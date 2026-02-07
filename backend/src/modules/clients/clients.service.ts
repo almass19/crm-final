@@ -10,6 +10,12 @@ import { AuditService } from '../audit/audit.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 
+const clientInclude = {
+  createdBy: { select: { fullName: true } },
+  assignedTo: { select: { fullName: true } },
+  designer: { select: { fullName: true } },
+};
+
 @Injectable()
 export class ClientsService {
   constructor(
@@ -30,14 +36,11 @@ export class ClientsService {
         companyName: dto.companyName,
         phone: dto.phone,
         email: dto.email,
-        source: dto.source,
+        services: dto.services,
         notes: dto.notes,
         createdById: userId,
       },
-      include: {
-        createdBy: { select: { fullName: true } },
-        assignedTo: { select: { fullName: true } },
-      },
+      include: clientInclude,
     });
 
     await this.auditService.log(
@@ -51,7 +54,7 @@ export class ClientsService {
   }
 
   async findAll(
-    userRole: Role,
+    userRole: Role | null,
     userId: string,
     search?: string,
     status?: ClientStatus,
@@ -61,6 +64,10 @@ export class ClientsService {
 
     if (userRole === Role.SPECIALIST) {
       where.assignedToId = userId;
+    }
+
+    if (userRole === Role.DESIGNER) {
+      where.designerId = userId;
     }
 
     if (search) {
@@ -82,23 +89,22 @@ export class ClientsService {
 
     return this.prisma.client.findMany({
       where,
-      include: {
-        createdBy: { select: { fullName: true } },
-        assignedTo: { select: { fullName: true } },
-      },
+      include: clientInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findById(id: string, userRole: Role, userId: string) {
+  async findById(id: string, userRole: Role | null, userId: string) {
     const client = await this.prisma.client.findUnique({
       where: { id },
       include: {
         createdBy: { select: { id: true, fullName: true, role: true } },
         assignedTo: { select: { id: true, fullName: true, role: true } },
+        designer: { select: { id: true, fullName: true, role: true } },
         assignmentHistory: {
           include: {
             specialist: { select: { fullName: true } },
+            designer: { select: { fullName: true } },
             assignedBy: { select: { fullName: true } },
           },
           orderBy: { assignedAt: 'desc' },
@@ -114,6 +120,10 @@ export class ClientsService {
       throw new ForbiddenException('Нет доступа к данному клиенту');
     }
 
+    if (userRole === Role.DESIGNER && client.designerId !== userId) {
+      throw new ForbiddenException('Нет доступа к данному клиенту');
+    }
+
     return client;
   }
 
@@ -121,7 +131,7 @@ export class ClientsService {
     id: string,
     dto: UpdateClientDto,
     userId: string,
-    userRole: Role,
+    userRole: Role | null,
   ) {
     const client = await this.prisma.client.findUnique({ where: { id } });
     if (!client) {
@@ -132,19 +142,20 @@ export class ClientsService {
       throw new ForbiddenException('Нет доступа к данному клиенту');
     }
 
-    if (dto.status && userRole !== Role.PROJECT_MANAGER) {
+    if (userRole === Role.DESIGNER && client.designerId !== userId) {
+      throw new ForbiddenException('Нет доступа к данному клиенту');
+    }
+
+    if (dto.status && userRole !== Role.ADMIN) {
       throw new ForbiddenException(
-        'Только проект-менеджер может менять статус клиента',
+        'Только администратор может менять статус клиента',
       );
     }
 
     const updated = await this.prisma.client.update({
       where: { id },
       data: dto,
-      include: {
-        createdBy: { select: { fullName: true } },
-        assignedTo: { select: { fullName: true } },
-      },
+      include: clientInclude,
     });
 
     if (dto.status) {
@@ -178,7 +189,12 @@ export class ClientsService {
     });
   }
 
-  async assign(clientId: string, specialistId: string, assignedById: string) {
+  async assign(
+    clientId: string,
+    specialistId: string | undefined,
+    designerId: string | undefined,
+    assignedById: string,
+  ) {
     const client = await this.prisma.client.findUnique({
       where: { id: clientId },
     });
@@ -186,77 +202,151 @@ export class ClientsService {
       throw new NotFoundException('Клиент не найден');
     }
 
-    const specialist = await this.prisma.user.findUnique({
-      where: { id: specialistId },
-    });
-    if (!specialist || specialist.role !== Role.SPECIALIST) {
-      throw new BadRequestException('Указанный пользователь не является специалистом');
+    if (!specialistId && !designerId) {
+      throw new BadRequestException(
+        'Необходимо указать специалиста или дизайнера',
+      );
     }
 
-    const oldAssignee = client.assignedToId;
+    const updateData: any = {};
 
-    const updated = await this.prisma.client.update({
-      where: { id: clientId },
-      data: {
-        assignedToId: specialistId,
-        assignedAt: new Date(),
-        status: ClientStatus.ASSIGNED,
-        assignmentSeen: false,
-      },
-      include: {
-        createdBy: { select: { fullName: true } },
-        assignedTo: { select: { fullName: true } },
-      },
-    });
+    if (specialistId) {
+      const specialist = await this.prisma.user.findUnique({
+        where: { id: specialistId },
+      });
+      if (!specialist || specialist.role !== Role.SPECIALIST) {
+        throw new BadRequestException(
+          'Указанный пользователь не является специалистом',
+        );
+      }
 
-    await this.prisma.assignmentHistory.create({
-      data: {
-        clientId,
-        specialistId,
+      const oldAssignee = client.assignedToId;
+      updateData.assignedToId = specialistId;
+      updateData.assignedAt = new Date();
+      updateData.assignmentSeen = false;
+
+      await this.prisma.assignmentHistory.create({
+        data: {
+          clientId,
+          type: 'SPECIALIST',
+          specialistId,
+          assignedById,
+        },
+      });
+
+      const action = oldAssignee
+        ? 'SPECIALIST_REASSIGNED'
+        : 'SPECIALIST_ASSIGNED';
+      await this.auditService.log(
+        action,
         assignedById,
-      },
+        clientId,
+        `Специалист назначен: ${specialist.fullName}`,
+      );
+    }
+
+    if (designerId) {
+      const designer = await this.prisma.user.findUnique({
+        where: { id: designerId },
+      });
+      if (!designer || designer.role !== Role.DESIGNER) {
+        throw new BadRequestException(
+          'Указанный пользователь не является дизайнером',
+        );
+      }
+
+      const oldDesigner = client.designerId;
+      updateData.designerId = designerId;
+      updateData.designerAssignedAt = new Date();
+      updateData.designerAssignmentSeen = false;
+
+      await this.prisma.assignmentHistory.create({
+        data: {
+          clientId,
+          type: 'DESIGNER',
+          designerId,
+          assignedById,
+        },
+      });
+
+      const action = oldDesigner
+        ? 'DESIGNER_REASSIGNED'
+        : 'DESIGNER_ASSIGNED';
+      await this.auditService.log(
+        action,
+        assignedById,
+        clientId,
+        `Дизайнер назначен: ${designer.fullName}`,
+      );
+    }
+
+    if (client.status === ClientStatus.NEW) {
+      updateData.status = ClientStatus.ASSIGNED;
+    }
+
+    return this.prisma.client.update({
+      where: { id: clientId },
+      data: updateData,
+      include: clientInclude,
     });
-
-    const action = oldAssignee ? 'SPECIALIST_REASSIGNED' : 'SPECIALIST_ASSIGNED';
-    await this.auditService.log(
-      action,
-      assignedById,
-      clientId,
-      `Специалист назначен: ${specialist.fullName}`,
-    );
-
-    return updated;
   }
 
-  async acknowledge(clientId: string, userId: string) {
+  async acknowledge(
+    clientId: string,
+    userId: string,
+    type: 'specialist' | 'designer' = 'specialist',
+  ) {
     const client = await this.prisma.client.findUnique({
       where: { id: clientId },
     });
     if (!client) {
       throw new NotFoundException('Клиент не найден');
     }
-    if (client.assignedToId !== userId) {
-      throw new ForbiddenException('Вы не назначены на данного клиента');
+
+    if (type === 'specialist') {
+      if (client.assignedToId !== userId) {
+        throw new ForbiddenException(
+          'Вы не назначены на данного клиента как специалист',
+        );
+      }
+      if (client.assignmentSeen) {
+        throw new BadRequestException('Назначение уже подтверждено');
+      }
+
+      await this.prisma.client.update({
+        where: { id: clientId },
+        data: { assignmentSeen: true, status: ClientStatus.IN_WORK },
+      });
+
+      await this.auditService.log(
+        'SPECIALIST_ACKNOWLEDGED',
+        userId,
+        clientId,
+        'Специалист принял клиента в работу',
+      );
+    } else {
+      if (client.designerId !== userId) {
+        throw new ForbiddenException(
+          'Вы не назначены на данного клиента как дизайнер',
+        );
+      }
+      if (client.designerAssignmentSeen) {
+        throw new BadRequestException(
+          'Назначение дизайнера уже подтверждено',
+        );
+      }
+
+      await this.prisma.client.update({
+        where: { id: clientId },
+        data: { designerAssignmentSeen: true },
+      });
+
+      await this.auditService.log(
+        'DESIGNER_ACKNOWLEDGED',
+        userId,
+        clientId,
+        'Дизайнер принял клиента в работу',
+      );
     }
-    if (client.assignmentSeen) {
-      throw new BadRequestException('Назначение уже подтверждено');
-    }
-
-    const updated = await this.prisma.client.update({
-      where: { id: clientId },
-      data: {
-        assignmentSeen: true,
-        status: ClientStatus.IN_WORK,
-      },
-    });
-
-    await this.auditService.log(
-      'ASSIGNMENT_ACKNOWLEDGED',
-      userId,
-      clientId,
-      'Специалист принял клиента в работу',
-    );
-
-    return updated;
   }
 }

@@ -7,13 +7,14 @@ interface User {
   id: string;
   email: string;
   fullName: string;
-  role: 'SALES_MANAGER' | 'PROJECT_MANAGER' | 'SPECIALIST';
+  role: 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: async () => {},
+  register: async () => {},
   logout: () => {},
 });
 
@@ -50,6 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   };
 
+  const register = async (email: string, password: string, fullName: string) => {
+    const data = await api.register(email, password, fullName);
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -58,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

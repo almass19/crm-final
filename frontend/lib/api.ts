@@ -36,10 +36,22 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
+  register: (email: string, password: string, fullName: string) =>
+    request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, fullName }),
+    }),
+
   me: () => request('/auth/me'),
 
   getUsers: (role?: string) =>
     request(`/users${role ? `?role=${role}` : ''}`),
+
+  updateUserRole: (userId: string, role: string) =>
+    request(`/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
 
   getClients: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
@@ -57,10 +69,10 @@ export const api = {
   archiveClient: (id: string) =>
     request(`/clients/${id}/archive`, { method: 'PATCH' }),
 
-  assignClient: (id: string, specialistId: string) =>
+  assignClient: (id: string, data: { specialistId?: string; designerId?: string }) =>
     request(`/clients/${id}/assign`, {
       method: 'POST',
-      body: JSON.stringify({ specialistId }),
+      body: JSON.stringify(data),
     }),
 
   acknowledgeClient: (id: string) =>

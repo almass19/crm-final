@@ -8,9 +8,10 @@ datasource db {
 }
 
 enum Role {
-  SALES_MANAGER
-  PROJECT_MANAGER
+  ADMIN
   SPECIALIST
+  SALES_MANAGER
+  DESIGNER
 }
 
 enum ClientStatus {
@@ -26,13 +27,15 @@ model User {
   email     String   @unique
   password  String
   fullName  String   @map("full_name")
-  role      Role
+  role      Role?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   createdClients  Client[]            @relation("CreatedBy")
   assignedClients Client[]            @relation("AssignedTo")
+  designerClients Client[]            @relation("DesignerAssignedTo")
   assignments     AssignmentHistory[] @relation("AssignedSpecialist")
+  designerHistory AssignmentHistory[] @relation("AssignedDesigner")
   assignedBy      AssignmentHistory[] @relation("AssignedByUser")
   comments        Comment[]
   auditLogs       AuditLog[]
@@ -46,7 +49,7 @@ model Client {
   companyName String?      @map("company_name")
   phone       String
   email       String
-  source      String
+  services    String[]
   notes       String?
   status      ClientStatus @default(NEW)
   archived    Boolean      @default(false)
@@ -59,6 +62,11 @@ model Client {
   assignedAt   DateTime? @map("assigned_at")
 
   assignmentSeen Boolean @default(false) @map("assignment_seen")
+
+  designerId             String?   @map("designer_id")
+  designer               User?     @relation("DesignerAssignedTo", fields: [designerId], references: [id])
+  designerAssignedAt     DateTime? @map("designer_assigned_at")
+  designerAssignmentSeen Boolean   @default(false) @map("designer_assignment_seen")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -75,8 +83,13 @@ model AssignmentHistory {
   clientId String @map("client_id")
   client   Client @relation(fields: [clientId], references: [id])
 
-  specialistId String @map("specialist_id")
-  specialist   User   @relation("AssignedSpecialist", fields: [specialistId], references: [id])
+  type String @default("SPECIALIST")
+
+  specialistId String? @map("specialist_id")
+  specialist   User?   @relation("AssignedSpecialist", fields: [specialistId], references: [id])
+
+  designerId String? @map("designer_id")
+  designer   User?   @relation("AssignedDesigner", fields: [designerId], references: [id])
 
   assignedById String @map("assigned_by_id")
   assignedBy   User   @relation("AssignedByUser", fields: [assignedById], references: [id])

@@ -1,7 +1,11 @@
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { IsOptional, IsUUID } from 'class-validator';
 
 export class AssignClientDto {
+  @IsOptional()
   @IsUUID('4', { message: 'Некорректный ID специалиста' })
-  @IsNotEmpty({ message: 'ID специалиста обязателен' })
-  specialistId: string;
+  specialistId?: string;
+
+  @IsOptional()
+  @IsUUID('4', { message: 'Некорректный ID дизайнера' })
+  designerId?: string;
 }

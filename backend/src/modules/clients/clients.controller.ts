@@ -66,7 +66,7 @@ export class ClientsController {
   }
 
   @Patch(':id/archive')
-  @Roles(Role.PROJECT_MANAGER)
+  @Roles(Role.ADMIN)
   async archive(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -75,21 +75,22 @@ export class ClientsController {
   }
 
   @Post(':id/assign')
-  @Roles(Role.PROJECT_MANAGER)
+  @Roles(Role.ADMIN)
   async assign(
     @Param('id') id: string,
     @Body() dto: AssignClientDto,
     @CurrentUser('id') userId: string,
   ) {
-    return this.clientsService.assign(id, dto.specialistId, userId);
+    return this.clientsService.assign(id, dto.specialistId, dto.designerId, userId);
   }
 
   @Post(':id/acknowledge')
-  @Roles(Role.SPECIALIST)
+  @Roles(Role.SPECIALIST, Role.DESIGNER)
   async acknowledge(
     @Param('id') id: string,
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: { id: string; role: Role },
   ) {
-    return this.clientsService.acknowledge(id, userId);
+    const type = user.role === Role.DESIGNER ? 'designer' : 'specialist';
+    return this.clientsService.acknowledge(id, user.id, type);
   }
 }

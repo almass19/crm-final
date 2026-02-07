@@ -14,18 +14,23 @@ interface Client {
   companyName: string | null;
   phone: string;
   email: string;
-  source: string;
+  services: string[];
   notes: string | null;
   status: string;
   assignmentSeen: boolean;
+  designerAssignmentSeen: boolean;
   createdAt: string;
   assignedAt: string | null;
+  designerAssignedAt: string | null;
   createdBy: { id: string; fullName: string; role: string };
   assignedTo: { id: string; fullName: string; role: string } | null;
+  designer: { id: string; fullName: string; role: string } | null;
   assignmentHistory: {
     id: string;
+    type: string;
     assignedAt: string;
-    specialist: { fullName: string };
+    specialist: { fullName: string } | null;
+    designer: { fullName: string } | null;
     assignedBy: { fullName: string };
   }[];
 }
@@ -37,7 +42,7 @@ interface Comment {
   author: { fullName: string; role: string };
 }
 
-interface Specialist {
+interface UserOption {
   id: string;
   fullName: string;
   email: string;
@@ -52,8 +57,10 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [specialists, setSpecialists] = useState<UserOption[]>([]);
+  const [designers, setDesigners] = useState<UserOption[]>([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showAssignDesignerModal, setShowAssignDesignerModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [error, setError] = useState('');
 
@@ -79,8 +86,9 @@ export default function ClientDetailPage() {
     }
     if (user) {
       fetchClient();
-      if (user.role === 'PROJECT_MANAGER') {
+      if (user.role === 'ADMIN') {
         api.getUsers('specialist').then(setSpecialists).catch(() => {});
+        api.getUsers('designer').then(setDesigners).catch(() => {});
       }
     }
   }, [authLoading, user, fetchClient, router]);
@@ -109,13 +117,23 @@ export default function ClientDetailPage() {
     }
   };
 
-  const handleAssign = async (specialistId: string) => {
+  const handleAssignSpecialist = async (specialistId: string) => {
     try {
-      await api.assignClient(id, specialistId);
+      await api.assignClient(id, { specialistId });
       setShowAssignModal(false);
       fetchClient();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка назначения');
+    }
+  };
+
+  const handleAssignDesigner = async (designerId: string) => {
+    try {
+      await api.assignClient(id, { designerId });
+      setShowAssignDesignerModal(false);
+      fetchClient();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка назначения дизайнера');
     }
   };
 
@@ -155,13 +173,18 @@ export default function ClientDetailPage() {
     );
   }
 
-  const isPM = user.role === 'PROJECT_MANAGER';
+  const isAdmin = user.role === 'ADMIN';
   const isSpecialist = user.role === 'SPECIALIST';
-  const canAcknowledge =
+  const isDesigner = user.role === 'DESIGNER';
+  const canAcknowledgeSpecialist =
     isSpecialist &&
     client.assignedTo?.id === user.id &&
     !client.assignmentSeen &&
     client.status === 'ASSIGNED';
+  const canAcknowledgeDesigner =
+    isDesigner &&
+    client.designer?.id === user.id &&
+    !client.designerAssignmentSeen;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -215,8 +238,8 @@ export default function ClientDetailPage() {
                   <p className="font-medium">{client.email}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Источник:</span>
-                  <p className="font-medium">{client.source}</p>
+                  <span className="text-gray-500">Услуги:</span>
+                  <p className="font-medium">{client.services?.join(', ') || '—'}</p>
                 </div>
                 <div>
                   <span className="text-gray-500">Дата создания:</span>
@@ -234,6 +257,12 @@ export default function ClientDetailPage() {
                     {client.assignedTo?.fullName || 'Не назначен'}
                   </p>
                 </div>
+                <div>
+                  <span className="text-gray-500">Дизайнер:</span>
+                  <p className="font-medium">
+                    {client.designer?.fullName || 'Не назначен'}
+                  </p>
+                </div>
               </div>
 
               {client.notes && (
@@ -247,22 +276,37 @@ export default function ClientDetailPage() {
 
               {/* Action Buttons */}
               <div className="mt-6 pt-4 border-t flex flex-wrap gap-3">
-                {canAcknowledge && (
+                {canAcknowledgeSpecialist && (
                   <button
                     onClick={handleAcknowledge}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
                   >
-                    Принять в работу
+                    Принять в работу (специалист)
                   </button>
                 )}
 
-                {isPM && (
+                {canAcknowledgeDesigner && (
+                  <button
+                    onClick={handleAcknowledge}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                  >
+                    Принять в работу (дизайнер)
+                  </button>
+                )}
+
+                {isAdmin && (
                   <>
                     <button
                       onClick={() => setShowAssignModal(true)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                     >
                       Назначить специалиста
+                    </button>
+                    <button
+                      onClick={() => setShowAssignDesignerModal(true)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                    >
+                      Назначить дизайнера
                     </button>
                     <button
                       onClick={() => setShowStatusModal(true)}
@@ -301,7 +345,7 @@ export default function ClientDetailPage() {
                           {comment.author.fullName}
                         </span>
                         <span className="px-1.5 py-0.5 bg-gray-100 rounded">
-                          {ROLE_LABELS[comment.author.role]}
+                          {ROLE_LABELS[comment.author.role] || comment.author.role}
                         </span>
                         <span>
                           {new Date(comment.createdAt).toLocaleString('ru-RU')}
@@ -348,7 +392,10 @@ export default function ClientDetailPage() {
                   {client.assignmentHistory.map((h) => (
                     <div key={h.id} className="text-sm border-b pb-3 last:border-0">
                       <p className="font-medium text-gray-700">
-                        {h.specialist.fullName}
+                        {h.type === 'DESIGNER' ? 'Дизайнер: ' : 'Специалист: '}
+                        {h.type === 'DESIGNER'
+                          ? h.designer?.fullName
+                          : h.specialist?.fullName}
                       </p>
                       <p className="text-xs text-gray-500">
                         Назначил: {h.assignedBy.fullName}
@@ -365,7 +412,7 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      {/* Assign Modal */}
+      {/* Assign Specialist Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
@@ -381,20 +428,63 @@ export default function ClientDetailPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {specialists.map((spec) => (
-                <button
-                  key={spec.id}
-                  onClick={() => handleAssign(spec.id)}
-                  className={`w-full text-left px-4 py-3 border rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors ${
-                    client.assignedTo?.id === spec.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="font-medium text-sm">{spec.fullName}</div>
-                  <div className="text-xs text-gray-500">{spec.email}</div>
-                </button>
-              ))}
+              {specialists.length === 0 ? (
+                <p className="text-sm text-gray-500">Нет доступных специалистов</p>
+              ) : (
+                specialists.map((spec) => (
+                  <button
+                    key={spec.id}
+                    onClick={() => handleAssignSpecialist(spec.id)}
+                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors ${
+                      client.assignedTo?.id === spec.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{spec.fullName}</div>
+                    <div className="text-xs text-gray-500">{spec.email}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Designer Modal */}
+      {showAssignDesignerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900">
+                Назначить дизайнера
+              </h2>
+              <button
+                onClick={() => setShowAssignDesignerModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-2">
+              {designers.length === 0 ? (
+                <p className="text-sm text-gray-500">Нет доступных дизайнеров</p>
+              ) : (
+                designers.map((des) => (
+                  <button
+                    key={des.id}
+                    onClick={() => handleAssignDesigner(des.id)}
+                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-purple-50 hover:border-purple-300 transition-colors ${
+                      client.designer?.id === des.id
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{des.fullName}</div>
+                    <div className="text-xs text-gray-500">{des.email}</div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>

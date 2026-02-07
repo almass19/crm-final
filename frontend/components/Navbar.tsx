@@ -23,12 +23,20 @@ export default function Navbar() {
             >
               Клиенты
             </Link>
+            {user.role === 'ADMIN' && (
+              <Link
+                href="/users"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Пользователи
+              </Link>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-500">
               {user.fullName}
               <span className="ml-2 px-2 py-1 bg-gray-100 rounded text-xs">
-                {ROLE_LABELS[user.role]}
+                {user.role ? ROLE_LABELS[user.role] : 'Без роли'}
               </span>
             </div>
             <button

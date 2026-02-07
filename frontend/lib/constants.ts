@@ -15,17 +15,16 @@ export const STATUS_COLORS: Record<string, string> = {
 };
 
 export const ROLE_LABELS: Record<string, string> = {
-  SALES_MANAGER: 'Менеджер по продажам',
-  PROJECT_MANAGER: 'Проект-менеджер',
+  ADMIN: 'Администратор',
   SPECIALIST: 'Специалист',
+  SALES_MANAGER: 'Менеджер по продажам',
+  DESIGNER: 'Дизайнер',
 };
 
-export const SOURCE_OPTIONS = [
+export const SERVICE_OPTIONS = [
+  'Таргетированная реклама',
+  'СММ',
   'Сайт',
-  'Телефон',
-  'Email',
-  'Рекомендация',
-  'Социальные сети',
-  'Реклама',
-  'Другое',
+  'Упаковка',
+  'Контекстная реклама',
 ];

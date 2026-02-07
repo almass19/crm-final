@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, ValidateIf, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsArray, ArrayNotEmpty, Matches } from 'class-validator';
 
 export class CreateClientDto {
   @IsOptional()
@@ -16,9 +16,10 @@ export class CreateClientDto {
   @IsEmail({}, { message: 'Некорректный email' })
   email: string;
 
-  @IsNotEmpty({ message: 'Источник обязателен' })
-  @IsString({ message: 'Источник должен быть строкой' })
-  source: string;
+  @IsArray({ message: 'Услуги должны быть массивом' })
+  @ArrayNotEmpty({ message: 'Выберите хотя бы одну услугу' })
+  @IsString({ each: true, message: 'Каждая услуга должна быть строкой' })
+  services: string[];
 
   @IsOptional()
   @IsString({ message: 'Заметки должны быть строкой' })

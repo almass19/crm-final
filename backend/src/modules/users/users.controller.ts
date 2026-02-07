@@ -1,7 +1,8 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
@@ -11,7 +12,7 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
-  @Roles(Role.PROJECT_MANAGER)
+  @Roles(Role.ADMIN)
   async getUsers(@Query('role') role?: string) {
     if (role) {
       const upperRole = role.toUpperCase() as Role;
@@ -19,6 +20,15 @@ export class UsersController {
         return this.usersService.findByRole(upperRole);
       }
     }
-    return this.usersService.findByRole(Role.SPECIALIST);
+    return this.usersService.findAll();
+  }
+
+  @Patch(':id/role')
+  @Roles(Role.ADMIN)
+  async updateRole(
+    @Param('id') id: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    return this.usersService.updateRole(id, dto.role);
   }
 }

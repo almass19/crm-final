@@ -6,14 +6,14 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await bcrypt.hash('password123', 10);
 
-  const pm = await prisma.user.upsert({
-    where: { email: 'pm@crm.local' },
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@crm.local' },
     update: {},
     create: {
-      email: 'pm@crm.local',
+      email: 'admin@crm.local',
       password: passwordHash,
       fullName: 'Иванов Петр Сергеевич',
-      role: Role.PROJECT_MANAGER,
+      role: Role.ADMIN,
     },
   });
 
@@ -50,11 +50,23 @@ async function main() {
     },
   });
 
+  const designer1 = await prisma.user.upsert({
+    where: { email: 'designer1@crm.local' },
+    update: {},
+    create: {
+      email: 'designer1@crm.local',
+      password: passwordHash,
+      fullName: 'Петрова Мария Алексеевна',
+      role: Role.DESIGNER,
+    },
+  });
+
   console.log('Seed data created:');
-  console.log(`  Project Manager: ${pm.email}`);
+  console.log(`  Admin: ${admin.email}`);
   console.log(`  Sales Manager: ${sales.email}`);
   console.log(`  Specialist 1: ${spec1.email}`);
   console.log(`  Specialist 2: ${spec2.email}`);
+  console.log(`  Designer 1: ${designer1.email}`);
   console.log('  Password for all: password123');
 }
 

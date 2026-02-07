@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, IsArray, Matches } from 'class-validator';
 import { ClientStatus } from '@prisma/client';
 
 export class UpdateClientDto {
@@ -19,8 +19,9 @@ export class UpdateClientDto {
   email?: string;
 
   @IsOptional()
-  @IsString({ message: 'Источник должен быть строкой' })
-  source?: string;
+  @IsArray({ message: 'Услуги должны быть массивом' })
+  @IsString({ each: true, message: 'Каждая услуга должна быть строкой' })
+  services?: string[];
 
   @IsOptional()
   @IsString({ message: 'Заметки должны быть строкой' })
