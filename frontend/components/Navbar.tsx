@@ -23,6 +23,12 @@ export default function Navbar() {
             >
               Клиенты
             </Link>
+            <Link
+              href="/tasks"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Задачи
+            </Link>
             {['SPECIALIST', 'DESIGNER', 'SALES_MANAGER'].includes(user.role || '') && (
               <Link
                 href="/dashboard"

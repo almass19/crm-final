@@ -22,6 +22,12 @@ enum ClientStatus {
   REJECTED
 }
 
+enum TaskStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -39,6 +45,8 @@ model User {
   assignedBy      AssignmentHistory[] @relation("AssignedByUser")
   comments        Comment[]
   auditLogs       AuditLog[]
+  createdTasks    Task[]              @relation("TaskCreator")
+  assignedTasks   Task[]              @relation("TaskAssignee")
 
   @@map("users")
 }
@@ -75,6 +83,7 @@ model Client {
   assignmentHistory AssignmentHistory[]
   comments          Comment[]
   auditLogs         AuditLog[]
+  tasks             Task[]
 
   @@map("clients")
 }
@@ -128,4 +137,27 @@ model AuditLog {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  priority    Int        @default(50)
+  status      TaskStatus @default(NEW)
+
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+
+  creatorId String @map("creator_id")
+  creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  assigneeId String? @map("assignee_id")
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  dueDate   DateTime? @map("due_date")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("tasks")
 }

@@ -96,4 +96,27 @@ export const api = {
 
   // Employees (for admin dashboard)
   getEmployees: () => request('/users/employees'),
+
+  // Tasks
+  getClientTasks: (clientId: string) =>
+    request(`/clients/${clientId}/tasks`),
+
+  getMyTasks: () => request('/tasks/my'),
+
+  getAllTasks: () => request('/tasks/all'),
+
+  createTask: (data: Record<string, unknown>) =>
+    request('/tasks', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateTask: (taskId: string, data: Record<string, unknown>) =>
+    request(`/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteTask: (taskId: string) =>
+    request(`/tasks/${taskId}`, { method: 'DELETE' }),
 };

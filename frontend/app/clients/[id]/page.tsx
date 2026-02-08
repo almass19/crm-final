@@ -7,6 +7,8 @@ import { api } from '@/lib/api';
 import { STATUS_LABELS, ROLE_LABELS } from '@/lib/constants';
 import Navbar from '@/components/Navbar';
 import StatusBadge from '@/components/StatusBadge';
+import TaskPriorityBadge from '@/components/TaskPriorityBadge';
+import TaskStatusBadge from '@/components/TaskStatusBadge';
 
 interface Client {
   id: string;
@@ -43,6 +45,18 @@ interface Comment {
   author: { fullName: string; role: string };
 }
 
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: number;
+  status: string;
+  dueDate: string | null;
+  createdAt: string;
+  creator: { id: string; fullName: string; role: string };
+  assignee: { id: string; fullName: string; role: string } | null;
+}
+
 interface UserOption {
   id: string;
   fullName: string;
@@ -55,6 +69,7 @@ export default function ClientDetailPage() {
   const { user, loading: authLoading } = useAuth();
   const [client, setClient] = useState<Client | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -69,12 +84,14 @@ export default function ClientDetailPage() {
 
   const fetchClient = useCallback(async () => {
     try {
-      const [clientData, commentsData] = await Promise.all([
+      const [clientData, commentsData, tasksData] = await Promise.all([
         api.getClient(id),
         api.getComments(id),
+        api.getClientTasks(id),
       ]);
       setClient(clientData);
       setComments(commentsData);
+      setTasks(tasksData);
     } catch {
       router.push('/clients');
     } finally {
@@ -174,6 +191,16 @@ export default function ClientDetailPage() {
   const openPaymentModal = () => {
     setPaymentAmount(client?.paymentAmount ? String(client.paymentAmount) : '');
     setShowPaymentModal(true);
+  };
+
+  const handleTaskStatusChange = async (taskId: string, status: string) => {
+    try {
+      await api.updateTask(taskId, { status });
+      const tasksData = await api.getClientTasks(id);
+      setTasks(tasksData);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка');
+    }
   };
 
   if (authLoading || loading || !user) {
@@ -416,6 +443,71 @@ export default function ClientDetailPage() {
                 </button>
               </div>
             </div>
+
+            {/* Tasks */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Задачи</h2>
+
+              {tasks.length === 0 ? (
+                <p className="text-sm text-gray-500">Задач пока нет</p>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="border rounded-md p-3 hover:bg-gray-50"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <TaskPriorityBadge priority={task.priority} showPercentage={false} />
+                          <span className="font-medium text-sm text-gray-900">
+                            {task.title}
+                          </span>
+                        </div>
+                        <TaskStatusBadge status={task.status} />
+                      </div>
+                      {task.description && (
+                        <p className="text-xs text-gray-500 mt-1 ml-7">
+                          {task.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between mt-2 ml-7">
+                        <div className="text-xs text-gray-400">
+                          {task.assignee ? (
+                            <span>Исполнитель: {task.assignee.fullName}</span>
+                          ) : (
+                            <span>Без исполнителя</span>
+                          )}
+                          {task.dueDate && (
+                            <span className="ml-2">
+                              | Срок: {new Date(task.dueDate).toLocaleDateString('ru-RU')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex space-x-1">
+                          {task.status === 'NEW' && (
+                            <button
+                              onClick={() => handleTaskStatusChange(task.id, 'IN_PROGRESS')}
+                              className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                            >
+                              Начать
+                            </button>
+                          )}
+                          {task.status === 'IN_PROGRESS' && (
+                            <button
+                              onClick={() => handleTaskStatusChange(task.id, 'DONE')}
+                              className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded hover:bg-green-200"
+                            >
+                              Завершить
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -617,6 +709,7 @@ export default function ClientDetailPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
