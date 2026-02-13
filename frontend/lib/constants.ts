@@ -19,6 +19,7 @@ export const ROLE_LABELS: Record<string, string> = {
   SPECIALIST: 'Специалист',
   SALES_MANAGER: 'Менеджер по продажам',
   DESIGNER: 'Дизайнер',
+  LEAD_DESIGNER: 'Главный дизайнер',
 };
 
 export const SERVICE_OPTIONS = [

@@ -90,8 +90,8 @@ export default function ClientsPage() {
     }
     if (user) {
       fetchClients();
-      // Fetch filter options for admin
-      if (user.role === 'ADMIN') {
+      // Fetch filter options for admin and lead designer
+      if (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') {
         api.getUsers('sales_manager').then(setSalesManagers).catch(() => {});
         api.getUsers('specialist').then(setSpecialists).catch(() => {});
       }
@@ -118,6 +118,7 @@ export default function ClientsPage() {
   const isDesigner = user.role === 'DESIGNER';
   const isSalesManager = user.role === 'SALES_MANAGER';
   const isAdmin = user.role === 'ADMIN';
+  const isLeadDesigner = user.role === 'LEAD_DESIGNER';
   const hasNoRole = !user.role;
 
   if (hasNoRole) {
@@ -240,7 +241,7 @@ export default function ClientsPage() {
                 ))}
               </select>
 
-              {isAdmin && (
+              {(isAdmin || isLeadDesigner) && (
                 <>
                   <select
                     value={salesManagerFilter}

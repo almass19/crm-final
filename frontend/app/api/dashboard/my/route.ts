@@ -5,7 +5,7 @@ import { snakeToCamel } from '@/lib/utils/case-transform';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireRoles('SPECIALIST', 'DESIGNER', 'SALES_MANAGER');
+    const user = await requireRoles('SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER');
     const supabase = await createClient();
 
     const sp = request.nextUrl.searchParams;
@@ -57,6 +57,17 @@ export async function GET(request: NextRequest) {
           .gte('created_at', startDate)
           .lte('created_at', endDate)
           .order('created_at', { ascending: false });
+        break;
+
+      case 'LEAD_DESIGNER':
+        query = supabase
+          .from('clients')
+          .select(clientSelect)
+          .eq('designer_id', user.id)
+          .eq('designer_assignment_seen', true)
+          .gte('designer_assigned_at', startDate)
+          .lte('designer_assigned_at', endDate)
+          .order('designer_assigned_at', { ascending: false });
         break;
 
       default:

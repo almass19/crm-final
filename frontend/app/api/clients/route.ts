@@ -66,11 +66,11 @@ export async function GET(request: NextRequest) {
       query = query.is('assigned_to_id', null);
     }
 
-    if (createdById && user.role === 'ADMIN') {
+    if (createdById && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
       query = query.eq('created_by_id', createdById);
     }
 
-    if (specialistId && user.role === 'ADMIN') {
+    if (specialistId && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
       query = query.eq('assigned_to_id', specialistId);
     }
 

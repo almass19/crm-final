@@ -8,7 +8,7 @@ interface User {
   id: string;
   email: string;
   fullName: string;
-  role: 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | null;
+  role: 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | 'LEAD_DESIGNER' | null;
 }
 
 interface AuthContextType {

@@ -15,7 +15,7 @@ interface UserItem {
   createdAt: string;
 }
 
-const ROLES = ['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER'] as const;
+const ROLES = ['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER'] as const;
 
 export default function UsersPage() {
   const { user, loading: authLoading } = useAuth();

@@ -3,7 +3,7 @@
 -- =============================================================
 
 -- Enums
-create type user_role as enum ('ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER');
+create type user_role as enum ('ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER');
 create type client_status as enum ('NEW', 'ASSIGNED', 'IN_WORK', 'DONE', 'REJECTED');
 create type task_status as enum ('NEW', 'IN_PROGRESS', 'DONE');
 
@@ -152,6 +152,19 @@ create index idx_payments_month on payments(month);
 create index idx_payments_renewal on payments(is_renewal);
 
 -- =============================================================
+-- Creatives
+-- =============================================================
+create table creatives (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  designer_id uuid not null references profiles(id),
+  count integer not null check (count > 0),
+  month text not null,
+  created_at timestamptz default now() not null
+);
+create index idx_creatives_client on creatives(client_id);
+
+-- =============================================================
 -- Updated_at triggers
 -- =============================================================
 create or replace function update_updated_at()
@@ -183,6 +196,7 @@ alter table comments enable row level security;
 alter table audit_logs enable row level security;
 alter table tasks enable row level security;
 alter table payments enable row level security;
+alter table creatives enable row level security;
 
 -- Profiles: everyone can read, users update their own, admin updates any
 create policy "profiles_select" on profiles for select using (true);
@@ -198,7 +212,7 @@ create policy "clients_select" on clients for select using (
   exists (
     select 1 from profiles p where p.id = auth.uid()
     and (
-      p.role in ('ADMIN', 'SALES_MANAGER')
+      p.role in ('ADMIN', 'SALES_MANAGER', 'LEAD_DESIGNER')
       or (p.role = 'SPECIALIST' and clients.assigned_to_id = auth.uid())
       or (p.role = 'DESIGNER' and clients.designer_id = auth.uid())
     )
@@ -243,4 +257,12 @@ create policy "payments_insert" on payments for insert with check (
     select 1 from profiles where id = auth.uid()
     and role in ('ADMIN', 'SALES_MANAGER')
   )
+);
+
+-- Creatives: read for admin/designer/lead_designer, insert for designer/lead_designer
+create policy "creatives_select" on creatives for select using (
+  exists (select 1 from profiles where id = auth.uid() and role in ('ADMIN', 'DESIGNER', 'LEAD_DESIGNER'))
+);
+create policy "creatives_insert" on creatives for insert with check (
+  exists (select 1 from profiles where id = auth.uid() and role in ('DESIGNER', 'LEAD_DESIGNER'))
 );

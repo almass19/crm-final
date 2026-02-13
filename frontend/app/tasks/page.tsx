@@ -63,6 +63,10 @@ export default function TasksPage() {
       router.replace('/login');
       return;
     }
+    if (user && user.role === 'SALES_MANAGER') {
+      router.replace('/clients');
+      return;
+    }
     if (user) {
       fetchTasks();
       api.getClients().then(setClients).catch(() => {});

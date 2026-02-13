@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER';
+export type UserRole = 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | 'LEAD_DESIGNER';
 export type ClientStatus = 'NEW' | 'ASSIGNED' | 'IN_WORK' | 'DONE' | 'REJECTED';
 export type TaskStatus = 'NEW' | 'IN_PROGRESS' | 'DONE';
 
@@ -68,6 +68,16 @@ export interface Comment {
   clientId: string;
   authorId: string;
   author?: { fullName: string; role: UserRole | null };
+  createdAt: string;
+}
+
+export interface Creative {
+  id: string;
+  clientId: string;
+  designerId: string;
+  designer?: { fullName: string; role: UserRole | null };
+  count: number;
+  month: string;
   createdAt: string;
 }
 

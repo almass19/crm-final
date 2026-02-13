@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requireRoles('ADMIN');
+    const user = await requireRoles('ADMIN', 'LEAD_DESIGNER');
     const { id: clientId } = await params;
     const { specialistId, designerId } = await request.json();
     const supabase = await createClient();
@@ -27,6 +27,14 @@ export async function POST(
       return NextResponse.json(
         { message: 'Необходимо указать специалиста или дизайнера' },
         { status: 400 },
+      );
+    }
+
+    // LEAD_DESIGNER can only assign designers, not specialists
+    if (user.role === 'LEAD_DESIGNER' && specialistId) {
+      return NextResponse.json(
+        { message: 'Главный дизайнер может назначать только дизайнеров' },
+        { status: 403 },
       );
     }
 
@@ -74,7 +82,7 @@ export async function POST(
         .eq('id', designerId)
         .single();
 
-      if (!designer || designer.role !== 'DESIGNER') {
+      if (!designer || (designer.role !== 'DESIGNER' && designer.role !== 'LEAD_DESIGNER')) {
         return NextResponse.json(
           { message: 'Указанный пользователь не является дизайнером' },
           { status: 400 },

@@ -86,6 +86,13 @@ export async function PATCH(
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
+    // Only ADMIN and SALES_MANAGER can edit client fields
+    const editableFields = ['fullName', 'companyName', 'phone', 'groupName', 'services', 'notes'];
+    const hasEditFields = editableFields.some(f => body[f] !== undefined);
+    if (hasEditFields && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') {
+      return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
+    }
+
     if (body.status && user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Только администратор может менять статус клиента' },

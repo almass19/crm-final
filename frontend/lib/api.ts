@@ -85,6 +85,9 @@ export const api = {
   getMyDashboard: (year: number, month: number) =>
     request(`/dashboard/my?year=${year}&month=${month}`),
 
+  getAnalytics: (year: number, month: number) =>
+    request(`/dashboard/analytics?year=${year}&month=${month}`),
+
   getUserDashboard: (userId: string, year: number, month: number) =>
     request(`/dashboard/user/${userId}?year=${year}&month=${month}`),
 
@@ -120,6 +123,16 @@ export const api = {
 
   createPayment: (clientId: string, data: { amount: number; month: string; isRenewal: boolean }) =>
     request(`/clients/${clientId}/payments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Creatives
+  getClientCreatives: (clientId: string) =>
+    request(`/clients/${clientId}/creatives`),
+
+  createCreative: (clientId: string, data: { count: number; month: string }) =>
+    request(`/clients/${clientId}/creatives`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),

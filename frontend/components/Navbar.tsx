@@ -23,12 +23,14 @@ export default function Navbar() {
             >
               Клиенты
             </Link>
-            <Link
-              href="/tasks"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Задачи
-            </Link>
+            {user.role !== 'SALES_MANAGER' && (
+              <Link
+                href="/tasks"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Задачи
+              </Link>
+            )}
             {['ADMIN', 'SPECIALIST'].includes(user.role || '') && (
               <Link
                 href="/renewals"
@@ -37,7 +39,7 @@ export default function Navbar() {
                 Продлеваемые
               </Link>
             )}
-            {['SPECIALIST', 'DESIGNER', 'SALES_MANAGER'].includes(user.role || '') && (
+            {['SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '') && (
               <Link
                 href="/dashboard"
                 className="text-gray-600 hover:text-gray-900 transition-colors"

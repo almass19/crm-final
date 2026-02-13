@@ -62,7 +62,7 @@ export default function DashboardPage() {
     }
     if (user) {
       // Only SPECIALIST, DESIGNER, SALES_MANAGER can see personal dashboard
-      if (!['SPECIALIST', 'DESIGNER', 'SALES_MANAGER'].includes(user.role || '')) {
+      if (!['SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '')) {
         router.replace('/clients');
         return;
       }
@@ -86,6 +86,8 @@ export default function DashboardPage() {
         return 'Мои клиенты (принятые в работу)';
       case 'SALES_MANAGER':
         return 'Мои созданные клиенты';
+      case 'LEAD_DESIGNER':
+        return 'Мои клиенты (как дизайнер)';
       default:
         return 'Мой дашборд';
     }

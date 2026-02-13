@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from './server';
 
-export type UserRole = 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER';
+export type UserRole = 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | 'LEAD_DESIGNER';
 
 export interface AuthUser {
   id: string;
