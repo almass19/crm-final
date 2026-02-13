@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { createTaskAssignedNotification } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {
@@ -53,6 +54,15 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
+
+    if (body.assigneeId && body.assigneeId !== user.id) {
+      await createTaskAssignedNotification(supabase, {
+        assigneeId: body.assigneeId,
+        taskTitle: body.title,
+        clientId: body.clientId,
+        assignerName: user.fullName,
+      });
+    }
 
     return NextResponse.json(snakeToCamel(data));
   } catch (e) {

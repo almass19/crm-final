@@ -140,4 +140,25 @@ export const api = {
   // Renewals
   getRenewals: (month: string) =>
     request(`/renewals?month=${month}`),
+
+  // Notifications
+  getNotifications: () => request('/notifications'),
+
+  markAllNotificationsRead: () =>
+    request('/notifications/read-all', { method: 'PATCH' }),
+
+  markNotificationRead: (id: string) =>
+    request(`/notifications/${id}/read`, { method: 'PATCH' }),
+
+  // Publications
+  getPublications: () => request('/publications'),
+
+  createPublication: (data: { title: string; content: string }) =>
+    request('/publications', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deletePublication: (id: string) =>
+    request(`/publications/${id}`, { method: 'DELETE' }),
 };

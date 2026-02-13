@@ -81,6 +81,26 @@ export interface Creative {
   createdAt: string;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Publication {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  author?: { fullName: string; role: UserRole | null };
+  createdAt: string;
+}
+
 export interface AssignmentHistory {
   id: string;
   clientId: string;

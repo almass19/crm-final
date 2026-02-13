@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { ROLE_LABELS } from '@/lib/constants';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -22,6 +23,12 @@ export default function Navbar() {
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               Клиенты
+            </Link>
+            <Link
+              href="/news"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Новости
             </Link>
             {user.role !== 'SALES_MANAGER' && (
               <Link
@@ -65,6 +72,7 @@ export default function Navbar() {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <NotificationBell />
             <div className="text-sm text-gray-500">
               {user.fullName}
               <span className="ml-2 px-2 py-1 bg-gray-100 rounded text-xs">
