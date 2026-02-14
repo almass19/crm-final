@@ -431,8 +431,6 @@ function CreateClientModal({
     paymentAmount: '',
     soldById: userRole === 'SALES_MANAGER' ? userId : '',
     createdAt: '',
-    assignedAt: '',
-    designerAssignedAt: '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -469,8 +467,6 @@ function CreateClientModal({
       if (form.paymentAmount) data.paymentAmount = parseFloat(form.paymentAmount);
       if (form.soldById) data.soldById = form.soldById;
       if (isAdmin && form.createdAt) data.createdAt = form.createdAt;
-      if (isAdmin && form.assignedAt) data.assignedAt = form.assignedAt;
-      if (isAdmin && form.designerAssignedAt) data.designerAssignedAt = form.designerAssignedAt;
       await api.createClient(data);
       onCreated();
     } catch (err: unknown) {
@@ -622,37 +618,14 @@ function CreateClientModal({
 
             {isAdmin && (
               <div className="border-t border-gray-200 pt-4">
-                <p className="text-sm font-medium text-gray-700 mb-1">Исторические даты</p>
-                <p className="text-xs text-gray-500 mb-3">Оставьте пустым для текущей даты</p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Дата создания</label>
-                    <input
-                      type="datetime-local"
-                      value={form.createdAt}
-                      onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Дата назначения специалисту</label>
-                    <input
-                      type="datetime-local"
-                      value={form.assignedAt}
-                      onChange={(e) => setForm({ ...form, assignedAt: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Дата назначения дизайнеру</label>
-                    <input
-                      type="datetime-local"
-                      value={form.designerAssignedAt}
-                      onChange={(e) => setForm({ ...form, designerAssignedAt: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                    />
-                  </div>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Дата создания</label>
+                <p className="text-xs text-gray-500 mb-2">Оставьте пустым для текущей даты</p>
+                <input
+                  type="datetime-local"
+                  value={form.createdAt}
+                  onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
               </div>
             )}
 

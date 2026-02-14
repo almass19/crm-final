@@ -123,12 +123,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Allow ADMIN to set historical dates for imported clients
+    // Allow ADMIN to set historical created_at for imported clients
     const customDates: Record<string, string> = {};
     if (user.role === 'ADMIN') {
       if (body.createdAt) customDates.created_at = body.createdAt;
-      if (body.assignedAt) customDates.assigned_at = body.assignedAt;
-      if (body.designerAssignedAt) customDates.designer_assigned_at = body.designerAssignedAt;
     }
 
     const { data: client, error } = await supabase

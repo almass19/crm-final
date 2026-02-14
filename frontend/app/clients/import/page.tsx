@@ -14,8 +14,6 @@ interface ImportRow {
   services: string[];
   paymentAmount: string;
   createdAt: string;
-  assignedAt: string;
-  designerAssignedAt: string;
 }
 
 interface ImportResult {
@@ -40,8 +38,6 @@ function parseCSV(text: string): ImportRow[] {
       services: cols[4]?.trim() ? cols[4].trim().split(';').map(s => s.trim()).filter(Boolean) : [],
       paymentAmount: cols[5]?.trim() || '',
       createdAt: cols[6]?.trim() || '',
-      assignedAt: cols[7]?.trim() || '',
-      designerAssignedAt: cols[8]?.trim() || '',
     };
   });
 }
@@ -119,8 +115,6 @@ export default function ImportClientsPage() {
         if (row.groupName) data.groupName = row.groupName;
         if (row.paymentAmount) data.paymentAmount = parseFloat(row.paymentAmount);
         if (row.createdAt) data.createdAt = row.createdAt;
-        if (row.assignedAt) data.assignedAt = row.assignedAt;
-        if (row.designerAssignedAt) data.designerAssignedAt = row.designerAssignedAt;
 
         await api.createClient(data);
         importResults.push({ row: i + 2, name, success: true });
@@ -159,8 +153,8 @@ export default function ImportClientsPage() {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-sm font-medium text-gray-700 mb-2">Формат CSV</h2>
           <div className="bg-gray-50 rounded p-3 text-xs font-mono text-gray-600 overflow-x-auto">
-            <div>fullName,companyName,phone,groupName,services,paymentAmount,createdAt,assignedAt,designerAssignedAt</div>
-            <div>Иванов,,+77001234567,VIP,СММ;Таргетированная реклама,50000,2024-01-15T10:30,,</div>
+            <div>fullName,companyName,phone,groupName,services,paymentAmount,createdAt</div>
+            <div>Иванов,,+77001234567,VIP,СММ;Таргетированная реклама,50000,2024-01-15T10:30</div>
           </div>
           <ul className="mt-3 text-xs text-gray-500 space-y-1">
             <li>Услуги через точку с запятой (;)</li>
