@@ -5,7 +5,7 @@ import { snakeToCamel } from '@/lib/utils/case-transform';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRoles('ADMIN');
+    await requireRoles('ADMIN', 'LEAD_DESIGNER');
     const supabase = await createClient();
 
     const role = request.nextUrl.searchParams.get('role');
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       const upperRole = role.toUpperCase();
-      if (['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER'].includes(upperRole)) {
+      if (['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER'].includes(upperRole)) {
         query = query.eq('role', upperRole);
       }
     }

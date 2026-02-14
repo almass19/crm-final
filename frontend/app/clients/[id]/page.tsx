@@ -156,9 +156,15 @@ export default function ClientDetailPage() {
       fetchClient();
       fetchPayments();
       fetchCreatives();
-      if (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') {
-        api.getUsers('specialist').then(setSpecialists).catch(() => {});
-        api.getUsers('designer').then(setDesigners).catch(() => {});
+      if (user.role === 'ADMIN') {
+        Promise.all([api.getUsers('specialist'), api.getUsers('admin')])
+          .then(([specs, admins]) => setSpecialists([...specs, ...admins]))
+          .catch(() => {});
+      }
+      if (user.role === 'LEAD_DESIGNER') {
+        Promise.all([api.getUsers('designer'), api.getUsers('lead_designer')])
+          .then(([des, leads]) => setDesigners([...des, ...leads]))
+          .catch(() => {});
       }
     }
   }, [authLoading, user, fetchClient, fetchPayments, fetchCreatives, router]);
@@ -351,10 +357,6 @@ export default function ClientDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Создал:</span>
-                  <p className="font-medium">{client.createdBy.fullName}</p>
-                </div>
-                <div>
                   <span className="text-gray-500">Продавец:</span>
                   <p className="font-medium">{client.soldBy?.fullName || '—'}</p>
                 </div>
@@ -451,7 +453,7 @@ export default function ClientDetailPage() {
                   </>
                 )}
 
-                {(isAdmin || isLeadDesigner) && (
+                {isLeadDesigner && (
                   <button
                     onClick={() => setShowAssignDesignerModal(true)}
                     className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"

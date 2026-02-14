@@ -38,6 +38,14 @@ export async function POST(
       );
     }
 
+    // ADMIN cannot assign designers — only LEAD_DESIGNER can
+    if (user.role === 'ADMIN' && designerId) {
+      return NextResponse.json(
+        { message: 'Назначать дизайнера может только главный дизайнер' },
+        { status: 403 },
+      );
+    }
+
     const updateData: Record<string, unknown> = {};
 
     if (specialistId) {
@@ -47,7 +55,7 @@ export async function POST(
         .eq('id', specialistId)
         .single();
 
-      if (!specialist || specialist.role !== 'SPECIALIST') {
+      if (!specialist || !['SPECIALIST', 'ADMIN'].includes(specialist.role)) {
         return NextResponse.json(
           { message: 'Указанный пользователь не является специалистом' },
           { status: 400 },

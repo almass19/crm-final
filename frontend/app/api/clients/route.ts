@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(snakeToCamel(sanitized));
   } catch (e) {
     if (e instanceof NextResponse) return e;
+    console.error('GET /api/clients error:', e);
     return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });
   }
 }
@@ -165,6 +166,7 @@ export async function POST(request: Request) {
     return NextResponse.json(snakeToCamel(client));
   } catch (e) {
     if (e instanceof NextResponse) return e;
+    console.error('POST /api/clients error:', e);
     return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });
   }
 }

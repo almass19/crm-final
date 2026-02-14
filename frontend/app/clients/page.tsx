@@ -440,7 +440,9 @@ function CreateClientModal({
 
   useEffect(() => {
     if (isAdmin) {
-      api.getUsers('sales_manager').then(setSalesManagers).catch(() => {});
+      Promise.all([api.getUsers('sales_manager'), api.getUsers('admin')])
+        .then(([managers, admins]) => setSalesManagers([...managers, ...admins]))
+        .catch(() => {});
     }
   }, [isAdmin]);
 

@@ -310,7 +310,7 @@ export default function AdminDashboardPage() {
               {/* Charts row 2 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Revenue by manager */}
-                <ChartCard title="Доход по менеджерам (за месяц)">
+                <ChartCard title="Зарплатный фонд (за месяц)">
                   {analytics.revenueByManager.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={analytics.revenueByManager} layout="vertical" margin={{ left: 20 }}>
