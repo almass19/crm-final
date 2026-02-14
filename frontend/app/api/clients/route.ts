@@ -123,6 +123,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Allow ADMIN to set historical dates for imported clients
+    const customDates: Record<string, string> = {};
+    if (user.role === 'ADMIN') {
+      if (body.createdAt) customDates.created_at = body.createdAt;
+      if (body.assignedAt) customDates.assigned_at = body.assignedAt;
+      if (body.designerAssignedAt) customDates.designer_assigned_at = body.designerAssignedAt;
+    }
+
     const { data: client, error } = await supabase
       .from('clients')
       .insert({
@@ -135,6 +143,7 @@ export async function POST(request: Request) {
         payment_amount: body.paymentAmount ?? null,
         created_by_id: user.id,
         sold_by_id: body.soldById || (user.role === 'SALES_MANAGER' ? user.id : null),
+        ...customDates,
       })
       .select(`
         *,
