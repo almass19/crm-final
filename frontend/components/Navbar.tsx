@@ -46,7 +46,7 @@ export default function Navbar() {
                 Продлеваемые
               </Link>
             )}
-            {['SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '') && (
+            {['ADMIN', 'SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '') && (
               <Link
                 href="/dashboard"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
