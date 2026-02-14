@@ -25,6 +25,7 @@ interface Client {
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
+  soldBy: { fullName: string } | null;
   createdBy: { id: string; fullName: string; role: string };
   assignedTo: { id: string; fullName: string; role: string } | null;
   designer: { id: string; fullName: string; role: string } | null;
@@ -295,7 +296,7 @@ export default function ClientDetailPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.push('/clients')}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-block"
+          className="text-sm text-amber-600 hover:text-amber-800 mb-4 inline-block"
         >
           &larr; Назад к списку
         </button>
@@ -354,6 +355,10 @@ export default function ClientDetailPage() {
                   <p className="font-medium">{client.createdBy.fullName}</p>
                 </div>
                 <div>
+                  <span className="text-gray-500">Продавец:</span>
+                  <p className="font-medium">{client.soldBy?.fullName || '—'}</p>
+                </div>
+                <div>
                   <span className="text-gray-500">Специалист:</span>
                   <p className="font-medium">
                     {client.assignedTo?.fullName || 'Не назначен'}
@@ -375,7 +380,7 @@ export default function ClientDetailPage() {
                       {canEditPayment && (
                         <button
                           onClick={openPaymentModal}
-                          className="ml-2 text-blue-600 hover:text-blue-800 text-xs"
+                          className="ml-2 text-amber-600 hover:text-amber-800 text-xs"
                         >
                           Изменить
                         </button>
@@ -427,7 +432,7 @@ export default function ClientDetailPage() {
                   <>
                     <button
                       onClick={() => setShowAssignModal(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                      className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 transition-colors text-sm font-medium"
                     >
                       Назначить специалиста
                     </button>
@@ -496,13 +501,13 @@ export default function ClientDetailPage() {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={2}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                   placeholder="Напишите комментарий..."
                 />
                 <button
                   onClick={handleAddComment}
                   disabled={submittingComment || !newComment.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm font-medium self-end"
+                  className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium self-end"
                 >
                   {submittingComment ? '...' : 'Отправить'}
                 </button>
@@ -726,9 +731,9 @@ export default function ClientDetailPage() {
                   <button
                     key={spec.id}
                     onClick={() => handleAssignSpecialist(spec.id)}
-                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors ${
+                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-amber-50 hover:border-amber-300 transition-colors ${
                       client.assignedTo?.id === spec.id
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-amber-500 bg-amber-50'
                         : 'border-gray-200'
                     }`}
                   >
@@ -801,15 +806,15 @@ export default function ClientDetailPage() {
                 <button
                   key={key}
                   onClick={() => handleStatusChange(key)}
-                  className={`w-full text-left px-4 py-3 border rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors text-sm ${
+                  className={`w-full text-left px-4 py-3 border rounded-md hover:bg-amber-50 hover:border-amber-300 transition-colors text-sm ${
                     client.status === key
-                      ? 'border-blue-500 bg-blue-50 font-medium'
+                      ? 'border-amber-500 bg-amber-50 font-medium'
                       : 'border-gray-200'
                   }`}
                 >
                   {label}
                   {client.status === key && (
-                    <span className="ml-2 text-xs text-blue-600">
+                    <span className="ml-2 text-xs text-amber-600">
                       (текущий)
                     </span>
                   )}
@@ -846,7 +851,7 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="0.00"
                 />
               </div>
@@ -859,7 +864,7 @@ export default function ClientDetailPage() {
                 </button>
                 <button
                   onClick={handlePaymentUpdate}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600"
                 >
                   Сохранить
                 </button>
@@ -981,7 +986,7 @@ function AddPaymentModal({
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder="100000"
             />
           </div>
@@ -994,7 +999,7 @@ function AddPaymentModal({
               type="month"
               value={form.month}
               onChange={(e) => setForm({ ...form, month: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -1117,7 +1122,7 @@ function EditClientModal({
                 type="text"
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1127,7 +1132,7 @@ function EditClientModal({
                 type="text"
                 value={form.companyName}
                 onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1137,7 +1142,7 @@ function EditClientModal({
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1147,7 +1152,7 @@ function EditClientModal({
                 type="text"
                 value={form.groupName}
                 onChange={(e) => setForm({ ...form, groupName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1166,7 +1171,7 @@ function EditClientModal({
                           setForm({ ...form, services: form.services.filter((s) => s !== service) });
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                     />
                     <span className="text-sm text-gray-700">{service}</span>
                   </label>
@@ -1180,7 +1185,7 @@ function EditClientModal({
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -1195,7 +1200,7 @@ function EditClientModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium"
               >
                 {submitting ? 'Сохранение...' : 'Сохранить'}
               </button>
@@ -1277,7 +1282,7 @@ function AddCreativeModal({
               value={form.count}
               onChange={(e) => setForm({ ...form, count: e.target.value })}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               placeholder="10"
             />
           </div>
@@ -1290,7 +1295,7 @@ function AddCreativeModal({
               type="month"
               value={form.month}
               onChange={(e) => setForm({ ...form, month: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 

@@ -165,10 +165,10 @@ export default function ClientsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Клиенты</h1>
-          {isSalesManager && (
+          {(isSalesManager || isAdmin) && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 transition-colors text-sm font-medium"
             >
               + Добавить клиента
             </button>
@@ -210,13 +210,13 @@ export default function ClientsPage() {
                   placeholder="Поиск по имени, телефону, группе..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                 />
               </div>
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -231,7 +231,7 @@ export default function ClientsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
               >
                 <option value="">Все статусы</option>
                 {Object.entries(STATUS_LABELS).map(([key, label]) => (
@@ -246,7 +246,7 @@ export default function ClientsPage() {
                   <select
                     value={salesManagerFilter}
                     onChange={(e) => setSalesManagerFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                   >
                     <option value="">Все менеджеры</option>
                     {salesManagers.map((sm) => (
@@ -259,7 +259,7 @@ export default function ClientsPage() {
                   <select
                     value={specialistFilter}
                     onChange={(e) => setSpecialistFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                   >
                     <option value="">Все специалисты</option>
                     {specialists.map((sp) => (
@@ -311,30 +311,30 @@ export default function ClientsPage() {
         ) : (
           <div className="bg-white shadow-sm rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Имя / Компания
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Телефон
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Группа
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Услуги
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Статус
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Специалист
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Дизайнер
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Дата
                   </th>
                 </tr>
@@ -344,7 +344,7 @@ export default function ClientsPage() {
                   <tr
                     key={client.id}
                     onClick={() => router.push(`/clients/${client.id}`)}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="hover:bg-amber-50 cursor-pointer transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -387,6 +387,8 @@ export default function ClientsPage() {
 
       {showCreateModal && (
         <CreateClientModal
+          userRole={user.role}
+          userId={user.id}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => {
             setShowCreateModal(false);
@@ -399,9 +401,13 @@ export default function ClientsPage() {
 }
 
 function CreateClientModal({
+  userRole,
+  userId,
   onClose,
   onCreated,
 }: {
+  userRole: string | null;
+  userId: string;
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -413,9 +419,19 @@ function CreateClientModal({
     services: [] as string[],
     notes: '',
     paymentAmount: '',
+    soldById: userRole === 'SALES_MANAGER' ? userId : '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [salesManagers, setSalesManagers] = useState<{ id: string; fullName: string }[]>([]);
+
+  const isAdmin = userRole === 'ADMIN';
+
+  useEffect(() => {
+    if (isAdmin) {
+      api.getUsers('sales_manager').then(setSalesManagers).catch(() => {});
+    }
+  }, [isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -438,6 +454,7 @@ function CreateClientModal({
       data.services = form.services;
       if (form.notes) data.notes = form.notes;
       if (form.paymentAmount) data.paymentAmount = parseFloat(form.paymentAmount);
+      if (form.soldById) data.soldById = form.soldById;
       await api.createClient(data);
       onCreated();
     } catch (err: unknown) {
@@ -480,7 +497,7 @@ function CreateClientModal({
                 onChange={(e) =>
                   setForm({ ...form, fullName: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="Иванов Иван Иванович"
               />
             </div>
@@ -495,7 +512,7 @@ function CreateClientModal({
                 onChange={(e) =>
                   setForm({ ...form, companyName: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="ООО 'Компания'"
               />
             </div>
@@ -509,7 +526,7 @@ function CreateClientModal({
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="+7 (999) 123-45-67"
               />
             </div>
@@ -522,7 +539,7 @@ function CreateClientModal({
                 type="text"
                 value={form.groupName}
                 onChange={(e) => setForm({ ...form, groupName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="Название группы"
               />
             </div>
@@ -544,7 +561,7 @@ function CreateClientModal({
                           setForm({ ...form, services: form.services.filter((s) => s !== service) });
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                     />
                     <span className="text-sm text-gray-700">{service}</span>
                   </label>
@@ -562,10 +579,30 @@ function CreateClientModal({
                 onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="0.00"
               />
             </div>
+
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Продавец
+                </label>
+                <select
+                  value={form.soldById}
+                  onChange={(e) => setForm({ ...form, soldById: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">Не указан</option>
+                  {salesManagers.map((sm) => (
+                    <option key={sm.id} value={sm.id}>
+                      {sm.fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -575,7 +612,7 @@ function CreateClientModal({
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="Дополнительная информация..."
               />
             </div>
@@ -591,7 +628,7 @@ function CreateClientModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium"
               >
                 {submitting ? 'Сохранение...' : 'Создать'}
               </button>

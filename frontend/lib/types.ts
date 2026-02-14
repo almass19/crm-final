@@ -21,6 +21,8 @@ export interface Client {
   paymentAmount: number | null;
   status: ClientStatus;
   archived: boolean;
+  soldById: string | null;
+  soldBy?: { fullName: string } | null;
   createdById: string;
   createdBy?: { fullName: string };
   assignedToId: string | null;

@@ -74,7 +74,7 @@ export default function NewsPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function NewsPage() {
           {isAdmin && (
             <button
               onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors text-sm"
             >
               Создать публикацию
             </button>
@@ -99,7 +99,7 @@ export default function NewsPage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
           </div>
         ) : publications.length === 0 ? (
           <div className="text-center py-12 text-gray-500">Публикаций пока нет</div>
@@ -158,7 +158,7 @@ export default function NewsPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="Заголовок публикации"
                 />
               </div>
@@ -170,7 +170,7 @@ export default function NewsPage() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
                   placeholder="Текст публикации..."
                 />
               </div>
@@ -189,7 +189,7 @@ export default function NewsPage() {
               <button
                 onClick={handleCreate}
                 disabled={submitting || !title.trim() || !content.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 disabled:opacity-50 text-sm"
               >
                 {submitting ? 'Публикация...' : 'Опубликовать'}
               </button>

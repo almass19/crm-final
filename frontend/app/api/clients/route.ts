@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         created_by:profiles!clients_created_by_id_fkey(full_name),
+        sold_by:profiles!clients_sold_by_id_fkey(full_name),
         assigned_to:profiles!clients_assigned_to_id_fkey(full_name),
         designer:profiles!clients_designer_id_fkey(full_name)
       `)
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
-    if (user.role !== 'SALES_MANAGER') {
+    if (user.role !== 'SALES_MANAGER' && user.role !== 'ADMIN') {
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
     }
 
@@ -133,10 +134,12 @@ export async function POST(request: Request) {
         notes: body.notes || null,
         payment_amount: body.paymentAmount ?? null,
         created_by_id: user.id,
+        sold_by_id: body.soldById || (user.role === 'SALES_MANAGER' ? user.id : null),
       })
       .select(`
         *,
         created_by:profiles!clients_created_by_id_fkey(full_name),
+        sold_by:profiles!clients_sold_by_id_fkey(full_name),
         assigned_to:profiles!clients_assigned_to_id_fkey(full_name),
         designer:profiles!clients_designer_id_fkey(full_name)
       `)

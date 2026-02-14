@@ -137,7 +137,7 @@ export default function UsersPage() {
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
                           onBlur={() => setEditingUserId(null)}
                           autoFocus
-                          className="px-2 py-1 border border-blue-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-2 py-1 border border-amber-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                         >
                           <option value="" disabled>
                             Выберите роль
@@ -165,7 +165,7 @@ export default function UsersPage() {
                       {u.id !== user.id && editingUserId !== u.id && (
                         <button
                           onClick={() => setEditingUserId(u.id)}
-                          className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                          className="text-sm text-amber-600 hover:text-amber-800 transition-colors"
                         >
                           Изменить роль
                         </button>

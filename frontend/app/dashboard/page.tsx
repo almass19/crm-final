@@ -128,7 +128,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 {getRoleDashboardTitle()}
               </h2>
-              <div className="text-4xl font-bold text-blue-600">
+              <div className="text-4xl font-bold text-amber-600">
                 {dashboardData.count}
               </div>
               <p className="text-sm text-gray-500 mt-1">

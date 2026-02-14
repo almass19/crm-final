@@ -58,6 +58,7 @@ create table clients (
   assigned_at timestamptz,
   assignment_seen boolean default false not null,
 
+  sold_by_id uuid references profiles(id),
   designer_id uuid references profiles(id),
   designer_assigned_at timestamptz,
   designer_assignment_seen boolean default false not null,
@@ -137,6 +138,7 @@ create table payments (
 -- =============================================================
 create index idx_clients_created_by on clients(created_by_id);
 create index idx_clients_assigned_to on clients(assigned_to_id);
+create index idx_clients_sold_by on clients(sold_by_id);
 create index idx_clients_designer on clients(designer_id);
 create index idx_clients_status on clients(status);
 create index idx_clients_archived on clients(archived);
@@ -252,7 +254,7 @@ create policy "clients_select" on clients for select using (
 );
 create policy "clients_insert" on clients for insert
   with check (
-    exists (select 1 from profiles where id = auth.uid() and role = 'SALES_MANAGER')
+    exists (select 1 from profiles where id = auth.uid() and role in ('SALES_MANAGER', 'ADMIN'))
   );
 create policy "clients_update" on clients for update using (true);
 

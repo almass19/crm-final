@@ -79,7 +79,7 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="relative p-2 text-gray-300 hover:text-amber-400 transition-colors"
         title="Уведомления"
       >
         <svg
@@ -110,7 +110,7 @@ export default function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-amber-600 hover:text-amber-800"
               >
                 Прочитать все
               </button>
@@ -127,7 +127,7 @@ export default function NotificationBell() {
                   key={n.id}
                   onClick={() => handleClick(n)}
                   className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
-                    !n.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''
+                    !n.isRead ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''
                   }`}
                 >
                   <div className="text-sm font-medium text-gray-900">{n.title}</div>

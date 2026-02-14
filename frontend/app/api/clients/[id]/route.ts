@@ -25,6 +25,7 @@ export async function GET(
       .select(`
         *,
         created_by:profiles!clients_created_by_id_fkey(id, full_name, role),
+        sold_by:profiles!clients_sold_by_id_fkey(id, full_name),
         assigned_to:profiles!clients_assigned_to_id_fkey(id, full_name, role),
         designer:profiles!clients_designer_id_fkey(id, full_name, role),
         assignment_history(
@@ -125,6 +126,7 @@ export async function PATCH(
       .select(`
         *,
         created_by:profiles!clients_created_by_id_fkey(full_name),
+        sold_by:profiles!clients_sold_by_id_fkey(full_name),
         assigned_to:profiles!clients_assigned_to_id_fkey(full_name),
         designer:profiles!clients_designer_id_fkey(full_name)
       `)

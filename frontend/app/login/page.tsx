@@ -59,7 +59,7 @@ export default function LoginPage() {
             onClick={() => switchTab('login')}
             className={`flex-1 pb-2 text-sm font-medium transition-colors ${
               activeTab === 'login'
-                ? 'text-blue-600 border-b-2 border-blue-600'
+                ? 'text-amber-600 border-b-2 border-amber-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -69,7 +69,7 @@ export default function LoginPage() {
             onClick={() => switchTab('register')}
             className={`flex-1 pb-2 text-sm font-medium transition-colors ${
               activeTab === 'register'
-                ? 'text-blue-600 border-b-2 border-blue-600'
+                ? 'text-amber-600 border-b-2 border-amber-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="user@crm.local"
               />
             </div>
@@ -108,14 +108,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+              className="w-full py-2 px-4 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? 'Вход...' : 'Войти'}
             </button>
@@ -131,7 +131,7 @@ export default function LoginPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="Иванов Иван Иванович"
               />
             </div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="user@example.com"
               />
             </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="Минимум 6 символов"
               />
             </div>
@@ -168,7 +168,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+              className="w-full py-2 px-4 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors font-medium"
             >
               {loading ? 'Регистрация...' : 'Зарегистрироваться'}
             </button>

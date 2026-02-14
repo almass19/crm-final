@@ -131,7 +131,7 @@ export default function TasksPage() {
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 transition-colors text-sm font-medium"
             >
               + Создать задачу
             </button>
@@ -197,7 +197,7 @@ export default function TasksPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => router.push(`/clients/${task.client.id}`)}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-amber-600 hover:text-amber-800"
                       >
                         {task.client.fullName || task.client.companyName}
                       </button>
@@ -345,7 +345,7 @@ function CreateTaskModal({
               <select
                 value={form.clientId}
                 onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="">Выберите клиента</option>
                 {clients.map((c) => (
@@ -364,7 +364,7 @@ function CreateTaskModal({
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="Название задачи"
               />
             </div>
@@ -377,7 +377,7 @@ function CreateTaskModal({
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="Описание задачи..."
               />
             </div>
@@ -416,7 +416,7 @@ function CreateTaskModal({
               <select
                 value={form.assigneeId}
                 onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="">Не назначен</option>
                 {users.map((u) => (
@@ -435,7 +435,7 @@ function CreateTaskModal({
                 type="date"
                 value={form.dueDate}
                 onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
 
@@ -450,7 +450,7 @@ function CreateTaskModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium"
               >
                 {submitting ? 'Создание...' : 'Создать'}
               </button>
