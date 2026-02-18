@@ -33,12 +33,9 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-
     const interval = setInterval(fetchNotifications, 30000);
-
     const onFocus = () => fetchNotifications();
     window.addEventListener('focus', onFocus);
-
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
@@ -61,7 +58,7 @@ export default function NotificationBell() {
     if (!notification.isRead) {
       await api.markNotificationRead(notification.id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)),
+        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
       );
     }
     setOpen(false);
@@ -79,45 +76,44 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-gray-300 hover:text-amber-400 transition-colors"
+        className="relative p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-colors"
         title="Уведомления"
       >
         <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
+          className="w-5 h-5"
           fill="none"
           viewBox="0 0 24 24"
+          strokeWidth={1.5}
           stroke="currentColor"
-          strokeWidth={2}
         >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
+          <span className="absolute top-1 right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto">
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <span className="font-semibold text-sm text-gray-900">Уведомления</span>
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 z-50 max-h-96 overflow-y-auto">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+            <span className="font-semibold text-sm text-slate-900">Уведомления</span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-amber-600 hover:text-amber-800"
+                className="text-xs text-primary hover:underline"
               >
                 Прочитать все
               </button>
             )}
           </div>
           {notifications.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-gray-500">
+            <div className="px-4 py-6 text-center text-sm text-slate-500">
               Нет уведомлений
             </div>
           ) : (
@@ -126,13 +122,13 @@ export default function NotificationBell() {
                 <button
                   key={n.id}
                   onClick={() => handleClick(n)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b last:border-b-0 ${
-                    !n.isRead ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''
+                  className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 ${
+                    !n.isRead ? 'border-l-4 border-l-primary bg-primary/5' : ''
                   }`}
                 >
-                  <div className="text-sm font-medium text-gray-900">{n.title}</div>
-                  <div className="text-sm text-gray-600 mt-0.5">{n.message}</div>
-                  <div className="text-xs text-gray-400 mt-1">{timeAgo(n.createdAt)}</div>
+                  <div className="text-sm font-medium text-slate-900">{n.title}</div>
+                  <div className="text-sm text-slate-600 mt-0.5">{n.message}</div>
+                  <div className="text-xs text-slate-400 mt-1">{timeAgo(n.createdAt)}</div>
                 </button>
               ))}
             </div>

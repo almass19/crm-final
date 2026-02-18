@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       // Clients created this month
       supabase
         .from('clients')
-        .select('id, created_by_id')
+        .select('id, created_by_id, payment_amount')
         .eq('archived', false)
         .gte('created_at', startDate)
         .lte('created_at', endDate),
@@ -77,7 +77,9 @@ export async function GET(request: NextRequest) {
     // Metric cards
     const totalClients = allClients.length;
     const newClientsThisMonth = newClients.length;
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const paymentsRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const clientsRevenue = newClients.reduce((sum, c) => sum + (Number(c.payment_amount) || 0), 0);
+    const totalRevenue = paymentsRevenue + clientsRevenue;
     const completedTasks = tasks.filter(t => t.status === 'DONE').length;
 
     // Clients by status

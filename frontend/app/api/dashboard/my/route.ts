@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
           .order('designer_assigned_at', { ascending: false });
         break;
 
-      case 'ADMIN':
       case 'SALES_MANAGER':
         query = supabase
           .from('clients')
@@ -70,6 +69,41 @@ export async function GET(request: NextRequest) {
           .lte('designer_assigned_at', endDate)
           .order('designer_assigned_at', { ascending: false });
         break;
+
+      case 'ADMIN': {
+        const [createdRes, specialistRes] = await Promise.all([
+          supabase
+            .from('clients')
+            .select(clientSelect)
+            .eq('created_by_id', user.id)
+            .gte('created_at', startDate)
+            .lte('created_at', endDate),
+          supabase
+            .from('clients')
+            .select(clientSelect)
+            .eq('assigned_to_id', user.id)
+            .gte('assigned_at', startDate)
+            .lte('assigned_at', endDate),
+        ]);
+        if (createdRes.error) throw createdRes.error;
+        if (specialistRes.error) throw specialistRes.error;
+
+        // Merge, deduplicate by id
+        const all = [...(createdRes.data || []), ...(specialistRes.data || [])];
+        const seen = new Set<string>();
+        const merged = all.filter((c) => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+        merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        return NextResponse.json({
+          count: merged.length,
+          createdCount: (createdRes.data || []).length,
+          specialistCount: (specialistRes.data || []).length,
+          clients: snakeToCamel(merged),
+          month,
+          year,
+          role: user.role,
+        });
+      }
 
       default:
         return NextResponse.json({

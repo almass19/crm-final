@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
-import Navbar from '@/components/Navbar';
+import AppShell from '@/components/AppShell';
+import NotificationBell from '@/components/NotificationBell';
 import { Publication } from '@/lib/types';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -73,8 +74,8 @@ export default function NewsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
+      <div className="min-h-screen flex items-center justify-center bg-background-light">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -82,53 +83,66 @@ export default function NewsPage() {
   const isAdmin = user.role === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="max-w-4xl mx-auto py-8 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Новости</h1>
+    <AppShell>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div />
+        <div className="flex items-center gap-3">
+          <NotificationBell />
           {isAdmin && (
             <button
               onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold shadow-sm shadow-primary/20"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
               Создать публикацию
             </button>
           )}
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-8 max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Новости</h1>
+          <p className="text-slate-500 mt-1">Публикации и объявления для команды</p>
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600" />
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : publications.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">Публикаций пока нет</div>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
+            Публикаций пока нет
+          </div>
         ) : (
           <div className="space-y-4">
             {publications.map((pub) => (
-              <div key={pub.id} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-start justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">{pub.title}</h2>
+              <div key={pub.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <h2 className="text-lg font-bold text-slate-900">{pub.title}</h2>
                   {isAdmin && pub.authorId === user.id && (
                     <button
                       onClick={() => handleDelete(pub.id)}
-                      className="text-sm text-red-500 hover:text-red-700 ml-4"
+                      className="text-sm text-red-500 hover:text-red-700 flex-shrink-0 font-medium"
                     >
                       Удалить
                     </button>
                   )}
                 </div>
-                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{pub.content}</p>
-                <div className="mt-4 flex items-center text-sm text-gray-500">
-                  <span>
-                    {pub.author?.fullName || 'Неизвестный'}
-                    {pub.author?.role && (
-                      <span className="ml-1 text-gray-400">
-                        ({ROLE_LABELS[pub.author.role] || pub.author.role})
-                      </span>
-                    )}
-                  </span>
-                  <span className="mx-2">&middot;</span>
+                <p className="mt-3 text-slate-700 whitespace-pre-wrap text-sm leading-relaxed">{pub.content}</p>
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center text-xs text-slate-500 gap-2">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]">
+                    {pub.author?.fullName?.[0] || '?'}
+                  </div>
+                  <span className="font-medium text-slate-700">{pub.author?.fullName || 'Неизвестный'}</span>
+                  {pub.author?.role && (
+                    <span className="text-slate-400">({ROLE_LABELS[pub.author.role] || pub.author.role})</span>
+                  )}
+                  <span className="text-slate-300">·</span>
                   <span>{new Date(pub.createdAt).toLocaleDateString('ru-RU', {
                     day: 'numeric',
                     month: 'long',
@@ -141,55 +155,55 @@ export default function NewsPage() {
             ))}
           </div>
         )}
-      </main>
+      </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
-            <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-semibold">Новая публикация</h3>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Новая публикация</h3>
+              <button
+                onClick={() => { setShowModal(false); setTitle(''); setContent(''); }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Заголовок
-                </label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Заголовок</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                   placeholder="Заголовок публикации"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Содержание
-                </label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Содержание</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
                   placeholder="Текст публикации..."
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t flex justify-end space-x-3">
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowModal(false);
-                  setTitle('');
-                  setContent('');
-                }}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+                onClick={() => { setShowModal(false); setTitle(''); setContent(''); }}
+                className="px-4 py-2 text-sm text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors font-medium"
               >
                 Отмена
               </button>
               <button
                 onClick={handleCreate}
                 disabled={submitting || !title.trim() || !content.trim()}
-                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 disabled:opacity-50 text-sm"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 text-sm font-semibold transition-opacity"
               >
                 {submitting ? 'Публикация...' : 'Опубликовать'}
               </button>
@@ -197,6 +211,6 @@ export default function NewsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

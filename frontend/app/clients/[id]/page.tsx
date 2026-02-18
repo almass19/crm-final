@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { STATUS_LABELS, ROLE_LABELS, SERVICE_OPTIONS } from '@/lib/constants';
-import Navbar from '@/components/Navbar';
+import AppShell from '@/components/AppShell';
+import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
 import TaskPriorityBadge from '@/components/TaskPriorityBadge';
 import TaskStatusBadge from '@/components/TaskStatusBadge';
@@ -261,16 +262,16 @@ export default function ClientDetailPage() {
 
   if (authLoading || loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Загрузка...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background-light">
+        <div className="text-slate-500">Загрузка...</div>
       </div>
     );
   }
 
   if (!client) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Клиент не найден</div>
+      <div className="min-h-screen flex items-center justify-center bg-background-light">
+        <div className="text-slate-500">Клиент не найден</div>
       </div>
     );
   }
@@ -296,40 +297,42 @@ export default function ClientDetailPage() {
     !client.designerAssignmentSeen;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppShell>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <button
           onClick={() => router.push('/clients')}
-          className="text-sm text-amber-600 hover:text-amber-800 mb-4 inline-block"
+          className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium"
         >
-          &larr; Назад к списку
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Назад к списку
         </button>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+        </div>
+      </div>
 
+      <div className="max-w-5xl mx-auto px-8 py-8">
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
-            {error}
-            <button
-              onClick={() => setError('')}
-              className="ml-2 text-red-500 hover:text-red-700"
-            >
-              ✕
-            </button>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Client Info */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">
+                  <h1 className="text-xl font-bold text-slate-900">
                     {client.fullName || client.companyName}
                   </h1>
                   {client.fullName && client.companyName && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       {client.companyName}
                     </p>
                   )}
@@ -339,42 +342,42 @@ export default function ClientDetailPage() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Телефон:</span>
+                  <span className="text-slate-500">Телефон:</span>
                   <p className="font-medium">{client.phone}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Название группы:</span>
+                  <span className="text-slate-500">Название группы:</span>
                   <p className="font-medium">{client.groupName || '—'}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Услуги:</span>
+                  <span className="text-slate-500">Услуги:</span>
                   <p className="font-medium">{client.services?.join(', ') || '—'}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Дата создания:</span>
+                  <span className="text-slate-500">Дата создания:</span>
                   <p className="font-medium">
                     {new Date(client.createdAt).toLocaleDateString('ru-RU')}
                   </p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Продавец:</span>
+                  <span className="text-slate-500">Продавец:</span>
                   <p className="font-medium">{client.soldBy?.fullName || '—'}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Специалист:</span>
+                  <span className="text-slate-500">Специалист:</span>
                   <p className="font-medium">
                     {client.assignedTo?.fullName || 'Не назначен'}
                   </p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Дизайнер:</span>
+                  <span className="text-slate-500">Дизайнер:</span>
                   <p className="font-medium">
                     {client.designer?.fullName || 'Не назначен'}
                   </p>
                 </div>
                 {canSeePayment && (
                   <div>
-                    <span className="text-gray-500">Сумма оплаты:</span>
+                    <span className="text-slate-500">Сумма оплаты:</span>
                     <p className="font-medium">
                       {client.paymentAmount
                         ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸`
@@ -382,7 +385,7 @@ export default function ClientDetailPage() {
                       {canEditPayment && (
                         <button
                           onClick={openPaymentModal}
-                          className="ml-2 text-amber-600 hover:text-amber-800 text-xs"
+                          className="ml-2 text-primary hover:underline text-xs"
                         >
                           Изменить
                         </button>
@@ -394,8 +397,8 @@ export default function ClientDetailPage() {
 
               {client.notes && (
                 <div className="mt-4 pt-4 border-t">
-                  <span className="text-sm text-gray-500">Заметки:</span>
-                  <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+                  <span className="text-sm text-slate-500">Заметки:</span>
+                  <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
                     {client.notes}
                   </p>
                 </div>
@@ -434,13 +437,13 @@ export default function ClientDetailPage() {
                   <>
                     <button
                       onClick={() => setShowAssignModal(true)}
-                      className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 transition-colors text-sm font-medium"
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium"
                     >
                       Назначить специалиста
                     </button>
                     <button
                       onClick={() => setShowStatusModal(true)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
                     >
                       Изменить статус
                     </button>
@@ -465,32 +468,32 @@ export default function ClientDetailPage() {
             </div>
 
             {/* Comments */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">
                 Комментарии
               </h2>
 
               <div className="space-y-4 mb-6">
                 {comments.length === 0 ? (
-                  <p className="text-sm text-gray-500">Комментариев пока нет</p>
+                  <p className="text-sm text-slate-500">Комментариев пока нет</p>
                 ) : (
                   comments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="border-l-2 border-gray-200 pl-4 py-1"
+                      className="border-l-2 border-slate-200 pl-4 py-1"
                     >
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span className="font-medium text-gray-700">
+                      <div className="flex items-center space-x-2 text-xs text-slate-500">
+                        <span className="font-medium text-slate-700">
                           {comment.author.fullName}
                         </span>
-                        <span className="px-1.5 py-0.5 bg-gray-100 rounded">
+                        <span className="px-1.5 py-0.5 bg-slate-100 rounded">
                           {ROLE_LABELS[comment.author.role] || comment.author.role}
                         </span>
                         <span>
                           {new Date(comment.createdAt).toLocaleString('ru-RU')}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+                      <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
                         {comment.content}
                       </p>
                     </div>
@@ -503,13 +506,13 @@ export default function ClientDetailPage() {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={2}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
                   placeholder="Напишите комментарий..."
                 />
                 <button
                   onClick={handleAddComment}
                   disabled={submittingComment || !newComment.trim()}
-                  className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium self-end"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-colors text-sm font-medium self-end"
                 >
                   {submittingComment ? '...' : 'Отправить'}
                 </button>
@@ -518,34 +521,34 @@ export default function ClientDetailPage() {
 
             {/* Tasks - hidden for SALES_MANAGER */}
             {!isSalesManager && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Задачи</h2>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4">Задачи</h2>
 
                 {tasks.length === 0 ? (
-                  <p className="text-sm text-gray-500">Задач пока нет</p>
+                  <p className="text-sm text-slate-500">Задач пока нет</p>
                 ) : (
                   <div className="space-y-3">
                     {tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="border rounded-md p-3 hover:bg-gray-50"
+                        className="border rounded-md p-3 hover:bg-slate-50"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-center space-x-2">
                             <TaskPriorityBadge priority={task.priority} showPercentage={false} />
-                            <span className="font-medium text-sm text-gray-900">
+                            <span className="font-medium text-sm text-slate-900">
                               {task.title}
                             </span>
                           </div>
                           <TaskStatusBadge status={task.status} />
                         </div>
                         {task.description && (
-                          <p className="text-xs text-gray-500 mt-1 ml-7">
+                          <p className="text-xs text-slate-500 mt-1 ml-7">
                             {task.description}
                           </p>
                         )}
                         <div className="flex items-center justify-between mt-2 ml-7">
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-slate-400">
                             {task.assignee ? (
                               <span>Исполнитель: {task.assignee.fullName}</span>
                             ) : (
@@ -585,9 +588,9 @@ export default function ClientDetailPage() {
 
             {/* Creatives */}
             {canSeeCreatives && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Креативы</h2>
+                  <h2 className="text-lg font-bold text-slate-900">Креативы</h2>
                   {canAddCreative && (
                     <button
                       onClick={() => setShowAddCreativeModal(true)}
@@ -598,25 +601,25 @@ export default function ClientDetailPage() {
                   )}
                 </div>
                 {creatives.length === 0 ? (
-                  <p className="text-sm text-gray-500">Записей пока нет</p>
+                  <p className="text-sm text-slate-500">Записей пока нет</p>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-slate-200 text-sm">
+                      <thead className="bg-slate-50">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Месяц</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Количество</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Автор</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Месяц</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Количество</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Автор</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Дата</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-slate-200">
                         {creatives.map((c) => (
                           <tr key={c.id}>
-                            <td className="px-4 py-2 text-gray-700">{c.month}</td>
-                            <td className="px-4 py-2 text-gray-700">{c.count}</td>
-                            <td className="px-4 py-2 text-gray-500">{c.designer?.fullName || '—'}</td>
-                            <td className="px-4 py-2 text-gray-400">
+                            <td className="px-4 py-2 text-slate-700">{c.month}</td>
+                            <td className="px-4 py-2 text-slate-700">{c.count}</td>
+                            <td className="px-4 py-2 text-slate-500">{c.designer?.fullName || '—'}</td>
+                            <td className="px-4 py-2 text-slate-400">
                               {new Date(c.createdAt).toLocaleDateString('ru-RU')}
                             </td>
                           </tr>
@@ -633,9 +636,9 @@ export default function ClientDetailPage() {
           <div className="space-y-6">
             {/* Payments - Only for Admin and Sales Manager */}
             {(isAdmin || isSalesManager) && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Платежи</h2>
+                  <h2 className="text-lg font-bold text-slate-900">Платежи</h2>
                   <button
                     onClick={() => setShowAddPaymentModal(true)}
                     className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
@@ -644,17 +647,17 @@ export default function ClientDetailPage() {
                   </button>
                 </div>
                 {payments.length === 0 ? (
-                  <p className="text-sm text-gray-500">Платежей пока нет</p>
+                  <p className="text-sm text-slate-500">Платежей пока нет</p>
                 ) : (
                   <div className="space-y-3">
                     {payments.map((p) => (
                       <div key={p.id} className="text-sm border-b pb-3 last:border-0">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium text-gray-700">
+                            <p className="font-medium text-slate-700">
                               {p.amount.toLocaleString('ru-RU')} ₸
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                               {p.month}
                             </p>
                           </div>
@@ -668,7 +671,7 @@ export default function ClientDetailPage() {
                             {p.isRenewal ? 'Продление' : 'Первичная'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                           {new Date(p.createdAt).toLocaleDateString('ru-RU')}
                         </p>
                       </div>
@@ -678,69 +681,41 @@ export default function ClientDetailPage() {
               </div>
             )}
 
-            {/* Assignment History */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                История назначений
-              </h2>
-              {client.assignmentHistory.length === 0 ? (
-                <p className="text-sm text-gray-500">Назначений не было</p>
-              ) : (
-                <div className="space-y-3">
-                  {client.assignmentHistory.map((h) => (
-                    <div key={h.id} className="text-sm border-b pb-3 last:border-0">
-                      <p className="font-medium text-gray-700">
-                        {h.type === 'DESIGNER' ? 'Дизайнер: ' : 'Специалист: '}
-                        {h.type === 'DESIGNER'
-                          ? h.designer?.fullName
-                          : h.specialist?.fullName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Назначил: {h.assignedBy.fullName}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(h.assignedAt).toLocaleString('ru-RU')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
       {/* Assign Specialist Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-slate-900">
                 Назначить специалиста
               </h2>
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
             </div>
             <div className="space-y-2">
               {specialists.length === 0 ? (
-                <p className="text-sm text-gray-500">Нет доступных специалистов</p>
+                <p className="text-sm text-slate-500">Нет доступных специалистов</p>
               ) : (
                 specialists.map((spec) => (
                   <button
                     key={spec.id}
                     onClick={() => handleAssignSpecialist(spec.id)}
-                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-amber-50 hover:border-amber-300 transition-colors ${
+                    className={`w-full text-left px-4 py-3 border rounded-md hover:bg-primary/5 hover:border-primary/30 transition-colors ${
                       client.assignedTo?.id === spec.id
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-gray-200'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-slate-200'
                     }`}
                   >
                     <div className="font-medium text-sm">{spec.fullName}</div>
-                    <div className="text-xs text-gray-500">{spec.email}</div>
+                    <div className="text-xs text-slate-500">{spec.email}</div>
                   </button>
                 ))
               )}
@@ -751,22 +726,22 @@ export default function ClientDetailPage() {
 
       {/* Assign Designer Modal */}
       {showAssignDesignerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-slate-900">
                 Назначить дизайнера
               </h2>
               <button
                 onClick={() => setShowAssignDesignerModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
             </div>
             <div className="space-y-2">
               {designers.length === 0 ? (
-                <p className="text-sm text-gray-500">Нет доступных дизайнеров</p>
+                <p className="text-sm text-slate-500">Нет доступных дизайнеров</p>
               ) : (
                 designers.map((des) => (
                   <button
@@ -775,11 +750,11 @@ export default function ClientDetailPage() {
                     className={`w-full text-left px-4 py-3 border rounded-md hover:bg-purple-50 hover:border-purple-300 transition-colors ${
                       client.designer?.id === des.id
                         ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200'
+                        : 'border-slate-200'
                     }`}
                   >
                     <div className="font-medium text-sm">{des.fullName}</div>
-                    <div className="text-xs text-gray-500">{des.email}</div>
+                    <div className="text-xs text-slate-500">{des.email}</div>
                   </button>
                 ))
               )}
@@ -790,15 +765,15 @@ export default function ClientDetailPage() {
 
       {/* Status Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-slate-900">
                 Изменить статус
               </h2>
               <button
                 onClick={() => setShowStatusModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
@@ -808,15 +783,15 @@ export default function ClientDetailPage() {
                 <button
                   key={key}
                   onClick={() => handleStatusChange(key)}
-                  className={`w-full text-left px-4 py-3 border rounded-md hover:bg-amber-50 hover:border-amber-300 transition-colors text-sm ${
+                  className={`w-full text-left px-4 py-3 border rounded-md hover:bg-primary/5 hover:border-primary/30 transition-colors text-sm ${
                     client.status === key
-                      ? 'border-amber-500 bg-amber-50 font-medium'
-                      : 'border-gray-200'
+                      ? 'border-primary bg-primary/5 font-medium'
+                      : 'border-slate-200'
                   }`}
                 >
                   {label}
                   {client.status === key && (
-                    <span className="ml-2 text-xs text-amber-600">
+                    <span className="ml-2 text-xs text-primary">
                       (текущий)
                     </span>
                   )}
@@ -829,22 +804,22 @@ export default function ClientDetailPage() {
 
       {/* Payment Modal (for paymentAmount field on Client) */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-slate-900">
                 Сумма оплаты
               </h2>
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Сумма (₸)
                 </label>
                 <input
@@ -853,20 +828,20 @@ export default function ClientDetailPage() {
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
                   placeholder="0.00"
                 />
               </div>
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50"
                 >
                   Отмена
                 </button>
                 <button
                   onClick={handlePaymentUpdate}
-                  className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90"
                 >
                   Сохранить
                 </button>
@@ -912,7 +887,7 @@ export default function ClientDetailPage() {
         />
       )}
 
-    </div>
+    </AppShell>
   );
 }
 
@@ -963,11 +938,11 @@ function AddPaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-gray-900">Добавить платёж</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-lg font-bold text-slate-900">Добавить платёж</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             ✕
           </button>
         </div>
@@ -980,7 +955,7 @@ function AddPaymentModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               Сумма (₸) *
             </label>
             <input
@@ -988,25 +963,25 @@ function AddPaymentModal({
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="100000"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               Месяц *
             </label>
             <input
               type="month"
               value={form.month}
               onChange={(e) => setForm({ ...form, month: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Тип платежа *
             </label>
             <div className="flex space-x-4">
@@ -1037,7 +1012,7 @@ function AddPaymentModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors text-sm"
+              className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-sm"
             >
               Отмена
             </button>
@@ -1101,12 +1076,12 @@ function EditClientModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Редактировать клиента</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <h2 className="text-lg font-bold text-slate-900">Редактировать клиента</h2>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
               ✕
             </button>
           </div>
@@ -1119,47 +1094,47 @@ function EditClientModal({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ФИО</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">ФИО</label>
               <input
                 type="text"
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Компания</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Компания</label>
               <input
                 type="text"
                 value={form.companyName}
                 onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Телефон</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Название группы</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Название группы</label>
               <input
                 type="text"
                 value={form.groupName}
                 onChange={(e) => setForm({ ...form, groupName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Услуги</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Услуги</label>
               <div className="space-y-2">
                 {SERVICE_OPTIONS.map((service) => (
                   <label key={service} className="flex items-center space-x-2 cursor-pointer">
@@ -1173,21 +1148,21 @@ function EditClientModal({
                           setForm({ ...form, services: form.services.filter((s) => s !== service) });
                         }
                       }}
-                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                      className="rounded border-slate-300 text-primary focus:ring-primary/40"
                     />
-                    <span className="text-sm text-gray-700">{service}</span>
+                    <span className="text-sm text-slate-700">{service}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Заметки</label>
               <textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
 
@@ -1195,14 +1170,14 @@ function EditClientModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-sm"
               >
                 Отмена
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-md hover:bg-amber-600 disabled:opacity-50 transition-colors text-sm font-medium"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-colors text-sm font-medium"
               >
                 {submitting ? 'Сохранение...' : 'Сохранить'}
               </button>
@@ -1259,11 +1234,11 @@ function AddCreativeModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-gray-900">Добавить креативы</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-lg font-bold text-slate-900">Добавить креативы</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             ✕
           </button>
         </div>
@@ -1276,7 +1251,7 @@ function AddCreativeModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               Количество *
             </label>
             <input
@@ -1284,20 +1259,20 @@ function AddCreativeModal({
               value={form.count}
               onChange={(e) => setForm({ ...form, count: e.target.value })}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="10"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
               Месяц *
             </label>
             <input
               type="month"
               value={form.month}
               onChange={(e) => setForm({ ...form, month: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
 
@@ -1305,7 +1280,7 @@ function AddCreativeModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors text-sm"
+              className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-sm"
             >
               Отмена
             </button>
