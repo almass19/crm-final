@@ -66,7 +66,7 @@ export default function ClientsPage() {
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
       if (showUnassigned) params.unassigned = 'true';
-      if (salesManagerFilter) params.createdById = salesManagerFilter;
+      if (salesManagerFilter) params.soldById = salesManagerFilter;
       if (specialistFilter) params.specialistId = specialistFilter;
       const [sortBy, sortOrder] = sortOption.split(':');
       params.sortBy = sortBy;

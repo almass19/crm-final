@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const status = sp.get('status');
     const unassigned = sp.get('unassigned') === 'true';
     const createdById = sp.get('createdById');
+    const soldById = sp.get('soldById');
     const specialistId = sp.get('specialistId');
     const sortBy = sp.get('sortBy') || 'created_at';
     const sortOrder = sp.get('sortOrder') || 'desc';
@@ -69,6 +70,10 @@ export async function GET(request: NextRequest) {
 
     if (createdById && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
       query = query.eq('created_by_id', createdById);
+    }
+
+    if (soldById && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
+      query = query.eq('sold_by_id', soldById);
     }
 
     if (specialistId && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
