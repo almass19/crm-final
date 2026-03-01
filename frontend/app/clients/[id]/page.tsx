@@ -26,7 +26,8 @@ interface Client {
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
-  soldBy: { fullName: string } | null;
+  soldById: string | null;
+  soldBy: { id: string; fullName: string } | null;
   createdBy: { id: string; fullName: string; role: string };
   assignedTo: { id: string; fullName: string; role: string } | null;
   designer: { id: string; fullName: string; role: string } | null;
@@ -867,6 +868,7 @@ export default function ClientDetailPage() {
       {showEditModal && client && (
         <EditClientModal
           client={client}
+          userRole={user?.role ?? null}
           onClose={() => setShowEditModal(false)}
           onSaved={() => {
             setShowEditModal(false);
@@ -1032,13 +1034,16 @@ function AddPaymentModal({
 
 function EditClientModal({
   client,
+  userRole,
   onClose,
   onSaved,
 }: {
   client: Client;
+  userRole: string | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const isAdmin = userRole === 'ADMIN';
   const [form, setForm] = useState({
     fullName: client.fullName || '',
     companyName: client.companyName || '',
@@ -1046,9 +1051,24 @@ function EditClientModal({
     groupName: client.groupName || '',
     services: client.services || [],
     notes: client.notes || '',
+    soldById: client.soldById || '',
   });
+  const [salesManagers, setSalesManagers] = useState<{ id: string; fullName: string }[]>([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      Promise.allSettled([api.getUsers('sales_manager'), api.getUsers('admin')])
+        .then((results) => {
+          const merged: { id: string; fullName: string }[] = results
+            .filter((r): r is PromiseFulfilledResult<{ id: string; fullName: string }[]> => r.status === 'fulfilled')
+            .flatMap((r) => r.value);
+          const unique = merged.filter((u, i, arr) => arr.findIndex((x) => x.id === u.id) === i);
+          setSalesManagers(unique);
+        });
+    }
+  }, [isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1059,14 +1079,16 @@ function EditClientModal({
     setError('');
     setSubmitting(true);
     try {
-      await api.updateClient(client.id, {
+      const payload: Record<string, unknown> = {
         fullName: form.fullName || null,
         companyName: form.companyName || null,
         phone: form.phone,
         groupName: form.groupName || null,
         services: form.services,
         notes: form.notes || null,
-      });
+      };
+      if (isAdmin) payload.soldById = form.soldById || null;
+      await api.updateClient(client.id, payload);
       onSaved();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения');
@@ -1165,6 +1187,22 @@ function EditClientModal({
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
+
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Продавец</label>
+                <select
+                  value={form.soldById}
+                  onChange={(e) => setForm({ ...form, soldById: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                >
+                  <option value="">Не указан</option>
+                  {salesManagers.map((sm) => (
+                    <option key={sm.id} value={sm.id}>{sm.fullName}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-3 pt-2">
               <button

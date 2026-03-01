@@ -94,6 +94,13 @@ export async function PATCH(
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
     }
 
+    if (body.soldById !== undefined && user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { message: 'Только администратор может менять продавца' },
+        { status: 403 },
+      );
+    }
+
     if (body.status && user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Только администратор может менять статус клиента' },
@@ -118,6 +125,7 @@ export async function PATCH(
     if (body.notes !== undefined) updateData.notes = body.notes;
     if (body.status !== undefined) updateData.status = body.status;
     if (body.paymentAmount !== undefined) updateData.payment_amount = body.paymentAmount;
+    if (body.soldById !== undefined) updateData.sold_by_id = body.soldById || null;
 
     const { data: updated, error } = await supabase
       .from('clients')
