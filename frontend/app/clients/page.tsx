@@ -333,6 +333,7 @@ export default function ClientsPage() {
         <CreateClientModal
           userRole={user.role}
           userId={user.id}
+          userName={user.fullName}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => { setShowCreateModal(false); fetchClients(); }}
         />
@@ -342,9 +343,9 @@ export default function ClientsPage() {
 }
 
 function CreateClientModal({
-  userRole, userId, onClose, onCreated,
+  userRole, userId, userName, onClose, onCreated,
 }: {
-  userRole: string | null; userId: string; onClose: () => void; onCreated: () => void;
+  userRole: string | null; userId: string; userName: string; onClose: () => void; onCreated: () => void;
 }) {
   const [form, setForm] = useState({
     fullName: '', companyName: '', phone: '', groupName: '',
@@ -358,11 +359,18 @@ function CreateClientModal({
 
   useEffect(() => {
     if (isAdmin) {
-      Promise.all([api.getUsers('sales_manager'), api.getUsers('admin')])
-        .then(([managers, admins]) => setSalesManagers([...managers, ...admins]))
-        .catch(() => {});
+      Promise.allSettled([api.getUsers('sales_manager'), api.getUsers('admin')])
+        .then((results) => {
+          const merged: { id: string; fullName: string }[] = results
+            .filter((r): r is PromiseFulfilledResult<{ id: string; fullName: string }[]> => r.status === 'fulfilled')
+            .flatMap((r) => r.value);
+          // Ensure current admin is always present, deduplicate by id
+          const withSelf = [{ id: userId, fullName: userName }, ...merged];
+          const unique = withSelf.filter((u, i, arr) => arr.findIndex((x) => x.id === u.id) === i);
+          setSalesManagers(unique);
+        });
     }
-  }, [isAdmin]);
+  }, [isAdmin, userId, userName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
