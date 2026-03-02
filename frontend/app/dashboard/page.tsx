@@ -18,6 +18,7 @@ interface DashboardClient {
   groupName: string | null;
   status: string;
   services: string[];
+  purchaseDate: string | null;
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
@@ -190,9 +191,7 @@ export default function DashboardPage() {
                           <StatusBadge status={client.status} />
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-500">
-                          {new Date(
-                            client.assignedAt || client.designerAssignedAt || client.createdAt
-                          ).toLocaleDateString('ru-RU')}
+                          {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : (client.assignedAt || client.designerAssignedAt ? new Date(client.assignedAt || client.designerAssignedAt!).toLocaleDateString('ru-RU') : '—')}
                         </td>
                       </tr>
                     ))}

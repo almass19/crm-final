@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(year, month - 1, 1).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
 
-    const clientSelect = 'id, full_name, company_name, phone, group_name, status, services, created_at, assigned_at, designer_assigned_at';
+    const clientSelect = 'id, full_name, company_name, phone, group_name, status, services, purchase_date, created_at, assigned_at, designer_assigned_at';
 
     let query;
 

@@ -15,10 +15,12 @@ interface Client {
   companyName: string | null;
   phone: string;
   groupName: string | null;
+  niche: string | null;
   services: string[];
   status: string;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
+  purchaseDate: string | null;
   createdAt: string;
   createdBy: { fullName: string };
   assignedTo: { fullName: string } | null;
@@ -54,6 +56,7 @@ export default function ClientsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [salesManagerFilter, setSalesManagerFilter] = useState('');
   const [specialistFilter, setSpecialistFilter] = useState('');
+  const [nicheFilter, setNicheFilter] = useState('');
   const [sortOption, setSortOption] = useState('createdAt:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
@@ -68,6 +71,7 @@ export default function ClientsPage() {
       if (showUnassigned) params.unassigned = 'true';
       if (salesManagerFilter) params.soldById = salesManagerFilter;
       if (specialistFilter) params.specialistId = specialistFilter;
+      if (nicheFilter) params.niche = nicheFilter;
       const [sortBy, sortOrder] = sortOption.split(':');
       params.sortBy = sortBy;
       params.sortOrder = sortOrder;
@@ -78,7 +82,7 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, search, statusFilter, showUnassigned, salesManagerFilter, specialistFilter, sortOption]);
+  }, [user, search, statusFilter, showUnassigned, salesManagerFilter, specialistFilter, nicheFilter, sortOption]);
 
   useEffect(() => {
     if (!authLoading && !user) { router.replace('/login'); return; }
@@ -140,10 +144,10 @@ export default function ClientsPage() {
 
   const clearFilters = () => {
     setSearch(''); setStatusFilter(''); setShowUnassigned(false);
-    setSalesManagerFilter(''); setSpecialistFilter(''); setSortOption('createdAt:desc');
+    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setSortOption('createdAt:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || sortOption !== 'createdAt:desc';
+  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || sortOption !== 'createdAt:desc';
 
   return (
     <AppShell>
@@ -229,6 +233,14 @@ export default function ClientsPage() {
                 ))}
               </select>
 
+              <input
+                type="text"
+                placeholder="Фильтр по нише..."
+                value={nicheFilter}
+                onChange={(e) => setNicheFilter(e.target.value)}
+                className={selectCls}
+              />
+
               {(isAdmin || isLeadDesigner) && (
                 <>
                   <select value={salesManagerFilter} onChange={(e) => setSalesManagerFilter(e.target.value)} className={selectCls}>
@@ -283,7 +295,7 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['Имя / Компания', 'Телефон', 'Группа', 'Услуги', 'Статус', 'Специалист', 'Дизайнер', 'Дата'].map((h) => (
+                  {['Имя / Компания', 'Телефон', 'Ниша', 'Группа', 'Услуги', 'Статус', 'Специалист', 'Дизайнер', 'Дата покупки'].map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -313,13 +325,14 @@ export default function ClientsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.niche || '—'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.groupName || '—'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500">{client.services?.join(', ') || '—'}</td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.designer?.fullName || '—'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {new Date(client.createdAt).toLocaleDateString('ru-RU')}
+                      {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
                   </tr>
                 ))}
@@ -350,7 +363,7 @@ function CreateClientModal({
   const [form, setForm] = useState({
     fullName: '', companyName: '', phone: '', groupName: '',
     services: [] as string[], notes: '', paymentAmount: '',
-    soldById: userRole === 'SALES_MANAGER' ? userId : '', createdAt: '',
+    soldById: userRole === 'SALES_MANAGER' ? userId : '', purchaseDate: '', niche: '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -384,11 +397,12 @@ function CreateClientModal({
       if (form.companyName) data.companyName = form.companyName;
       data.phone = form.phone;
       if (form.groupName) data.groupName = form.groupName;
+      if (form.niche) data.niche = form.niche;
       data.services = form.services;
       if (form.notes) data.notes = form.notes;
       if (form.paymentAmount) data.paymentAmount = parseFloat(form.paymentAmount);
       if (form.soldById) data.soldById = form.soldById;
-      if (isAdmin && form.createdAt) data.createdAt = form.createdAt;
+      if (form.purchaseDate) data.purchaseDate = form.purchaseDate;
       await api.createClient(data);
       onCreated();
     } catch (err: unknown) {
@@ -432,6 +446,10 @@ function CreateClientModal({
               <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required className={fieldCls} placeholder="+7 (999) 123-45-67" />
             </div>
             <div>
+              <label className={labelCls}>Ниша</label>
+              <input type="text" value={form.niche} onChange={(e) => setForm({ ...form, niche: e.target.value })} className={fieldCls} placeholder="Например: E-commerce, Медицина..." />
+            </div>
+            <div>
               <label className={labelCls}>Название группы</label>
               <input type="text" value={form.groupName} onChange={(e) => setForm({ ...form, groupName: e.target.value })} className={fieldCls} placeholder="Название группы" />
             </div>
@@ -460,20 +478,17 @@ function CreateClientModal({
             </div>
             {isAdmin && (
               <div>
-                <label className={labelCls}>Продавец</label>
+                <label className={labelCls}>Менеджер</label>
                 <select value={form.soldById} onChange={(e) => setForm({ ...form, soldById: e.target.value })} className={fieldCls}>
                   <option value="">Не указан</option>
                   {salesManagers.map((sm) => (<option key={sm.id} value={sm.id}>{sm.fullName}</option>))}
                 </select>
               </div>
             )}
-            {isAdmin && (
-              <div className="border-t border-slate-100 pt-4">
-                <label className={labelCls}>Дата создания</label>
-                <p className="text-xs text-slate-500 mb-2">Оставьте пустым для текущей даты</p>
-                <input type="datetime-local" value={form.createdAt} onChange={(e) => setForm({ ...form, createdAt: e.target.value })} className={fieldCls} />
-              </div>
-            )}
+            <div>
+              <label className={labelCls}>Дата покупки</label>
+              <input type="date" value={form.purchaseDate} onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })} className={fieldCls} />
+            </div>
             <div>
               <label className={labelCls}>Заметки</label>
               <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={fieldCls} placeholder="Дополнительная информация..." />

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const createdById = sp.get('createdById');
     const soldById = sp.get('soldById');
     const specialistId = sp.get('specialistId');
+    const niche = sp.get('niche');
     const sortBy = sp.get('sortBy') || 'created_at';
     const sortOrder = sp.get('sortOrder') || 'desc';
 
@@ -30,6 +31,8 @@ export async function GET(request: NextRequest) {
     const sortFieldMap: Record<string, string> = {
       createdAt: 'created_at',
       created_at: 'created_at',
+      purchaseDate: 'purchase_date',
+      purchase_date: 'purchase_date',
       fullName: 'full_name',
       full_name: 'full_name',
       companyName: 'company_name',
@@ -80,9 +83,13 @@ export async function GET(request: NextRequest) {
       query = query.eq('assigned_to_id', specialistId);
     }
 
+    if (niche) {
+      query = query.ilike('niche', `%${niche}%`);
+    }
+
     if (search) {
       query = query.or(
-        `full_name.ilike.%${search}%,company_name.ilike.%${search}%,phone.ilike.%${search}%,group_name.ilike.%${search}%`,
+        `full_name.ilike.%${search}%,company_name.ilike.%${search}%,phone.ilike.%${search}%,group_name.ilike.%${search}%,niche.ilike.%${search}%`,
       );
     }
 
@@ -129,12 +136,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Allow ADMIN to set historical created_at for imported clients
-    const customDates: Record<string, string> = {};
-    if (user.role === 'ADMIN') {
-      if (body.createdAt) customDates.created_at = body.createdAt;
-    }
-
     const { data: client, error } = await supabase
       .from('clients')
       .insert({
@@ -142,12 +143,13 @@ export async function POST(request: Request) {
         company_name: body.companyName || null,
         phone: body.phone,
         group_name: body.groupName || null,
+        niche: body.niche || null,
         services: body.services,
         notes: body.notes || null,
         payment_amount: body.paymentAmount ?? null,
         created_by_id: user.id,
         sold_by_id: body.soldById || (user.role === 'SALES_MANAGER' ? user.id : null),
-        ...customDates,
+        purchase_date: body.purchaseDate || null,
       })
       .select(`
         *,

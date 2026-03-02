@@ -17,12 +17,14 @@ interface Client {
   companyName: string | null;
   phone: string;
   groupName: string | null;
+  niche: string | null;
   services: string[];
   notes: string | null;
   paymentAmount?: string | number | null;
   status: string;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
+  purchaseDate: string | null;
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
@@ -347,6 +349,10 @@ export default function ClientDetailPage() {
                   <p className="font-medium">{client.phone}</p>
                 </div>
                 <div>
+                  <span className="text-slate-500">Ниша:</span>
+                  <p className="font-medium">{client.niche || '—'}</p>
+                </div>
+                <div>
                   <span className="text-slate-500">Название группы:</span>
                   <p className="font-medium">{client.groupName || '—'}</p>
                 </div>
@@ -355,9 +361,9 @@ export default function ClientDetailPage() {
                   <p className="font-medium">{client.services?.join(', ') || '—'}</p>
                 </div>
                 <div>
-                  <span className="text-slate-500">Дата создания:</span>
+                  <span className="text-slate-500">Дата покупки:</span>
                   <p className="font-medium">
-                    {new Date(client.createdAt).toLocaleDateString('ru-RU')}
+                    {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                   </p>
                 </div>
                 <div>
@@ -1049,6 +1055,7 @@ function EditClientModal({
     companyName: client.companyName || '',
     phone: client.phone || '',
     groupName: client.groupName || '',
+    niche: client.niche || '',
     services: client.services || [],
     notes: client.notes || '',
     soldById: client.soldById || '',
@@ -1084,6 +1091,7 @@ function EditClientModal({
         companyName: form.companyName || null,
         phone: form.phone,
         groupName: form.groupName || null,
+        niche: form.niche || null,
         services: form.services,
         notes: form.notes || null,
       };
@@ -1142,6 +1150,17 @@ function EditClientModal({
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Ниша</label>
+              <input
+                type="text"
+                value={form.niche}
+                onChange={(e) => setForm({ ...form, niche: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Например: E-commerce, Медицина..."
               />
             </div>
 

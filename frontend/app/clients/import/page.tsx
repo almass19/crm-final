@@ -11,9 +11,10 @@ interface ImportRow {
   companyName: string;
   phone: string;
   groupName: string;
+  niche: string;
   services: string[];
   paymentAmount: string;
-  createdAt: string;
+  purchaseDate: string;
 }
 
 interface ImportResult {
@@ -35,9 +36,10 @@ function parseCSV(text: string): ImportRow[] {
       companyName: cols[1]?.trim() || '',
       phone: cols[2]?.trim() || '',
       groupName: cols[3]?.trim() || '',
-      services: cols[4]?.trim() ? cols[4].trim().split(';').map(s => s.trim()).filter(Boolean) : [],
-      paymentAmount: cols[5]?.trim() || '',
-      createdAt: cols[6]?.trim() || '',
+      niche: cols[4]?.trim() || '',
+      services: cols[5]?.trim() ? cols[5].trim().split(';').map(s => s.trim()).filter(Boolean) : [],
+      paymentAmount: cols[6]?.trim() || '',
+      purchaseDate: cols[7]?.trim() || '',
     };
   });
 }
@@ -113,8 +115,9 @@ export default function ImportClientsPage() {
         if (row.fullName) data.fullName = row.fullName;
         if (row.companyName) data.companyName = row.companyName;
         if (row.groupName) data.groupName = row.groupName;
+        if (row.niche) data.niche = row.niche;
         if (row.paymentAmount) data.paymentAmount = parseFloat(row.paymentAmount);
-        if (row.createdAt) data.createdAt = row.createdAt;
+        if (row.purchaseDate) data.purchaseDate = row.purchaseDate;
 
         await api.createClient(data);
         importResults.push({ row: i + 2, name, success: true });
@@ -156,12 +159,12 @@ export default function ImportClientsPage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
           <h2 className="text-sm font-semibold text-slate-700 mb-2">Формат CSV</h2>
           <div className="bg-slate-50 rounded-lg p-3 text-xs font-mono text-slate-600 overflow-x-auto border border-slate-200">
-            <div>fullName,companyName,phone,groupName,services,paymentAmount,createdAt</div>
-            <div>Иванов,,+77001234567,VIP,СММ;Таргетированная реклама,50000,2024-01-15T10:30</div>
+            <div>fullName,companyName,phone,groupName,niche,services,paymentAmount,purchaseDate</div>
+            <div>Иванов,,+77001234567,VIP,E-commerce,СММ;Таргетированная реклама,50000,2024-01-15</div>
           </div>
           <ul className="mt-3 text-xs text-slate-500 space-y-1">
             <li>Услуги через точку с запятой (;)</li>
-            <li>Даты в формате YYYY-MM-DDTHH:MM (оставьте пустым для текущей даты)</li>
+            <li>Дата покупки в формате YYYY-MM-DD (оставьте пустым если нет)</li>
             <li>Обязательные поля: phone, хотя бы одно из fullName/companyName, services</li>
           </ul>
         </div>
@@ -200,8 +203,9 @@ export default function ImportClientsPage() {
                       <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Имя</th>
                       <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Компания</th>
                       <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Телефон</th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ниша</th>
                       <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Услуги</th>
-                      <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Дата создания</th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Дата покупки</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -211,8 +215,9 @@ export default function ImportClientsPage() {
                         <td className="px-3 py-2 text-slate-900">{row.fullName || '—'}</td>
                         <td className="px-3 py-2 text-slate-900">{row.companyName || '—'}</td>
                         <td className="px-3 py-2 text-slate-900">{row.phone || '—'}</td>
+                        <td className="px-3 py-2 text-slate-500">{row.niche || '—'}</td>
                         <td className="px-3 py-2 text-slate-900">{row.services.join(', ') || '—'}</td>
-                        <td className="px-3 py-2 text-slate-500">{row.createdAt || 'сейчас'}</td>
+                        <td className="px-3 py-2 text-slate-500">{row.purchaseDate || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
