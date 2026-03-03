@@ -56,7 +56,9 @@ export async function GET(request: NextRequest) {
       .order(dbSortField, { ascending: sortOrder === 'asc' });
 
     // Role-based access restrictions
-    if (user.role === 'SPECIALIST') {
+    if (user.role === 'SALES_MANAGER') {
+      query = query.eq('sold_by_id', user.id);
+    } else if (user.role === 'SPECIALIST') {
       query = query.eq('assigned_to_id', user.id);
     } else if (user.role === 'DESIGNER') {
       query = query.eq('designer_id', user.id);

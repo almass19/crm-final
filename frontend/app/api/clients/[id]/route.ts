@@ -43,6 +43,10 @@ export async function GET(
       return NextResponse.json({ message: 'Клиент не найден' }, { status: 404 });
     }
 
+    if (user.role === 'SALES_MANAGER' && client.sold_by_id !== user.id) {
+      return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
+    }
+
     if (user.role === 'SPECIALIST' && client.assigned_to_id !== user.id) {
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
@@ -77,6 +81,10 @@ export async function PATCH(
 
     if (!client) {
       return NextResponse.json({ message: 'Клиент не найден' }, { status: 404 });
+    }
+
+    if (user.role === 'SALES_MANAGER' && client.sold_by_id !== user.id) {
+      return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
     if (user.role === 'SPECIALIST' && client.assigned_to_id !== user.id) {
