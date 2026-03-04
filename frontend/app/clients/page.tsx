@@ -210,6 +210,20 @@ export default function ClientsPage() {
     ? filteredClients.filter((c) => c.purchaseDate?.startsWith(monthFilter))
     : filteredClients;
 
+  const availableMonths = Array.from(
+    new Set(
+      clients
+        .filter((c) => c.purchaseDate)
+        .map((c) => c.purchaseDate!.slice(0, 7))
+    )
+  )
+    .sort((a, b) => b.localeCompare(a))
+    .map((value) => {
+      const [year, month] = value.split('-');
+      const label = new Date(Number(year), Number(month) - 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+      return { value, label: label.charAt(0).toUpperCase() + label.slice(1) };
+    });
+
   const clearFilters = () => {
     setSearch(''); setStatusFilter(''); setShowUnassigned(false);
     setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('createdAt:desc');
@@ -309,13 +323,14 @@ export default function ClientsPage() {
                 className={selectCls}
               />
 
-              <input
-                type="month"
-                value={monthFilter}
-                onChange={(e) => setMonthFilter(e.target.value)}
-                className={selectCls}
-                title="Фильтр по месяцу покупки"
-              />
+              {availableMonths.length > 0 && (
+                <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className={selectCls}>
+                  <option value="">Все месяцы</option>
+                  {availableMonths.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              )}
 
               {(isAdmin || isLeadDesigner) && (
                 <>
