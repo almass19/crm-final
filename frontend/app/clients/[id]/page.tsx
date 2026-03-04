@@ -10,6 +10,7 @@ import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
 import TaskPriorityBadge from '@/components/TaskPriorityBadge';
 import TaskStatusBadge from '@/components/TaskStatusBadge';
+import { useToast } from '@/components/Toast';
 
 interface Client {
   id: string;
@@ -92,6 +93,7 @@ export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [client, setClient] = useState<Client | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -182,8 +184,9 @@ export default function ClientDetailPage() {
       setNewComment('');
       const data = await api.getComments(id);
       setComments(data);
+      showToast('Комментарий добавлен');
     } catch {
-      // handled
+      showToast('Ошибка добавления комментария', 'error');
     } finally {
       setSubmittingComment(false);
     }
@@ -203,8 +206,11 @@ export default function ClientDetailPage() {
       await api.assignClient(id, { specialistId });
       setShowAssignModal(false);
       fetchClient();
+      showToast('Специалист назначен');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка назначения');
+      const msg = err instanceof Error ? err.message : 'Ошибка назначения';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -213,8 +219,11 @@ export default function ClientDetailPage() {
       await api.assignClient(id, { designerId });
       setShowAssignDesignerModal(false);
       fetchClient();
+      showToast('Дизайнер назначен');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка назначения дизайнера');
+      const msg = err instanceof Error ? err.message : 'Ошибка назначения дизайнера';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -223,8 +232,11 @@ export default function ClientDetailPage() {
       await api.updateClient(id, { status });
       setShowStatusModal(false);
       fetchClient();
+      showToast('Статус обновлён');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка');
+      const msg = err instanceof Error ? err.message : 'Ошибка';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -244,8 +256,11 @@ export default function ClientDetailPage() {
       await api.updateClient(id, { paymentAmount: amount });
       setShowPaymentModal(false);
       fetchClient();
+      showToast('Сумма оплаты обновлена');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения суммы');
+      const msg = err instanceof Error ? err.message : 'Ошибка сохранения суммы';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -889,6 +904,7 @@ export default function ClientDetailPage() {
           onSaved={() => {
             setShowEditModal(false);
             fetchClient();
+            showToast('Данные клиента сохранены');
           }}
         />
       )}
@@ -1374,6 +1390,7 @@ function LaunchDateEditor({
   currentDate: string | null;
   onSaved: () => void;
 }) {
+  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentDate ? currentDate.split('T')[0] : '');
   const [saving, setSaving] = useState(false);
@@ -1384,8 +1401,9 @@ function LaunchDateEditor({
       await api.updateClient(clientId, { launchDate: value || null });
       setEditing(false);
       onSaved();
+      showToast('Дата запуска сохранена');
     } catch {
-      // ignore
+      showToast('Ошибка сохранения даты', 'error');
     } finally {
       setSaving(false);
     }

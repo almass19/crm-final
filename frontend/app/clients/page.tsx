@@ -8,6 +8,7 @@ import { STATUS_LABELS, SERVICE_OPTIONS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
+import { useToast } from '@/components/Toast';
 
 interface Client {
   id: string;
@@ -45,9 +46,39 @@ const SORT_OPTIONS = [
 const selectCls = "px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-slate-700";
 const inputCls = "px-3 py-2 bg-slate-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-slate-400 text-slate-700";
 
+// Read initial filter value from URL (client-side only, safe in SSR)
+function getUrlParam(key: string): string {
+  if (typeof window === 'undefined') return '';
+  return new URLSearchParams(window.location.search).get(key) || '';
+}
+
+// Skeleton row component
+function SkeletonRow() {
+  return (
+    <tr>
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="skeleton w-8 h-8 rounded-full flex-shrink-0" />
+          <div className="space-y-1.5">
+            <div className="skeleton h-3.5 w-32" />
+            <div className="skeleton h-3 w-20" />
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4"><div className="skeleton h-3.5 w-28" /></td>
+      <td className="px-6 py-4"><div className="skeleton h-3.5 w-20" /></td>
+      <td className="px-6 py-4"><div className="skeleton h-3.5 w-24" /></td>
+      <td className="px-6 py-4"><div className="skeleton h-3.5 w-24" /></td>
+      <td className="px-6 py-4"><div className="skeleton h-3.5 w-24" /></td>
+    </tr>
+  );
+}
+
 export default function ClientsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
+
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -61,6 +92,35 @@ export default function ClientsPage() {
   const [sortOption, setSortOption] = useState('createdAt:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
+  const [urlInitialized, setUrlInitialized] = useState(false);
+
+  // Initialize filters from URL on first client render
+  useEffect(() => {
+    setSearch(getUrlParam('search'));
+    setStatusFilter(getUrlParam('status'));
+    setNicheFilter(getUrlParam('niche'));
+    setSalesManagerFilter(getUrlParam('soldById'));
+    setSpecialistFilter(getUrlParam('specialistId'));
+    setShowUnassigned(getUrlParam('unassigned') === 'true');
+    const sort = getUrlParam('sort');
+    if (sort) setSortOption(sort);
+    setUrlInitialized(true);
+  }, []);
+
+  // Sync filters to URL whenever they change (after init)
+  useEffect(() => {
+    if (!urlInitialized) return;
+    const sp = new URLSearchParams();
+    if (search) sp.set('search', search);
+    if (statusFilter) sp.set('status', statusFilter);
+    if (nicheFilter) sp.set('niche', nicheFilter);
+    if (salesManagerFilter) sp.set('soldById', salesManagerFilter);
+    if (specialistFilter) sp.set('specialistId', specialistFilter);
+    if (showUnassigned) sp.set('unassigned', 'true');
+    if (sortOption !== 'createdAt:desc') sp.set('sort', sortOption);
+    const qs = sp.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  }, [search, statusFilter, nicheFilter, salesManagerFilter, specialistFilter, showUnassigned, sortOption, urlInitialized]);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -285,8 +345,32 @@ export default function ClientsPage() {
           </div>
         )}
 
+        {/* Client counter */}
+        {!loading && (
+          <div className="mb-3 text-sm text-slate-500">
+            {filteredClients.length === 0
+              ? 'Клиенты не найдены'
+              : `${filteredClients.length} ${clientWord(filteredClients.length)}`}
+          </div>
+        )}
+
         {loading ? (
-          <div className="text-center py-12 text-slate-500">Загрузка...</div>
+          <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50">
+                <tr>
+                  {['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист'].map((h) => (
+                    <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
+              </tbody>
+            </table>
+          </div>
         ) : filteredClients.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
             {(isSpecialist || isDesigner) && activeTab === 'new' ? 'Нет новых назначений' : 'Клиенты не найдены'}
@@ -348,17 +432,35 @@ export default function ClientsPage() {
           userId={user.id}
           userName={user.fullName}
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => { setShowCreateModal(false); fetchClients(); }}
+          onCreated={(name) => {
+            setShowCreateModal(false);
+            fetchClients();
+            showToast(`Клиент «${name}» успешно создан`);
+          }}
+          onError={(msg) => showToast(msg, 'error')}
         />
       )}
     </AppShell>
   );
 }
 
+// Russian pluralization for "клиент"
+function clientWord(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return `${n} клиентов`;
+  if (mod10 === 1) return `${n} клиент`;
+  if (mod10 >= 2 && mod10 <= 4) return `${n} клиента`;
+  return `${n} клиентов`;
+}
+
 function CreateClientModal({
-  userRole, userId, userName, onClose, onCreated,
+  userRole, userId, userName, onClose, onCreated, onError,
 }: {
-  userRole: string | null; userId: string; userName: string; onClose: () => void; onCreated: () => void;
+  userRole: string | null; userId: string; userName: string;
+  onClose: () => void;
+  onCreated: (name: string) => void;
+  onError: (msg: string) => void;
 }) {
   const [form, setForm] = useState({
     fullName: '', companyName: '', phone: '', groupName: '',
@@ -377,7 +479,6 @@ function CreateClientModal({
           const merged: { id: string; fullName: string }[] = results
             .filter((r): r is PromiseFulfilledResult<{ id: string; fullName: string }[]> => r.status === 'fulfilled')
             .flatMap((r) => r.value);
-          // Ensure current admin is always present, deduplicate by id
           const withSelf = [{ id: userId, fullName: userName }, ...merged];
           const unique = withSelf.filter((u, i, arr) => arr.findIndex((x) => x.id === u.id) === i);
           setSalesManagers(unique);
@@ -404,9 +505,11 @@ function CreateClientModal({
       if (form.soldById) data.soldById = form.soldById;
       if (form.purchaseDate) data.purchaseDate = form.purchaseDate;
       await api.createClient(data);
-      onCreated();
+      onCreated(form.companyName || form.fullName || 'Клиент');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка создания');
+      const msg = err instanceof Error ? err.message : 'Ошибка создания';
+      setError(msg);
+      onError(msg);
     } finally {
       setSubmitting(false);
     }
