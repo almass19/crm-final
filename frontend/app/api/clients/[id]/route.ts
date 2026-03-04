@@ -95,10 +95,15 @@ export async function PATCH(
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
-    // Only ADMIN and SALES_MANAGER can edit client fields
-    const editableFields = ['fullName', 'companyName', 'phone', 'groupName', 'niche', 'services', 'notes'];
-    const hasEditFields = editableFields.some(f => body[f] !== undefined);
-    if (hasEditFields && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') {
+    // Only ADMIN and SALES_MANAGER can edit core client fields
+    const adminManagerFields = ['fullName', 'companyName', 'phone', 'groupName', 'niche', 'services', 'notes', 'purchaseDate'];
+    const hasAdminManagerFields = adminManagerFields.some(f => body[f] !== undefined);
+    if (hasAdminManagerFields && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') {
+      return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
+    }
+
+    // SPECIALIST can set launch date for their own client
+    if (body.launchDate !== undefined && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER' && user.role !== 'SPECIALIST') {
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
     }
 
@@ -130,6 +135,8 @@ export async function PATCH(
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.groupName !== undefined) updateData.group_name = body.groupName;
     if (body.niche !== undefined) updateData.niche = body.niche;
+    if (body.launchDate !== undefined) updateData.launch_date = body.launchDate || null;
+    if (body.purchaseDate !== undefined) updateData.purchase_date = body.purchaseDate || null;
     if (body.services !== undefined) updateData.services = body.services;
     if (body.notes !== undefined) updateData.notes = body.notes;
     if (body.status !== undefined) updateData.status = body.status;

@@ -21,6 +21,7 @@ interface Client {
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;
+  launchDate: string | null;
   createdAt: string;
   createdBy: { fullName: string };
   assignedTo: { fullName: string } | null;
@@ -295,7 +296,7 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['Имя / Компания', 'Телефон', 'Ниша', 'Группа', 'Услуги', 'Статус', 'Специалист', 'Дизайнер', 'Дата покупки'].map((h) => (
+                  {['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист'].map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -312,28 +313,27 @@ export default function ClientsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                          {(client.fullName || client.companyName || '?')[0]?.toUpperCase()}
+                          {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-900">
-                            {client.fullName || client.companyName}
+                            {client.companyName || client.fullName}
                           </div>
-                          {client.fullName && client.companyName && (
-                            <div className="text-xs text-slate-500">{client.companyName}</div>
+                          {client.companyName && client.fullName && (
+                            <div className="text-xs text-slate-500">{client.fullName}</div>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.niche || '—'}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.groupName || '—'}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{client.services?.join(', ') || '—'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.designer?.fullName || '—'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
       created_at: 'created_at',
       purchaseDate: 'purchase_date',
       purchase_date: 'purchase_date',
+      launchDate: 'launch_date',
+      launch_date: 'launch_date',
       fullName: 'full_name',
       full_name: 'full_name',
       companyName: 'company_name',
@@ -152,6 +154,7 @@ export async function POST(request: Request) {
         created_by_id: user.id,
         sold_by_id: body.soldById || (user.role === 'SALES_MANAGER' ? user.id : null),
         purchase_date: body.purchaseDate || null,
+        launch_date: body.launchDate || null,
       })
       .select(`
         *,

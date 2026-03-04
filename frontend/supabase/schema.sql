@@ -64,6 +64,7 @@ create table clients (
   designer_assignment_seen boolean default false not null,
 
   purchase_date date,
+  launch_date date,
   niche text,
 
   created_at timestamptz default now() not null,

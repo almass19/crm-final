@@ -25,6 +25,7 @@ interface Client {
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;
+  launchDate: string | null;
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
@@ -364,6 +365,15 @@ export default function ClientDetailPage() {
                   <span className="text-slate-500">Дата покупки:</span>
                   <p className="font-medium">
                     {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-500">Дата запуска:</span>
+                  <p className="font-medium flex items-center gap-2">
+                    {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
+                    {isSpecialist && client.assignedTo?.id === user.id && (
+                      <LaunchDateEditor clientId={client.id} currentDate={client.launchDate} onSaved={fetchClient} />
+                    )}
                   </p>
                 </div>
                 <div>
@@ -1352,5 +1362,67 @@ function AddCreativeModal({
         </form>
       </div>
     </div>
+  );
+}
+
+function LaunchDateEditor({
+  clientId,
+  currentDate,
+  onSaved,
+}: {
+  clientId: string;
+  currentDate: string | null;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(currentDate ? currentDate.split('T')[0] : '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.updateClient(clientId, { launchDate: value || null });
+      setEditing(false);
+      onSaved();
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="text-xs text-primary hover:underline"
+      >
+        {currentDate ? 'Изменить' : 'Указать'}
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1">
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="px-2 py-0.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary/40"
+      />
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="text-xs text-white bg-primary px-2 py-0.5 rounded hover:opacity-90 disabled:opacity-50"
+      >
+        {saving ? '...' : 'OK'}
+      </button>
+      <button
+        onClick={() => setEditing(false)}
+        className="text-xs text-slate-500 hover:text-slate-700"
+      >
+        ✕
+      </button>
+    </span>
   );
 }
