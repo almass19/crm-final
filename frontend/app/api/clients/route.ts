@@ -8,6 +8,15 @@ function sanitizeClient(client: Record<string, unknown>, role: string | null) {
     const { payment_amount, ...rest } = client;
     return rest;
   }
+  if (role === 'SALES_MANAGER') {
+    const {
+      status,
+      assigned_to, assigned_to_id, assigned_at, assignment_seen,
+      designer, designer_id, designer_assigned_at, designer_assignment_seen,
+      ...rest
+    } = client;
+    return rest;
+  }
   return client;
 }
 
@@ -59,7 +68,11 @@ export async function GET(request: NextRequest) {
 
     // Role-based access restrictions
     if (user.role === 'SALES_MANAGER') {
-      query = query.eq('sold_by_id', user.id);
+      const now = new Date();
+      const firstDayOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      query = query
+        .eq('sold_by_id', user.id)
+        .or(`purchase_date.gte.${firstDayOfMonth},status.eq.NEW`);
     } else if (user.role === 'SPECIALIST') {
       query = query.eq('assigned_to_id', user.id);
     } else if (user.role === 'DESIGNER') {

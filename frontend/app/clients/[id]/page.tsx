@@ -356,7 +356,7 @@ export default function ClientDetailPage() {
                     </p>
                   )}
                 </div>
-                <StatusBadge status={client.status} />
+                {!isSalesManager && <StatusBadge status={client.status} />}
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -395,18 +395,22 @@ export default function ClientDetailPage() {
                   <span className="text-slate-500">Продавец:</span>
                   <p className="font-medium">{client.soldBy?.fullName || '—'}</p>
                 </div>
-                <div>
-                  <span className="text-slate-500">Специалист:</span>
-                  <p className="font-medium">
-                    {client.assignedTo?.fullName || 'Не назначен'}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-slate-500">Дизайнер:</span>
-                  <p className="font-medium">
-                    {client.designer?.fullName || 'Не назначен'}
-                  </p>
-                </div>
+                {!isSalesManager && (
+                  <div>
+                    <span className="text-slate-500">Специалист:</span>
+                    <p className="font-medium">
+                      {client.assignedTo?.fullName || 'Не назначен'}
+                    </p>
+                  </div>
+                )}
+                {!isSalesManager && (
+                  <div>
+                    <span className="text-slate-500">Дизайнер:</span>
+                    <p className="font-medium">
+                      {client.designer?.fullName || 'Не назначен'}
+                    </p>
+                  </div>
+                )}
                 {canSeePayment && (
                   <div>
                     <span className="text-slate-500">Сумма оплаты:</span>

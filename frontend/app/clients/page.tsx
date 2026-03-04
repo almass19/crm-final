@@ -389,7 +389,10 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист'].map((h) => (
+                  {(isSalesManager
+                    ? ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист']
+                  ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -410,7 +413,10 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист'].map((h) => (
+                  {(isSalesManager
+                    ? ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист']
+                  ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -447,7 +453,9 @@ export default function ClientsPage() {
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
+                    {!isSalesManager && (
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
+                    )}
                   </tr>
                 ))}
               </tbody>
