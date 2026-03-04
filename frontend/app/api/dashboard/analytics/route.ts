@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
         .from('clients')
         .select('id, status')
         .eq('archived', false),
-      // Clients created this month
+      // Clients purchased this month
       supabase
         .from('clients')
-        .select('id, created_by_id, payment_amount')
+        .select('id, sold_by_id, payment_amount')
         .eq('archived', false)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate),
+        .gte('purchase_date', `${monthStr}-01`)
+        .lte('purchase_date', new Date(year, month, 0).toISOString().slice(0, 10)),
       // Payments this month
       supabase
         .from('payments')
@@ -92,10 +92,11 @@ export async function GET(request: NextRequest) {
       count,
     }));
 
-    // New clients by manager (this month)
+    // New clients by manager (this month, by purchase date)
     const managerCounts: Record<string, number> = {};
     for (const c of newClients) {
-      managerCounts[c.created_by_id] = (managerCounts[c.created_by_id] || 0) + 1;
+      if (!c.sold_by_id) continue;
+      managerCounts[c.sold_by_id] = (managerCounts[c.sold_by_id] || 0) + 1;
     }
     const clientsByManager = Object.entries(managerCounts).map(([id, count]) => ({
       name: profileMap.get(id) || 'Неизвестный',

@@ -217,13 +217,13 @@ export default function AdminDashboardPage() {
               {/* Metric cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <MetricCard label="Всего клиентов" value={analytics.totalClients} color="bg-primary" />
-                <MetricCard label="Новые за месяц" value={analytics.newClientsThisMonth} color="bg-green-500" />
+                <MetricCard label="Куплено за месяц" value={analytics.newClientsThisMonth} color="bg-green-500" />
                 <MetricCard label="Доход за месяц" value={formatCurrency(analytics.totalRevenue)} color="bg-amber-500" />
                 <MetricCard label="Задач выполнено" value={analytics.completedTasks} color="bg-purple-500" />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <ChartCard title="Клиенты по менеджерам (за месяц)">
+                <ChartCard title="Клиенты по менеджерам (по дате покупки)">
                   {analytics.clientsByManager.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={analytics.clientsByManager} layout="vertical" margin={{ left: 20 }}>
