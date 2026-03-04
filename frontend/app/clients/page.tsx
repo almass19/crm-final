@@ -89,6 +89,7 @@ export default function ClientsPage() {
   const [salesManagerFilter, setSalesManagerFilter] = useState('');
   const [specialistFilter, setSpecialistFilter] = useState('');
   const [nicheFilter, setNicheFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
   const [sortOption, setSortOption] = useState('createdAt:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
@@ -99,6 +100,7 @@ export default function ClientsPage() {
     setSearch(getUrlParam('search'));
     setStatusFilter(getUrlParam('status'));
     setNicheFilter(getUrlParam('niche'));
+    setMonthFilter(getUrlParam('month'));
     setSalesManagerFilter(getUrlParam('soldById'));
     setSpecialistFilter(getUrlParam('specialistId'));
     setShowUnassigned(getUrlParam('unassigned') === 'true');
@@ -114,13 +116,14 @@ export default function ClientsPage() {
     if (search) sp.set('search', search);
     if (statusFilter) sp.set('status', statusFilter);
     if (nicheFilter) sp.set('niche', nicheFilter);
+    if (monthFilter) sp.set('month', monthFilter);
     if (salesManagerFilter) sp.set('soldById', salesManagerFilter);
     if (specialistFilter) sp.set('specialistId', specialistFilter);
     if (showUnassigned) sp.set('unassigned', 'true');
     if (sortOption !== 'createdAt:desc') sp.set('sort', sortOption);
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-  }, [search, statusFilter, nicheFilter, salesManagerFilter, specialistFilter, showUnassigned, sortOption, urlInitialized]);
+  }, [search, statusFilter, nicheFilter, monthFilter, salesManagerFilter, specialistFilter, showUnassigned, sortOption, urlInitialized]);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -203,12 +206,16 @@ export default function ClientsPage() {
       : clients.filter((c) => c.designerAssignmentSeen)
     : clients;
 
+  const displayedClients = monthFilter
+    ? filteredClients.filter((c) => c.purchaseDate?.startsWith(monthFilter))
+    : filteredClients;
+
   const clearFilters = () => {
     setSearch(''); setStatusFilter(''); setShowUnassigned(false);
-    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setSortOption('createdAt:desc');
+    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('createdAt:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || sortOption !== 'createdAt:desc';
+  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || monthFilter || sortOption !== 'createdAt:desc';
 
   return (
     <AppShell>
@@ -302,6 +309,14 @@ export default function ClientsPage() {
                 className={selectCls}
               />
 
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className={selectCls}
+                title="Фильтр по месяцу покупки"
+              />
+
               {(isAdmin || isLeadDesigner) && (
                 <>
                   <select value={salesManagerFilter} onChange={(e) => setSalesManagerFilter(e.target.value)} className={selectCls}>
@@ -348,9 +363,9 @@ export default function ClientsPage() {
         {/* Client counter */}
         {!loading && (
           <div className="mb-3 text-sm text-slate-500">
-            {filteredClients.length === 0
+            {displayedClients.length === 0
               ? 'Клиенты не найдены'
-              : clientWord(filteredClients.length)}
+              : clientWord(displayedClients.length)}
           </div>
         )}
 
@@ -371,7 +386,7 @@ export default function ClientsPage() {
               </tbody>
             </table>
           </div>
-        ) : filteredClients.length === 0 ? (
+        ) : displayedClients.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
             {(isSpecialist || isDesigner) && activeTab === 'new' ? 'Нет новых назначений' : 'Клиенты не найдены'}
           </div>
@@ -388,7 +403,7 @@ export default function ClientsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
-                {filteredClients.map((client) => (
+                {displayedClients.map((client) => (
                   <tr
                     key={client.id}
                     onClick={() => router.push(`/clients/${client.id}`)}
