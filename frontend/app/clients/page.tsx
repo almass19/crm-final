@@ -350,7 +350,7 @@ export default function ClientsPage() {
           <div className="mb-3 text-sm text-slate-500">
             {filteredClients.length === 0
               ? 'Клиенты не найдены'
-              : `${filteredClients.length} ${clientWord(filteredClients.length)}`}
+              : clientWord(filteredClients.length)}
           </div>
         )}
 
