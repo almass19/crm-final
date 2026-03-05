@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requireRoles('SPECIALIST', 'DESIGNER');
+    const user = await requireRoles('SPECIALIST', 'DESIGNER', 'ADMIN');
     const { id: clientId } = await params;
     const supabase = await createClient();
 
@@ -21,7 +21,9 @@ export async function POST(
       return NextResponse.json({ message: 'Клиент не найден' }, { status: 404 });
     }
 
-    const type = user.role === 'DESIGNER' ? 'designer' : 'specialist';
+    // ADMIN acting as specialist if assigned to client, otherwise designer fallback
+    const isAssignedAsDesigner = client.designer_id === user.id && client.assigned_to_id !== user.id;
+    const type = isAssignedAsDesigner ? 'designer' : 'specialist';
 
     if (type === 'specialist') {
       if (client.assigned_to_id !== user.id) {

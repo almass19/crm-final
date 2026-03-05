@@ -390,8 +390,8 @@ export default function ClientsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isSalesManager
-                    ? ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска']
-                    : ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
@@ -414,8 +414,8 @@ export default function ClientsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isSalesManager
-                    ? ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска']
-                    : ['Компания', 'Телефон', 'Ниша', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
@@ -446,7 +446,7 @@ export default function ClientsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.niche || '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                     </td>

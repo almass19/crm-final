@@ -306,7 +306,7 @@ export default function ClientDetailPage() {
   const canAddCreative = isDesigner || isLeadDesigner;
   const canEditPayment = isSalesManager;
   const canAcknowledgeSpecialist =
-    isSpecialist &&
+    (isSpecialist || isAdmin) &&
     client.assignedTo?.id === user.id &&
     !client.assignmentSeen &&
     client.status === 'ASSIGNED';
@@ -386,7 +386,7 @@ export default function ClientDetailPage() {
                   <span className="text-slate-500">Дата запуска:</span>
                   <p className="font-medium flex items-center gap-2">
                     {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
-                    {isSpecialist && client.assignedTo?.id === user.id && (
+                    {(isSpecialist || isAdmin) && client.assignedTo?.id === user.id && (
                       <LaunchDateEditor clientId={client.id} currentDate={client.launchDate} onSaved={fetchClient} />
                     )}
                   </p>
@@ -469,6 +469,15 @@ export default function ClientDetailPage() {
                   </button>
                 )}
 
+                {(isAdmin || (isSpecialist && client.assignedTo?.id === user.id)) && (
+                  <button
+                    onClick={() => setShowStatusModal(true)}
+                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                  >
+                    Изменить статус
+                  </button>
+                )}
+
                 {isAdmin && (
                   <>
                     <button
@@ -476,12 +485,6 @@ export default function ClientDetailPage() {
                       className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium"
                     >
                       Назначить специалиста
-                    </button>
-                    <button
-                      onClick={() => setShowStatusModal(true)}
-                      className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
-                    >
-                      Изменить статус
                     </button>
                     <button
                       onClick={handleArchive}

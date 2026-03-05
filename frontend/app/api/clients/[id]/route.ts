@@ -115,10 +115,13 @@ export async function PATCH(
     }
 
     if (body.status && user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { message: 'Только администратор может менять статус клиента' },
-        { status: 403 },
-      );
+      const isAssignedSpecialist = (user.role === 'SPECIALIST') && client.assigned_to_id === user.id;
+      if (!isAssignedSpecialist) {
+        return NextResponse.json(
+          { message: 'Недостаточно прав для смены статуса' },
+          { status: 403 },
+        );
+      }
     }
 
     if (body.paymentAmount !== undefined && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') {
