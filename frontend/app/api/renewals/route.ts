@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { data: payments, error: paymentsError } = await paymentsQuery;
     if (paymentsError) throw paymentsError;
 
-    const clientIds = [...new Set((payments || []).map((p) => p.client_id))];
+    const clientIds = Array.from(new Set((payments || []).map((p) => p.client_id)));
     if (clientIds.length === 0) {
       return NextResponse.json({ month, totalRenewals: 0, clients: [] });
     }
