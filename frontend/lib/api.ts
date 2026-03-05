@@ -121,7 +121,7 @@ export const api = {
   getClientPayments: (clientId: string) =>
     request(`/clients/${clientId}/payments`),
 
-  createPayment: (clientId: string, data: { amount: number; month: string; isRenewal: boolean }) =>
+  createPayment: (clientId: string, data: { amount: number; paymentDate: string; isRenewal: boolean }) =>
     request(`/clients/${clientId}/payments`, {
       method: 'POST',
       body: JSON.stringify(data),

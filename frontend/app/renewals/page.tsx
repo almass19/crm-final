@@ -6,19 +6,17 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
+import StatusBadge from '@/components/StatusBadge';
 
-interface RenewalClient {
-  clientId: string;
-  clientName: string;
-  amount: number;
-  renewedAt: string;
-  specialist: { id: string; fullName: string } | null;
-}
-
-interface RenewalsData {
-  month: string;
-  totalRenewals: number;
-  clients: RenewalClient[];
+interface Client {
+  id: string;
+  fullName: string | null;
+  companyName: string | null;
+  phone: string;
+  status: string;
+  purchaseDate: string | null;
+  launchDate: string | null;
+  assignedTo: { fullName: string } | null;
 }
 
 const MONTH_NAMES = [
@@ -29,7 +27,8 @@ const MONTH_NAMES = [
 export default function RenewalsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [data, setData] = useState<RenewalsData | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [totalRenewals, setTotalRenewals] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -51,7 +50,8 @@ export default function RenewalsPage() {
     setError('');
     try {
       const result = await api.getRenewals(getMonthString());
-      setData(result);
+      setClients(result.clients);
+      setTotalRenewals(result.totalRenewals);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -64,9 +64,7 @@ export default function RenewalsPage() {
       router.replace('/login');
       return;
     }
-    if (user) {
-      fetchRenewals();
-    }
+    if (user) fetchRenewals();
   }, [authLoading, user, fetchRenewals, router]);
 
   const handlePrevMonth = () => {
@@ -95,11 +93,12 @@ export default function RenewalsPage() {
     );
   }
 
+  const isAdmin = user.role === 'ADMIN';
+
   return (
     <AppShell>
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        {/* Month Navigator */}
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
@@ -128,9 +127,11 @@ export default function RenewalsPage() {
 
       {/* Content */}
       <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Продлеваемые</h1>
-          <p className="text-slate-500 mt-1">Клиенты с продлениями за выбранный месяц</p>
+        <div className="mb-6">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Продляемые</h1>
+          <p className="text-slate-500 mt-1">
+            {totalRenewals > 0 ? `${totalRenewals} клиент${totalRenewals === 1 ? '' : totalRenewals < 5 ? 'а' : 'ов'} с продлением` : 'Нет продлений за выбранный месяц'}
+          </p>
         </div>
 
         {error && (
@@ -138,73 +139,92 @@ export default function RenewalsPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-12 text-slate-500">Загрузка...</div>
-        ) : (
-          <>
-            {/* Summary Card */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    Всего продлений за месяц
-                  </p>
-                  <p className="text-4xl font-black text-green-600">{data?.totalRenewals || 0}</p>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Table */}
-            {data && data.clients.length > 0 ? (
-              <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-slate-100">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Клиент</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Сумма</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Дата продления</th>
-                      {user.role === 'ADMIN' && (
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Специалист</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100">
-                    {data.clients.map((client, index) => (
-                      <tr key={`${client.clientId}-${index}`} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <button
-                            onClick={() => router.push(`/clients/${client.clientId}`)}
-                            className="text-sm font-semibold text-primary hover:underline"
-                          >
-                            {client.clientName}
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                          {client.amount.toLocaleString('ru-RU')} ₸
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-500">
-                          {new Date(client.renewedAt).toLocaleDateString('ru-RU')}
-                        </td>
-                        {user.role === 'ADMIN' && (
-                          <td className="px-6 py-4 text-sm text-slate-500">
-                            {client.specialist?.fullName || '—'}
-                          </td>
-                        )}
-                      </tr>
+          <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50">
+                <tr>
+                  {(isAdmin
+                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
+                  ).map((h) => (
+                    <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: isAdmin ? 6 : 5 }).map((_, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <div className="h-4 bg-slate-100 rounded animate-pulse w-24" />
+                      </td>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
-                Нет продлений за выбранный месяц
-              </div>
-            )}
-          </>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : clients.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
+            Нет продлений за выбранный месяц
+          </div>
+        ) : (
+          <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50">
+                <tr>
+                  {(isAdmin
+                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
+                  ).map((h) => (
+                    <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {clients.map((client) => (
+                  <tr
+                    key={client.id}
+                    onClick={() => router.push(`/clients/${client.id}`)}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                          {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            {client.companyName || client.fullName}
+                          </div>
+                          {client.companyName && client.fullName && (
+                            <div className="text-xs text-slate-500">{client.fullName}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
+                    </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                        {client.assignedTo?.fullName || '—'}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </AppShell>

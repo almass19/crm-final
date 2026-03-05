@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/auth-helpers';
+import { snakeToCamel } from '@/lib/utils/case-transform';
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,57 +24,52 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = supabase
+    // Get distinct client IDs with renewals in this month
+    let paymentsQuery = supabase
       .from('payments')
-      .select(`
-        *,
-        client:clients!payments_client_id_fkey(
-          id, full_name, company_name,
-          assigned_to:profiles!clients_assigned_to_id_fkey(id, full_name)
-        )
-      `)
+      .select('client_id')
       .eq('is_renewal', true)
-      .eq('month', month)
-      .order('created_at', { ascending: false });
+      .eq('month', month);
 
-    // Specialist can only see renewals of their assigned clients
     if (user.role === 'SPECIALIST') {
-      // We need to filter by clients assigned to this user
-      // First get the client IDs assigned to this specialist
       const { data: assignedClients } = await supabase
         .from('clients')
         .select('id')
         .eq('assigned_to_id', user.id);
-
       const clientIds = (assignedClients || []).map((c) => c.id);
       if (clientIds.length === 0) {
-        return NextResponse.json({
-          month,
-          totalRenewals: 0,
-          clients: [],
-        });
+        return NextResponse.json({ month, totalRenewals: 0, clients: [] });
       }
-      query = query.in('client_id', clientIds);
+      paymentsQuery = paymentsQuery.in('client_id', clientIds);
     }
 
-    const { data: payments, error } = await query;
-    if (error) throw error;
+    const { data: payments, error: paymentsError } = await paymentsQuery;
+    if (paymentsError) throw paymentsError;
+
+    const clientIds = [...new Set((payments || []).map((p) => p.client_id))];
+    if (clientIds.length === 0) {
+      return NextResponse.json({ month, totalRenewals: 0, clients: [] });
+    }
+
+    const { data: clients, error: clientsError } = await supabase
+      .from('clients')
+      .select(`
+        *,
+        created_by:profiles!clients_created_by_id_fkey(full_name),
+        sold_by:profiles!clients_sold_by_id_fkey(full_name),
+        assigned_to:profiles!clients_assigned_to_id_fkey(full_name),
+        designer:profiles!clients_designer_id_fkey(full_name)
+      `)
+      .in('id', clientIds)
+      .eq('archived', false)
+      .order('created_at', { ascending: false });
+
+    if (clientsError) throw clientsError;
 
     return NextResponse.json({
       month,
-      totalRenewals: (payments || []).length,
-      clients: (payments || []).map((p: Record<string, unknown>) => {
-        const client = p.client as Record<string, unknown> | null;
-        return {
-          clientId: client?.id,
-          clientName: client?.full_name || client?.company_name,
-          amount: p.amount,
-          renewedAt: typeof p.created_at === 'string'
-            ? p.created_at.split('T')[0]
-            : p.created_at,
-          specialist: client?.assigned_to || null,
-        };
-      }),
+      totalRenewals: clientIds.length,
+      clients: snakeToCamel(clients || []),
     });
   } catch (e) {
     if (e instanceof NextResponse) return e;

@@ -942,11 +942,11 @@ function AddPaymentModal({
   onCreated: () => void;
 }) {
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const [form, setForm] = useState({
     amount: '',
-    month: currentMonth,
+    paymentDate: currentDate,
     isRenewal: false,
   });
   const [error, setError] = useState('');
@@ -958,8 +958,8 @@ function AddPaymentModal({
       setError('Введите сумму платежа');
       return;
     }
-    if (!form.month) {
-      setError('Выберите месяц');
+    if (!form.paymentDate) {
+      setError('Выберите дату');
       return;
     }
     setError('');
@@ -967,7 +967,7 @@ function AddPaymentModal({
     try {
       await api.createPayment(clientId, {
         amount: parseInt(form.amount),
-        month: form.month,
+        paymentDate: form.paymentDate,
         isRenewal: form.isRenewal,
       });
       onCreated();
@@ -1011,12 +1011,12 @@ function AddPaymentModal({
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Месяц *
+              Дата *
             </label>
             <input
-              type="month"
-              value={form.month}
-              onChange={(e) => setForm({ ...form, month: e.target.value })}
+              type="date"
+              value={form.paymentDate}
+              onChange={(e) => setForm({ ...form, paymentDate: e.target.value })}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>

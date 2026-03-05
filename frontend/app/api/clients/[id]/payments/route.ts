@@ -78,18 +78,21 @@ export async function POST(
       );
     }
 
-    if (!body.month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(body.month)) {
+    if (!body.paymentDate || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(body.paymentDate)) {
       return NextResponse.json(
-        { message: 'Месяц должен быть в формате YYYY-MM' },
+        { message: 'Дата должна быть в формате YYYY-MM-DD' },
         { status: 400 },
       );
     }
+
+    const month = body.paymentDate.slice(0, 7);
 
     const { data, error } = await supabase
       .from('payments')
       .insert({
         amount: body.amount,
-        month: body.month,
+        month,
+        payment_date: body.paymentDate,
         is_renewal: body.isRenewal ?? false,
         client_id: clientId,
         manager_id: user.id,
