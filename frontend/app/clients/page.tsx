@@ -19,6 +19,7 @@ interface Client {
   niche: string | null;
   services: string[];
   status: string;
+  paymentAmount: number | null;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;
@@ -38,6 +39,10 @@ interface UserOption {
 const SORT_OPTIONS = [
   { value: 'createdAt:desc', label: 'Сначала новые' },
   { value: 'createdAt:asc', label: 'Сначала старые' },
+  { value: 'purchaseDate:desc', label: 'Дата покупки ↓' },
+  { value: 'purchaseDate:asc', label: 'Дата покупки ↑' },
+  { value: 'launchDate:desc', label: 'Дата запуска ↓' },
+  { value: 'launchDate:asc', label: 'Дата запуска ↑' },
   { value: 'fullName:asc', label: 'По имени А-Я' },
   { value: 'fullName:desc', label: 'По имени Я-А' },
   { value: 'status:asc', label: 'По статусу' },
@@ -236,22 +241,8 @@ export default function ClientsPage() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-3 flex-1">
-          {!isSpecialist && !isDesigner && (
-            <div className="relative flex-1 max-w-sm">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Поиск по имени, телефону, группе..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 ${inputCls}`}
-              />
-            </div>
-          )}
           {(isSpecialist || isDesigner) && (
-            <div className="flex bg-slate-100 rounded-lg p-1">
+            <div className="flex bg-slate-100 rounded-lg p-1 flex-shrink-0">
               <button
                 onClick={() => setActiveTab('new')}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'new' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -266,6 +257,18 @@ export default function ClientsPage() {
               </button>
             </div>
           )}
+          <div className="relative flex-1 max-w-sm">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Поиск по имени, телефону, группе..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`w-full pl-9 pr-4 py-2 ${inputCls}`}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <NotificationBell />
@@ -389,9 +392,11 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {(isSalesManager
-                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
-                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                  {(isAdmin
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    : isSalesManager
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
@@ -413,9 +418,11 @@ export default function ClientsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {(isSalesManager
-                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
-                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                  {(isAdmin
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    : isSalesManager
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
@@ -447,13 +454,18 @@ export default function ClientsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
+                    {(isAdmin || isSalesManager) && (
+                      <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
+                        {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
-                    {!isSalesManager && (
+                    {isAdmin && (
                       <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
                     )}
                   </tr>
