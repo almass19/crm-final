@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { ROLE_LABELS } from '@/lib/constants';
 
 function NavIcon({ path, path2 }: { path: string; path2?: string }) {
@@ -52,6 +54,38 @@ function NavLink({ href, icon, label }: NavLinkProps) {
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirm: '' });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('Минимум 6 символов');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirm) {
+      setPasswordError('Пароли не совпадают');
+      return;
+    }
+    setPasswordSubmitting(true);
+    try {
+      await api.changePassword(passwordForm.newPassword);
+      setPasswordSuccess(true);
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess(false);
+        setPasswordForm({ newPassword: '', confirm: '' });
+      }, 1500);
+    } catch (err: unknown) {
+      setPasswordError(err instanceof Error ? err.message : 'Ошибка');
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -119,7 +153,16 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout */}
-        <div className="mt-auto pt-4 border-t border-slate-100">
+        <div className="mt-auto pt-4 border-t border-slate-100 space-y-1">
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+            </svg>
+            <span>Сменить пароль</span>
+          </button>
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors text-sm"
@@ -129,6 +172,55 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full mx-4 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Сменить пароль</h2>
+              <button onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordForm({ newPassword: '', confirm: '' }); }} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            {passwordSuccess ? (
+              <div className="py-4 text-center text-green-600 font-medium">Пароль успешно изменён</div>
+            ) : (
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                {passwordError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{passwordError}</div>
+                )}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Новый пароль</label>
+                  <input
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    placeholder="Минимум 6 символов"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Повторите пароль</label>
+                  <input
+                    type="password"
+                    value={passwordForm.confirm}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    placeholder="Повторите новый пароль"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-1">
+                  <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordForm({ newPassword: '', confirm: '' }); }} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 text-sm">
+                    Отмена
+                  </button>
+                  <button type="submit" disabled={passwordSubmitting} className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 text-sm font-medium">
+                    {passwordSubmitting ? 'Сохранение...' : 'Сохранить'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

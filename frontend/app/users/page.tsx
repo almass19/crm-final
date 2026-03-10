@@ -24,7 +24,9 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -60,6 +62,28 @@ export default function UsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка назначения роли');
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    setError('');
+    try {
+      await api.deleteUser(userId);
+      setConfirmDeleteId(null);
+      fetchUsers();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления');
+    }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    setError('');
+    try {
+      await api.resetUserPassword(userId);
+      setSuccessMsg('Пароль сброшен до password123');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка сброса пароля');
     }
   };
 
@@ -112,6 +136,11 @@ export default function UsersPage() {
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center justify-between">
             <span>{error}</span>
             <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+          </div>
+        )}
+        {successMsg && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm">
+            {successMsg}
           </div>
         )}
 
@@ -168,13 +197,37 @@ export default function UsersPage() {
                       {new Date(u.createdAt).toLocaleDateString('ru-RU')}
                     </td>
                     <td className="px-6 py-4">
-                      {u.id !== user.id && editingUserId !== u.id && (
-                        <button
-                          onClick={() => setEditingUserId(u.id)}
-                          className="text-sm text-primary hover:underline font-medium"
-                        >
-                          Изменить роль
-                        </button>
+                      {u.id !== user.id && (
+                        <div className="flex items-center gap-3">
+                          {editingUserId !== u.id && (
+                            <button
+                              onClick={() => setEditingUserId(u.id)}
+                              className="text-sm text-primary hover:underline font-medium"
+                            >
+                              Роль
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleResetPassword(u.id)}
+                            className="text-sm text-slate-500 hover:text-slate-700 hover:underline"
+                          >
+                            Сбросить пароль
+                          </button>
+                          {confirmDeleteId === u.id ? (
+                            <span className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-500">Удалить?</span>
+                              <button onClick={() => handleDelete(u.id)} className="text-red-600 font-medium hover:underline">Да</button>
+                              <button onClick={() => setConfirmDeleteId(null)} className="text-slate-400 hover:underline">Нет</button>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteId(u.id)}
+                              className="text-sm text-red-500 hover:text-red-700 hover:underline"
+                            >
+                              Удалить
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>

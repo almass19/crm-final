@@ -47,6 +47,18 @@ export const api = {
       body: JSON.stringify({ role }),
     }),
 
+  deleteUser: (userId: string) =>
+    request(`/users/${userId}`, { method: 'DELETE' }),
+
+  resetUserPassword: (userId: string) =>
+    request(`/users/${userId}/reset-password`, { method: 'POST' }),
+
+  changePassword: (password: string) =>
+    request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
   getClients: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
     return request(`/clients${query}`);
