@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -59,6 +59,41 @@ export default function Sidebar() {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  const [telegramConnected, setTelegramConnected] = useState<boolean | null>(null);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+
+  const checkTelegramStatus = async () => {
+    try {
+      const res = await fetch('/api/telegram/status');
+      const data = await res.json();
+      setTelegramConnected(data.connected);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleTelegramConnect = async () => {
+    setTelegramLoading(true);
+    try {
+      if (telegramConnected === null) {
+        await checkTelegramStatus();
+        setTelegramLoading(false);
+        return;
+      }
+      if (telegramConnected) {
+        await fetch('/api/telegram/disconnect', { method: 'POST' });
+        setTelegramConnected(false);
+      } else {
+        const res = await fetch('/api/telegram/connect', { method: 'POST' });
+        const data = await res.json();
+        if (data.url) window.open(data.url, '_blank');
+      }
+    } catch {
+      // ignore
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +121,11 @@ export default function Sidebar() {
       setPasswordSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (user) checkTelegramStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   if (!user) return null;
 
@@ -162,6 +202,26 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
             </svg>
             <span>Сменить пароль</span>
+          </button>
+          <button
+            onClick={handleTelegramConnect}
+            disabled={telegramLoading}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${
+              telegramConnected
+                ? 'text-blue-600 hover:bg-blue-50'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.5l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.958.059z"/>
+            </svg>
+            <span>
+              {telegramLoading
+                ? 'Загрузка...'
+                : telegramConnected
+                ? 'Telegram ✓ (отключить)'
+                : 'Подключить Telegram'}
+            </span>
           </button>
           <button
             onClick={logout}

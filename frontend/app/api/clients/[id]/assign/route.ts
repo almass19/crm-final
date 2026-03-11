@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { createClientAssignedNotification } from '@/lib/notifications';
 
 export async function POST(
   request: Request,
@@ -15,7 +16,7 @@ export async function POST(
 
     const { data: client } = await supabase
       .from('clients')
-      .select('*')
+      .select('id, status, assigned_to_id, designer_id, full_name, company_name')
       .eq('id', clientId)
       .single();
 
@@ -81,6 +82,16 @@ export async function POST(
         client_id: clientId,
         details: `Специалист назначен: ${specialist.full_name}`,
       });
+
+      if (specialistId !== user.id) {
+        await createClientAssignedNotification(supabase, {
+          assigneeId: specialistId,
+          clientId,
+          clientName: client.company_name || client.full_name,
+          assignerName: user.fullName,
+          role: 'specialist',
+        });
+      }
     }
 
     if (designerId) {
@@ -116,6 +127,16 @@ export async function POST(
         client_id: clientId,
         details: `Дизайнер назначен: ${designer.full_name}`,
       });
+
+      if (designerId !== user.id) {
+        await createClientAssignedNotification(supabase, {
+          assigneeId: designerId,
+          clientId,
+          clientName: client.company_name || client.full_name,
+          assignerName: user.fullName,
+          role: 'designer',
+        });
+      }
     }
 
     if (client.status === 'NEW') {
