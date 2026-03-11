@@ -55,7 +55,7 @@ export async function POST(
         .eq('id', specialistId)
         .single();
 
-      if (!specialist || !['SPECIALIST', 'ADMIN'].includes(specialist.role)) {
+      if (!specialist || !['SPECIALIST', 'ADMIN', 'LEAD_DESIGNER'].includes(specialist.role)) {
         return NextResponse.json(
           { message: 'Указанный пользователь не является специалистом' },
           { status: 400 },

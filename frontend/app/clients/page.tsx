@@ -161,8 +161,8 @@ export default function ClientsPage() {
         Promise.all([api.getUsers('sales_manager'), api.getUsers('admin')])
           .then(([managers, admins]) => setSalesManagers([...managers, ...admins]))
           .catch(() => {});
-        Promise.all([api.getUsers('specialist'), api.getUsers('admin')])
-          .then(([specs, admins]) => setSpecialists([...specs, ...admins]))
+        Promise.all([api.getUsers('specialist'), api.getUsers('admin'), api.getUsers('lead_designer')])
+          .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
           .catch(() => {});
       }
     }
