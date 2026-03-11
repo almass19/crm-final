@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/supabase/auth-helpers';
+import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
@@ -57,6 +57,26 @@ export async function GET(
 
     const sanitized = sanitizeClient(client as Record<string, unknown>, user.role);
     return NextResponse.json(snakeToCamel(sanitized));
+  } catch (e) {
+    if (e instanceof NextResponse) return e;
+    return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await requireRoles('ADMIN');
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
   } catch (e) {
     if (e instanceof NextResponse) return e;
     return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });

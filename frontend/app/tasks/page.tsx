@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -44,6 +44,7 @@ export default function TasksPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [allUsers, setAllUsers] = useState<UserOption[]>([]);
   const [viewMode, setViewMode] = useState<'my' | 'all'>('my');
+  const [confirmDeleteTaskId, setConfirmDeleteTaskId] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
@@ -81,6 +82,16 @@ export default function TasksPage() {
       fetchTasks();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await api.deleteTask(taskId);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      setConfirmDeleteTaskId(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления');
     }
   };
 
@@ -197,7 +208,7 @@ export default function TasksPage() {
                       {viewMode === 'all' ? task.assignee?.fullName || 'Не назначен' : task.creator.fullName}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         {task.status === 'NEW' && (
                           <button
                             onClick={() => handleStatusChange(task.id, 'IN_PROGRESS')}
@@ -213,6 +224,21 @@ export default function TasksPage() {
                           >
                             Завершить
                           </button>
+                        )}
+                        {user.role === 'ADMIN' && (
+                          confirmDeleteTaskId === task.id ? (
+                            <span className="flex items-center gap-1 text-sm">
+                              <button onClick={() => handleDeleteTask(task.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Да</button>
+                              <button onClick={() => setConfirmDeleteTaskId(null)} className="text-slate-400 hover:text-slate-600 text-sm">Нет</button>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteTaskId(task.id)}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              Удалить
+                            </button>
+                          )
                         )}
                       </div>
                     </td>
@@ -260,6 +286,24 @@ function CreateTaskModal({
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
+  const [showClientList, setShowClientList] = useState(false);
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
+        setShowClientList(false);
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, []);
+
+  const filteredClients = clients.filter((c) => {
+    const name = (c.fullName || c.companyName || '').toLowerCase();
+    return name.includes(clientSearch.toLowerCase());
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,14 +356,38 @@ function CreateTaskModal({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
+            <div ref={clientDropdownRef} className="relative">
               <label className={labelCls}>Клиент *</label>
-              <select value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })} className={inputCls}>
-                <option value="">Выберите клиента</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.fullName || c.companyName}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                value={clientSearch}
+                onChange={(e) => {
+                  setClientSearch(e.target.value);
+                  setForm({ ...form, clientId: '' });
+                  setShowClientList(true);
+                }}
+                onFocus={() => setShowClientList(true)}
+                className={inputCls}
+                placeholder="Поиск клиента..."
+                autoComplete="off"
+              />
+              {showClientList && filteredClients.length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredClients.map((c) => (
+                    <li
+                      key={c.id}
+                      className="px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 text-slate-700"
+                      onMouseDown={() => {
+                        setForm({ ...form, clientId: c.id });
+                        setClientSearch(c.fullName || c.companyName || '');
+                        setShowClientList(false);
+                      }}
+                    >
+                      {c.fullName || c.companyName}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div>

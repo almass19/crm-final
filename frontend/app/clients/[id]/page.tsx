@@ -113,6 +113,7 @@ export default function ClientDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [creatives, setCreatives] = useState<Creative[]>([]);
   const [showAddCreativeModal, setShowAddCreativeModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const fetchClient = useCallback(async () => {
     try {
@@ -247,6 +248,16 @@ export default function ClientDetailPage() {
       router.push('/clients');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.deleteClient(id);
+      router.push('/clients');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления');
+      setConfirmDelete(false);
     }
   };
 
@@ -492,6 +503,20 @@ export default function ClientDetailPage() {
                     >
                       Архивировать
                     </button>
+                    {confirmDelete ? (
+                      <span className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-600">Удалить?</span>
+                        <button onClick={handleDelete} className="text-red-500 hover:text-red-700 text-sm font-medium">Да</button>
+                        <button onClick={() => setConfirmDelete(false)} className="text-slate-400 hover:text-slate-600 text-sm">Нет</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Удалить
+                      </button>
+                    )}
                   </>
                 )}
 

@@ -75,6 +75,9 @@ export const api = {
   archiveClient: (id: string) =>
     request(`/clients/${id}/archive`, { method: 'PATCH' }),
 
+  deleteClient: (id: string) =>
+    request(`/clients/${id}`, { method: 'DELETE' }),
+
   assignClient: (id: string, data: { specialistId?: string; designerId?: string }) =>
     request(`/clients/${id}/assign`, {
       method: 'POST',
