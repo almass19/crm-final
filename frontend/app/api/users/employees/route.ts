@@ -11,7 +11,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, email, full_name, role')
-      .in('role', ['SPECIALIST', 'DESIGNER', 'SALES_MANAGER'])
+      .in('role', ['TARGETOLOGIST', 'DESIGNER', 'SALES_MANAGER'])
       .order('full_name', { ascending: true });
 
     if (error) throw error;

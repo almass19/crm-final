@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
 
   const getRoleDashboardTitle = (role: string) => {
     switch (role) {
-      case 'SPECIALIST':
+      case 'TARGETOLOGIST':
       case 'DESIGNER': return 'Клиенты (принятые в работу)';
       case 'SALES_MANAGER': return 'Созданные клиенты';
       default: return 'Клиенты';

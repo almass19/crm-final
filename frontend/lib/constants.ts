@@ -1,7 +1,10 @@
 export const STATUS_LABELS: Record<string, string> = {
   NEW: 'Новый',
   ASSIGNED: 'Назначен',
-  IN_WORK: 'В работе',
+  ONBOARDING: 'Онбординг',
+  SETUP: 'Настройка',
+  LAUNCHED: 'Запущен',
+  IN_WORK: 'Ведение',
   RENEWAL: 'В процессе продления',
   DONE: 'Завершён',
 };
@@ -9,14 +12,17 @@ export const STATUS_LABELS: Record<string, string> = {
 export const STATUS_COLORS: Record<string, string> = {
   NEW: 'bg-blue-100 text-blue-700',
   ASSIGNED: 'bg-amber-100 text-amber-700',
+  ONBOARDING: 'bg-sky-100 text-sky-700',
+  SETUP: 'bg-orange-100 text-orange-700',
+  LAUNCHED: 'bg-emerald-100 text-emerald-700',
   IN_WORK: 'bg-green-100 text-green-700',
   RENEWAL: 'bg-purple-100 text-purple-700',
   DONE: 'bg-slate-100 text-slate-600',
 };
 
 export const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Администратор',
-  SPECIALIST: 'Специалист',
+  ADMIN: 'Руководитель',
+  TARGETOLOGIST: 'Таргетолог',
   SALES_MANAGER: 'Менеджер по продажам',
   DESIGNER: 'Дизайнер',
   LEAD_DESIGNER: 'Главный дизайнер',

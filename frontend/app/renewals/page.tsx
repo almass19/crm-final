@@ -42,7 +42,7 @@ export default function RenewalsPage() {
 
   const fetchRenewals = useCallback(async () => {
     if (!user) return;
-    if (user.role !== 'ADMIN' && user.role !== 'SPECIALIST') {
+    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
       router.replace('/clients');
       return;
     }
@@ -85,7 +85,7 @@ export default function RenewalsPage() {
     );
   }
 
-  if (user.role !== 'ADMIN' && user.role !== 'SPECIALIST') {
+  if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light">
         <div className="text-red-500">Доступ запрещён</div>

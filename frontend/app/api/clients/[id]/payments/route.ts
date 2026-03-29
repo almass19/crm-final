@@ -12,7 +12,7 @@ export async function GET(
     const { id: clientId } = await params;
     const supabase = await createClient();
 
-    if (user.role === 'SPECIALIST' || user.role === 'DESIGNER') {
+    if (user.role === 'TARGETOLOGIST' || user.role === 'DESIGNER') {
       return NextResponse.json(
         { message: 'Недостаточно прав для просмотра платежей' },
         { status: 403 },

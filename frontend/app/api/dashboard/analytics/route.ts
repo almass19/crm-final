@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       supabase
         .from('profiles')
         .select('id, full_name, role')
-        .in('role', ['SALES_MANAGER', 'SPECIALIST', 'DESIGNER', 'LEAD_DESIGNER']),
+        .in('role', ['SALES_MANAGER', 'TARGETOLOGIST', 'DESIGNER', 'LEAD_DESIGNER']),
     ]);
 
     const allClients = allClientsRes.data || [];

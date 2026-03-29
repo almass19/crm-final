@@ -56,9 +56,9 @@ export async function POST(
         .eq('id', specialistId)
         .single();
 
-      if (!specialist || !['SPECIALIST', 'ADMIN', 'LEAD_DESIGNER'].includes(specialist.role)) {
+      if (!specialist || !['TARGETOLOGIST', 'ADMIN', 'LEAD_DESIGNER'].includes(specialist.role)) {
         return NextResponse.json(
-          { message: 'Указанный пользователь не является специалистом' },
+          { message: 'Указанный пользователь не является таргетологом' },
           { status: 400 },
         );
       }
@@ -70,12 +70,12 @@ export async function POST(
 
       await supabase.from('assignment_history').insert({
         client_id: clientId,
-        type: 'SPECIALIST',
+        type: 'TARGETOLOGIST',
         specialist_id: specialistId,
         assigned_by_id: user.id,
       });
 
-      const action = oldAssignee ? 'SPECIALIST_REASSIGNED' : 'SPECIALIST_ASSIGNED';
+      const action = oldAssignee ? 'TARGETOLOGIST_REASSIGNED' : 'TARGETOLOGIST_ASSIGNED';
       await supabase.from('audit_logs').insert({
         action,
         user_id: user.id,

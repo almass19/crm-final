@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
-  if (role === 'SPECIALIST' || role === 'DESIGNER') {
+  if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
     const { payment_amount, ...rest } = client;
     return rest;
   }
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       query = query
         .eq('sold_by_id', user.id)
         .or(`purchase_date.gte.${firstDayOfMonth},status.eq.NEW`);
-    } else if (user.role === 'SPECIALIST') {
+    } else if (user.role === 'TARGETOLOGIST') {
       query = query.eq('assigned_to_id', user.id);
     } else if (user.role === 'DESIGNER') {
       query = query.eq('designer_id', user.id);

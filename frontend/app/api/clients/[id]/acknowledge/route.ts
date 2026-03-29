@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await requireRoles('SPECIALIST', 'DESIGNER', 'ADMIN');
+    const user = await requireRoles('TARGETOLOGIST', 'DESIGNER', 'ADMIN');
     const { id: clientId } = await params;
     const supabase = await createClient();
 
@@ -45,7 +45,7 @@ export async function POST(
         .eq('id', clientId);
 
       await supabase.from('audit_logs').insert({
-        action: 'SPECIALIST_ACKNOWLEDGED',
+        action: 'TARGETOLOGIST_ACKNOWLEDGED',
         user_id: user.id,
         client_id: clientId,
         details: 'Специалист принял клиента в работу',

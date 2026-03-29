@@ -173,11 +173,11 @@ export default function Sidebar() {
             <NavLink href="/tasks" icon="tasks" label="Задачи" />
           )}
 
-          {['ADMIN', 'SPECIALIST'].includes(user.role || '') && (
+          {['ADMIN', 'TARGETOLOGIST'].includes(user.role || '') && (
             <NavLink href="/renewals" icon="renewals" label="Продлеваемые" />
           )}
 
-          {['ADMIN', 'SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(
+          {['ADMIN', 'TARGETOLOGIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(
             user.role || ''
           ) && <NavLink href="/dashboard" icon="dashboard" label="Мой дашборд" />}
 

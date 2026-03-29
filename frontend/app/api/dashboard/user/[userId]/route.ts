@@ -42,7 +42,7 @@ export async function GET(
     let query;
 
     switch (targetUser.role as UserRole) {
-      case 'SPECIALIST':
+      case 'TARGETOLOGIST':
         query = supabase
           .from('clients')
           .select(clientSelect)

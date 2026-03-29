@@ -65,7 +65,7 @@ export default function DashboardPage() {
       return;
     }
     if (user) {
-      if (!['ADMIN', 'SPECIALIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '')) {
+      if (!['ADMIN', 'TARGETOLOGIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(user.role || '')) {
         router.replace('/clients');
         return;
       }
@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
   const getRoleDashboardTitle = () => {
     switch (user.role) {
-      case 'SPECIALIST': return 'Мои клиенты (принятые в работу)';
+      case 'TARGETOLOGIST': return 'Мои клиенты (принятые в работу)';
       case 'DESIGNER': return 'Мои клиенты (принятые в работу)';
       case 'ADMIN':
       case 'SALES_MANAGER': return 'Мои созданные клиенты';

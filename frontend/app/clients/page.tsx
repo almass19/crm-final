@@ -161,7 +161,7 @@ export default function ClientsPage() {
         Promise.all([api.getUsers('sales_manager'), api.getUsers('admin')])
           .then(([managers, admins]) => setSalesManagers([...managers, ...admins]))
           .catch(() => {});
-        Promise.all([api.getUsers('specialist'), api.getUsers('admin'), api.getUsers('lead_designer')])
+        Promise.all([api.getUsers('targetologist'), api.getUsers('admin'), api.getUsers('lead_designer')])
           .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
           .catch(() => {});
       }
@@ -181,7 +181,7 @@ export default function ClientsPage() {
     );
   }
 
-  const isSpecialist = user.role === 'SPECIALIST';
+  const isSpecialist = user.role === 'TARGETOLOGIST';
   const isDesigner = user.role === 'DESIGNER';
   const isSalesManager = user.role === 'SALES_MANAGER';
   const isAdmin = user.role === 'ADMIN';
@@ -204,7 +204,7 @@ export default function ClientsPage() {
   const filteredClients = isSpecialist
     ? activeTab === 'new'
       ? clients.filter((c) => !c.assignmentSeen && c.status === 'ASSIGNED')
-      : clients.filter((c) => c.assignmentSeen || c.status === 'IN_WORK' || c.status === 'DONE')
+      : clients.filter((c) => c.assignmentSeen || ['ONBOARDING', 'SETUP', 'LAUNCHED', 'IN_WORK', 'RENEWAL', 'DONE'].includes(c.status))
     : isDesigner
     ? activeTab === 'new'
       ? clients.filter((c) => !c.designerAssignmentSeen)

@@ -1,5 +1,5 @@
-export type UserRole = 'ADMIN' | 'SPECIALIST' | 'SALES_MANAGER' | 'DESIGNER' | 'LEAD_DESIGNER';
-export type ClientStatus = 'NEW' | 'ASSIGNED' | 'IN_WORK' | 'DONE' | 'REJECTED';
+export type UserRole = 'ADMIN' | 'TARGETOLOGIST' | 'SALES_MANAGER' | 'DESIGNER' | 'LEAD_DESIGNER';
+export type ClientStatus = 'NEW' | 'ASSIGNED' | 'ONBOARDING' | 'SETUP' | 'LAUNCHED' | 'IN_WORK' | 'DONE' | 'REJECTED';
 export type TaskStatus = 'NEW' | 'IN_PROGRESS' | 'DONE';
 
 export interface User {

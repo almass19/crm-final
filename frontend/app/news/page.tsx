@@ -9,8 +9,8 @@ import NotificationBell from '@/components/NotificationBell';
 import { Publication } from '@/lib/types';
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Админ',
-  SPECIALIST: 'Специалист',
+  ADMIN: 'Руководитель',
+  TARGETOLOGIST: 'Таргетолог',
   SALES_MANAGER: 'Менеджер',
   DESIGNER: 'Дизайнер',
   LEAD_DESIGNER: 'Лид-дизайнер',

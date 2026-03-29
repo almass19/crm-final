@@ -13,7 +13,7 @@ export async function PATCH(
     const { role } = await request.json();
     const supabase = await createClient();
 
-    const validRoles = ['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER'];
+    const validRoles = ['ADMIN', 'TARGETOLOGIST', 'SALES_MANAGER', 'DESIGNER'];
     if (!role || !validRoles.includes(role)) {
       return NextResponse.json({ message: 'Некорректная роль' }, { status: 400 });
     }

@@ -4,7 +4,7 @@ import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
-  if (role === 'SPECIALIST' || role === 'DESIGNER') {
+  if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
     const { payment_amount, ...rest } = client;
     return rest;
   }
@@ -47,7 +47,7 @@ export async function GET(
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
-    if (user.role === 'SPECIALIST' && client.assigned_to_id !== user.id) {
+    if (user.role === 'TARGETOLOGIST' && client.assigned_to_id !== user.id) {
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
@@ -107,7 +107,7 @@ export async function PATCH(
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
-    if (user.role === 'SPECIALIST' && client.assigned_to_id !== user.id) {
+    if (user.role === 'TARGETOLOGIST' && client.assigned_to_id !== user.id) {
       return NextResponse.json({ message: 'Нет доступа к данному клиенту' }, { status: 403 });
     }
 
@@ -122,8 +122,8 @@ export async function PATCH(
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
     }
 
-    // SPECIALIST can set launch date for their own client
-    if (body.launchDate !== undefined && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER' && user.role !== 'SPECIALIST') {
+    // TARGETOLOGIST can set launch date for their own client
+    if (body.launchDate !== undefined && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER' && user.role !== 'TARGETOLOGIST') {
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
     }
 
@@ -135,7 +135,7 @@ export async function PATCH(
     }
 
     if (body.status && user.role !== 'ADMIN') {
-      const isAssignedSpecialist = (user.role === 'SPECIALIST') && client.assigned_to_id === user.id;
+      const isAssignedSpecialist = (user.role === 'TARGETOLOGIST') && client.assigned_to_id === user.id;
       if (!isAssignedSpecialist) {
         return NextResponse.json(
           { message: 'Недостаточно прав для смены статуса' },

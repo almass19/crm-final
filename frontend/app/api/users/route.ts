@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       const upperRole = role.toUpperCase();
-      if (['ADMIN', 'SPECIALIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER'].includes(upperRole)) {
+      if (['ADMIN', 'TARGETOLOGIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER'].includes(upperRole)) {
         query = query.eq('role', upperRole);
       }
     }

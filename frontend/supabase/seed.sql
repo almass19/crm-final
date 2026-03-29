@@ -18,8 +18,8 @@
 -- After creating auth users, update their roles in profiles:
 update profiles set role = 'ADMIN' where email = 'admin@crm.local';
 update profiles set role = 'SALES_MANAGER' where email = 'sales@crm.local';
-update profiles set role = 'SPECIALIST' where email = 'spec1@crm.local';
-update profiles set role = 'SPECIALIST' where email = 'spec2@crm.local';
+update profiles set role = 'TARGETOLOGIST' where email = 'spec1@crm.local';
+update profiles set role = 'TARGETOLOGIST' where email = 'spec2@crm.local';
 update profiles set role = 'DESIGNER' where email = 'designer1@crm.local';
 
 -- =============================================================

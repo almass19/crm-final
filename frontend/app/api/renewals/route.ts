@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth();
     const supabase = await createClient();
 
-    if (user.role !== 'ADMIN' && user.role !== 'SPECIALIST') {
+    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
       return NextResponse.json(
         { message: 'Недостаточно прав для просмотра продлений' },
         { status: 403 },
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .eq('is_renewal', true)
       .eq('month', month);
 
-    if (user.role === 'SPECIALIST') {
+    if (user.role === 'TARGETOLOGIST') {
       const { data: assignedClients } = await supabase
         .from('clients')
         .select('id')
