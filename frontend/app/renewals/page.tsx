@@ -160,7 +160,7 @@ export default function RenewalsPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Продляемые</h1>
           <p className="text-slate-500 mt-1">
-            {totalRenewals > 0 ? `${totalRenewals} клиент${totalRenewals === 1 ? '' : totalRenewals < 5 ? 'а' : 'ов'} с продлением` : 'Нет продлений за выбранный месяц'}
+            {displayedClients.length > 0 ? `${displayedClients.length} клиент${displayedClients.length === 1 ? '' : displayedClients.length < 5 ? 'а' : 'ов'} с продлением` : 'Нет продлений за выбранный месяц'}
           </p>
         </div>
 
