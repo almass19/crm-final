@@ -16,7 +16,12 @@ interface Client {
   status: string;
   purchaseDate: string | null;
   launchDate: string | null;
-  assignedTo: { fullName: string } | null;
+  assignedTo: { id: string; fullName: string } | null;
+}
+
+interface UserOption {
+  id: string;
+  fullName: string;
 }
 
 const MONTH_NAMES = [
@@ -31,6 +36,8 @@ export default function RenewalsPage() {
   const [totalRenewals, setTotalRenewals] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [specialists, setSpecialists] = useState<UserOption[]>([]);
+  const [specialistFilter, setSpecialistFilter] = useState('');
 
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -64,7 +71,14 @@ export default function RenewalsPage() {
       router.replace('/login');
       return;
     }
-    if (user) fetchRenewals();
+    if (user) {
+      fetchRenewals();
+      if (user.role === 'ADMIN') {
+        Promise.all([api.getUsers('targetologist'), api.getUsers('admin'), api.getUsers('lead_designer')])
+          .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
+          .catch(() => {});
+      }
+    }
   }, [authLoading, user, fetchRenewals, router]);
 
   const handlePrevMonth = () => {
@@ -95,6 +109,10 @@ export default function RenewalsPage() {
 
   const isAdmin = user.role === 'ADMIN';
 
+  const displayedClients = specialistFilter
+    ? clients.filter((c) => c.assignedTo?.id === specialistFilter)
+    : clients;
+
   return (
     <AppShell>
       {/* Sticky Header */}
@@ -121,6 +139,18 @@ export default function RenewalsPage() {
           </button>
         </div>
         <div className="flex items-center gap-3">
+          {isAdmin && specialists.length > 0 && (
+            <select
+              value={specialistFilter}
+              onChange={(e) => setSpecialistFilter(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 text-slate-700"
+            >
+              <option value="">Все таргетологи</option>
+              {specialists.map((s) => (
+                <option key={s.id} value={s.id}>{s.fullName}</option>
+              ))}
+            </select>
+          )}
           <NotificationBell />
         </div>
       </div>
@@ -166,7 +196,7 @@ export default function RenewalsPage() {
               </tbody>
             </table>
           </div>
-        ) : clients.length === 0 ? (
+        ) : displayedClients.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
             Нет продлений за выбранный месяц
           </div>
@@ -186,7 +216,7 @@ export default function RenewalsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
-                {clients.map((client) => (
+                {displayedClients.map((client) => (
                   <tr
                     key={client.id}
                     onClick={() => router.push(`/clients/${client.id}`)}
