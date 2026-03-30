@@ -546,16 +546,39 @@ export default function ClientDetailPage() {
                       key={comment.id}
                       className="border-l-2 border-slate-200 pl-4 py-1"
                     >
-                      <div className="flex items-center space-x-2 text-xs text-slate-500">
-                        <span className="font-medium text-slate-700">
-                          {comment.author.fullName}
-                        </span>
-                        <span className="px-1.5 py-0.5 bg-slate-100 rounded">
-                          {ROLE_LABELS[comment.author.role] || comment.author.role}
-                        </span>
-                        <span>
-                          {new Date(comment.createdAt).toLocaleString('ru-RU')}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-xs text-slate-500">
+                          <span className="font-medium text-slate-700">
+                            {comment.author.fullName}
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-slate-100 rounded">
+                            {ROLE_LABELS[comment.author.role] || comment.author.role}
+                          </span>
+                          <span>
+                            {new Date(comment.createdAt).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Удалить комментарий?')) return;
+                              try {
+                                await api.deleteComment(id, comment.id);
+                                const data = await api.getComments(id);
+                                setComments(data);
+                                showToast('Комментарий удалён');
+                              } catch {
+                                showToast('Ошибка удаления', 'error');
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
+                            title="Удалить комментарий"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                       <p className="mt-1 text-sm text-slate-700 whitespace-pre-wrap">
                         {comment.content}
@@ -624,7 +647,7 @@ export default function ClientDetailPage() {
                               </span>
                             )}
                           </div>
-                          <div className="flex space-x-1">
+                          <div className="flex items-center space-x-1">
                             {task.status === 'NEW' && (
                               <button
                                 onClick={() => handleTaskStatusChange(task.id, 'IN_PROGRESS')}
@@ -639,6 +662,27 @@ export default function ClientDetailPage() {
                                 className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded hover:bg-green-200"
                               >
                                 Завершить
+                              </button>
+                            )}
+                            {isAdmin && (
+                              <button
+                                onClick={async () => {
+                                  if (!confirm('Удалить задачу?')) return;
+                                  try {
+                                    await api.deleteTask(task.id);
+                                    const data = await api.getClientTasks(id);
+                                    setTasks(data);
+                                    showToast('Задача удалена');
+                                  } catch {
+                                    showToast('Ошибка удаления', 'error');
+                                  }
+                                }}
+                                className="text-red-400 hover:text-red-600 transition-colors"
+                                title="Удалить задачу"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                               </button>
                             )}
                           </div>

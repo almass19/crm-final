@@ -124,7 +124,7 @@ export default function NewsPage() {
               <div key={pub.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-lg font-bold text-slate-900">{pub.title}</h2>
-                  {isAdmin && pub.authorId === user.id && (
+                  {isAdmin && (
                     <button
                       onClick={() => handleDelete(pub.id)}
                       className="text-sm text-red-500 hover:text-red-700 flex-shrink-0 font-medium"

@@ -96,6 +96,12 @@ export const api = {
       body: JSON.stringify({ content }),
     }),
 
+  deleteComment: (clientId: string, commentId: string) =>
+    request(`/clients/${clientId}/comments`, {
+      method: 'DELETE',
+      body: JSON.stringify({ commentId }),
+    }),
+
   // Dashboard
   getMyDashboard: (year: number, month: number) =>
     request(`/dashboard/my?year=${year}&month=${month}`),
