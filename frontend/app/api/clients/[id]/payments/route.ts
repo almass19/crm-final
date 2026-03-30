@@ -12,11 +12,26 @@ export async function GET(
     const { id: clientId } = await params;
     const supabase = await createClient();
 
-    if (user.role === 'TARGETOLOGIST' || user.role === 'DESIGNER') {
+    if (user.role === 'DESIGNER') {
       return NextResponse.json(
         { message: 'Недостаточно прав для просмотра платежей' },
         { status: 403 },
       );
+    }
+
+    // Targetologist can only see payments for their assigned client
+    if (user.role === 'TARGETOLOGIST') {
+      const { data: client } = await supabase
+        .from('clients')
+        .select('assigned_to_id')
+        .eq('id', clientId)
+        .single();
+      if (!client || client.assigned_to_id !== user.id) {
+        return NextResponse.json(
+          { message: 'Нет доступа к данному клиенту' },
+          { status: 403 },
+        );
+      }
     }
 
     let query = supabase

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -35,6 +35,13 @@ interface UserOption {
   fullName: string;
   role: string;
 }
+
+const SPECIALIST_GROUPS = [
+  { key: 'new', label: 'Новые', statuses: ['ASSIGNED', 'ONBOARDING', 'SETUP'] },
+  { key: 'inwork', label: 'В работе', statuses: ['IN_WORK', 'RENEWAL'] },
+  { key: 'paused', label: 'На паузе', statuses: ['PAUSED'] },
+  { key: 'done', label: 'Завершённые', statuses: ['DONE'] },
+];
 
 const SORT_OPTIONS = [
   { value: 'createdAt:desc', label: 'Сначала новые' },
@@ -95,7 +102,7 @@ export default function ClientsPage() {
   const [specialistFilter, setSpecialistFilter] = useState('');
   const [nicheFilter, setNicheFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
-  const [sortOption, setSortOption] = useState('createdAt:desc');
+  const [sortOption, setSortOption] = useState('purchaseDate:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
   const [urlInitialized, setUrlInitialized] = useState(false);
@@ -125,7 +132,7 @@ export default function ClientsPage() {
     if (salesManagerFilter) sp.set('soldById', salesManagerFilter);
     if (specialistFilter) sp.set('specialistId', specialistFilter);
     if (showUnassigned) sp.set('unassigned', 'true');
-    if (sortOption !== 'createdAt:desc') sp.set('sort', sortOption);
+    if (sortOption !== 'purchaseDate:desc') sp.set('sort', sortOption);
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
   }, [search, statusFilter, nicheFilter, monthFilter, salesManagerFilter, specialistFilter, showUnassigned, sortOption, urlInitialized]);
@@ -201,11 +208,7 @@ export default function ClientsPage() {
     );
   }
 
-  const filteredClients = isSpecialist
-    ? activeTab === 'new'
-      ? clients.filter((c) => !c.assignmentSeen && c.status === 'ASSIGNED')
-      : clients.filter((c) => c.assignmentSeen || ['ONBOARDING', 'SETUP', 'LAUNCHED', 'IN_WORK', 'RENEWAL', 'DONE'].includes(c.status))
-    : isDesigner
+  const filteredClients = isDesigner
     ? activeTab === 'new'
       ? clients.filter((c) => !c.designerAssignmentSeen)
       : clients.filter((c) => c.designerAssignmentSeen)
@@ -231,17 +234,17 @@ export default function ClientsPage() {
 
   const clearFilters = () => {
     setSearch(''); setStatusFilter(''); setShowUnassigned(false);
-    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('createdAt:desc');
+    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('purchaseDate:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || monthFilter || sortOption !== 'createdAt:desc';
+  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
 
   return (
     <AppShell>
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-3 flex-1">
-          {(isSpecialist || isDesigner) && (
+          {isDesigner && (
             <div className="flex bg-slate-100 rounded-lg p-1 flex-shrink-0">
               <button
                 onClick={() => setActiveTab('new')}
@@ -301,8 +304,8 @@ export default function ClientsPage() {
           <p className="text-slate-500 mt-1">Управление базой клиентов и назначениями</p>
         </div>
 
-        {/* Filters (admin/lead designer) */}
-        {!isSpecialist && !isDesigner && (
+        {/* Filters */}
+        {!isDesigner && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
             <div className="flex flex-wrap gap-3 items-center">
               <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={selectCls}>
@@ -411,7 +414,7 @@ export default function ClientsPage() {
           </div>
         ) : displayedClients.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
-            {(isSpecialist || isDesigner) && activeTab === 'new' ? 'Нет новых назначений' : 'Клиенты не найдены'}
+            {isDesigner && activeTab === 'new' ? 'Нет новых назначений' : 'Клиенты не найдены'}
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
@@ -431,45 +434,93 @@ export default function ClientsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
-                {displayedClients.map((client) => (
-                  <tr
-                    key={client.id}
-                    onClick={() => router.push(`/clients/${client.id}`)}
-                    className="hover:bg-slate-50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                          {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">
-                            {client.companyName || client.fullName}
+                {isSpecialist ? (
+                  SPECIALIST_GROUPS.map(({ key, label, statuses }) => {
+                    const groupClients = displayedClients.filter((c) => statuses.includes(c.status));
+                    if (groupClients.length === 0) return null;
+                    return (
+                      <React.Fragment key={key}>
+                        <tr>
+                          <td colSpan={5} className="px-6 py-2 bg-slate-50 border-y border-slate-100">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+                            <span className="ml-2 text-xs text-slate-400">{groupClients.length}</span>
+                          </td>
+                        </tr>
+                        {groupClients.map((client) => (
+                          <tr
+                            key={client.id}
+                            onClick={() => router.push(`/clients/${client.id}`)}
+                            className="hover:bg-slate-50 cursor-pointer transition-colors"
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                                  {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-slate-900">
+                                    {client.companyName || client.fullName}
+                                  </div>
+                                  {client.companyName && client.fullName && (
+                                    <div className="text-xs text-slate-500">{client.fullName}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                            <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
+                            <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                              {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                              {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
+                ) : (
+                  displayedClients.map((client) => (
+                    <tr
+                      key={client.id}
+                      onClick={() => router.push(`/clients/${client.id}`)}
+                      className="hover:bg-slate-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                            {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
                           </div>
-                          {client.companyName && client.fullName && (
-                            <div className="text-xs text-slate-500">{client.fullName}</div>
-                          )}
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">
+                              {client.companyName || client.fullName}
+                            </div>
+                            {client.companyName && client.fullName && (
+                              <div className="text-xs text-slate-500">{client.fullName}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
-                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
-                    {(isAdmin || isSalesManager) && (
-                      <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                        {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
                       </td>
-                    )}
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
-                    </td>
-                    {isAdmin && (
-                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
+                      {(isAdmin || isSalesManager) && (
+                        <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
+                          {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                        </td>
+                      )}
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                        {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                        {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.assignedTo?.fullName || '—'}</td>
+                      )}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

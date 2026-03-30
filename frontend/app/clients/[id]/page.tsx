@@ -74,6 +74,7 @@ interface Payment {
   id: string;
   amount: number;
   month: string;
+  paymentDate: string | null;
   isRenewal: boolean;
   createdAt: string;
   manager: { id: string; fullName: string };
@@ -134,8 +135,7 @@ export default function ClientDetailPage() {
 
   const fetchPayments = useCallback(async () => {
     if (!user) return;
-    // Only Admin and Sales Manager can see payments
-    if (user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') return;
+    if (!['ADMIN', 'SALES_MANAGER', 'TARGETOLOGIST'].includes(user.role || '')) return;
     try {
       const data = await api.getClientPayments(id);
       setPayments(data);
@@ -397,7 +397,7 @@ export default function ClientDetailPage() {
                   <span className="text-slate-500">Дата запуска:</span>
                   <p className="font-medium flex items-center gap-2">
                     {client.launchDate ? new Date(client.launchDate).toLocaleDateString('ru-RU') : '—'}
-                    {(isSpecialist || isAdmin) && client.assignedTo?.id === user.id && (
+                    {(isSpecialist || isAdmin) && (
                       <LaunchDateEditor clientId={client.id} currentDate={client.launchDate} onSaved={fetchClient} />
                     )}
                   </p>
@@ -698,17 +698,19 @@ export default function ClientDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Payments - Only for Admin and Sales Manager */}
-            {(isAdmin || isSalesManager) && (
+            {/* Payments - Admin and Sales Manager can manage, Targetologist can view */}
+            {(isAdmin || isSalesManager || isSpecialist) && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-bold text-slate-900">Платежи</h2>
-                  <button
-                    onClick={() => setShowAddPaymentModal(true)}
-                    className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    + Добавить
-                  </button>
+                  {(isAdmin || isSalesManager) && (
+                    <button
+                      onClick={() => setShowAddPaymentModal(true)}
+                      className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      + Добавить
+                    </button>
+                  )}
                 </div>
                 {payments.length === 0 ? (
                   <p className="text-sm text-slate-500">Платежей пока нет</p>
@@ -736,7 +738,9 @@ export default function ClientDetailPage() {
                           </span>
                         </div>
                         <p className="text-xs text-slate-400 mt-1">
-                          {new Date(p.createdAt).toLocaleDateString('ru-RU')}
+                          {p.paymentDate
+                            ? new Date(p.paymentDate + 'T00:00:00').toLocaleDateString('ru-RU')
+                            : new Date(p.createdAt).toLocaleDateString('ru-RU')}
                         </p>
                       </div>
                     ))}

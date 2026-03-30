@@ -1,10 +1,10 @@
 export const STATUS_LABELS: Record<string, string> = {
   NEW: 'Новый',
   ASSIGNED: 'Назначен',
-  ONBOARDING: 'Онбординг',
+  ONBOARDING: 'Брифинг',
   SETUP: 'Настройка',
-  LAUNCHED: 'Запущен',
   IN_WORK: 'Ведение',
+  PAUSED: 'На паузе',
   RENEWAL: 'В процессе продления',
   DONE: 'Завершён',
 };
@@ -14,8 +14,8 @@ export const STATUS_COLORS: Record<string, string> = {
   ASSIGNED: 'bg-amber-100 text-amber-700',
   ONBOARDING: 'bg-sky-100 text-sky-700',
   SETUP: 'bg-orange-100 text-orange-700',
-  LAUNCHED: 'bg-emerald-100 text-emerald-700',
   IN_WORK: 'bg-green-100 text-green-700',
+  PAUSED: 'bg-yellow-100 text-yellow-700',
   RENEWAL: 'bg-purple-100 text-purple-700',
   DONE: 'bg-slate-100 text-slate-600',
 };
