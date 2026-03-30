@@ -1187,6 +1187,8 @@ function EditClientModal({
     services: client.services || [],
     notes: client.notes || '',
     soldById: client.soldById || '',
+    purchaseDate: client.purchaseDate ? client.purchaseDate.split('T')[0] : '',
+    paymentAmount: client.paymentAmount ? String(client.paymentAmount) : '',
   });
   const [salesManagers, setSalesManagers] = useState<{ id: string; fullName: string }[]>([]);
   const [error, setError] = useState('');
@@ -1222,8 +1224,12 @@ function EditClientModal({
         niche: form.niche || null,
         services: form.services,
         notes: form.notes || null,
+        purchaseDate: form.purchaseDate || null,
       };
-      if (isAdmin) payload.soldById = form.soldById || null;
+      if (isAdmin) {
+        payload.soldById = form.soldById || null;
+        payload.paymentAmount = form.paymentAmount ? parseFloat(form.paymentAmount) : null;
+      }
       await api.updateClient(client.id, payload);
       onSaved();
     } catch (err: unknown) {
@@ -1326,6 +1332,16 @@ function EditClientModal({
             </div>
 
             <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Дата покупки</label>
+              <input
+                type="date"
+                value={form.purchaseDate}
+                onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Заметки</label>
               <textarea
                 value={form.notes}
@@ -1336,6 +1352,18 @@ function EditClientModal({
             </div>
 
             {isAdmin && (
+              <>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Сумма оплаты (₸)</label>
+                <input
+                  type="number"
+                  value={form.paymentAmount}
+                  onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
+                  min="0"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  placeholder="0"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Продавец</label>
                 <select
@@ -1349,6 +1377,7 @@ function EditClientModal({
                   ))}
                 </select>
               </div>
+              </>
             )}
 
             <div className="flex justify-end space-x-3 pt-2">
