@@ -165,8 +165,8 @@ export default function ClientDetailPage() {
       fetchPayments();
       fetchCreatives();
       if (user.role === 'ADMIN') {
-        Promise.all([api.getUsers('specialist'), api.getUsers('admin'), api.getUsers('lead_designer')])
-          .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
+        api.getUsers('targetologist')
+          .then((specs) => setSpecialists(specs))
           .catch(() => {});
       }
       if (user.role === 'LEAD_DESIGNER') {
