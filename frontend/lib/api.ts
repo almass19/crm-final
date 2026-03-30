@@ -142,6 +142,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  deletePayment: (clientId: string, paymentId: string) =>
+    request(`/clients/${clientId}/payments/${paymentId}`, { method: 'DELETE' }),
+
   // Creatives
   getClientCreatives: (clientId: string) =>
     request(`/clients/${clientId}/creatives`),

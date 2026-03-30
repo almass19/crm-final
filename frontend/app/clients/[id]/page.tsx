@@ -727,15 +727,37 @@ export default function ClientDetailPage() {
                               {p.month}
                             </p>
                           </div>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded ${
-                              p.isRenewal
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}
-                          >
-                            {p.isRenewal ? 'Продление' : 'Первичная'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded ${
+                                p.isRenewal
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}
+                            >
+                              {p.isRenewal ? 'Продление' : 'Первичная'}
+                            </span>
+                            {isAdmin && (
+                              <button
+                                onClick={async () => {
+                                  if (!confirm('Удалить платёж?')) return;
+                                  try {
+                                    await api.deletePayment(id, p.id);
+                                    fetchPayments();
+                                    showToast('Платёж удалён');
+                                  } catch {
+                                    showToast('Ошибка удаления', 'error');
+                                  }
+                                }}
+                                className="text-red-400 hover:text-red-600 transition-colors"
+                                title="Удалить платёж"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-xs text-slate-400 mt-1">
                           {p.paymentDate
