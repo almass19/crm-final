@@ -422,7 +422,7 @@ export default function ClientsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isAdmin
-                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
@@ -502,7 +502,9 @@ export default function ClientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                        {isAdmin ? (client.designer?.fullName || '—') : client.phone}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                       {(isAdmin || isSalesManager) && (
                         <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
