@@ -80,7 +80,9 @@ export default function RenewalsPage() {
           .catch(() => {});
       }
       if (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') {
-        api.getUsers('lead_designer').then(setDesigners).catch(() => {});
+        Promise.all([api.getUsers('lead_designer'), api.getUsers('designer')])
+          .then(([leads, designers]) => setDesigners([...leads, ...designers]))
+          .catch(() => {});
       }
     }
   }, [authLoading, user, fetchRenewals, router]);
