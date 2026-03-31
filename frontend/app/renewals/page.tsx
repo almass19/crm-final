@@ -17,6 +17,7 @@ interface Client {
   purchaseDate: string | null;
   launchDate: string | null;
   assignedTo: { id: string; fullName: string } | null;
+  designer: { fullName: string } | null;
 }
 
 interface UserOption {
@@ -174,7 +175,7 @@ export default function RenewalsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isAdmin
-                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -206,7 +207,7 @@ export default function RenewalsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isAdmin
-                    ? ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -237,7 +238,9 @@ export default function RenewalsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{client.phone}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {isAdmin ? (client.designer?.fullName || '—') : client.phone}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
