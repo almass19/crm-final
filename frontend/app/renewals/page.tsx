@@ -50,7 +50,7 @@ export default function RenewalsPage() {
 
   const fetchRenewals = useCallback(async () => {
     if (!user) return;
-    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
+    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST' && user.role !== 'LEAD_DESIGNER') {
       router.replace('/clients');
       return;
     }
@@ -100,7 +100,7 @@ export default function RenewalsPage() {
     );
   }
 
-  if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
+  if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST' && user.role !== 'LEAD_DESIGNER') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light">
         <div className="text-red-500">Доступ запрещён</div>
@@ -109,6 +109,7 @@ export default function RenewalsPage() {
   }
 
   const isAdmin = user.role === 'ADMIN';
+  const isLeadDesigner = user.role === 'LEAD_DESIGNER';
 
   const displayedClients = specialistFilter
     ? clients.filter((c) => c.assignedTo?.id === specialistFilter)

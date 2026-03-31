@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth();
     const supabase = await createClient();
 
-    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST') {
+    if (user.role !== 'ADMIN' && user.role !== 'TARGETOLOGIST' && user.role !== 'LEAD_DESIGNER') {
       return NextResponse.json(
         { message: 'Недостаточно прав для просмотра продлений' },
         { status: 403 },
@@ -37,6 +37,18 @@ export async function GET(request: NextRequest) {
         .select('id')
         .eq('assigned_to_id', user.id);
       const clientIds = (assignedClients || []).map((c) => c.id);
+      if (clientIds.length === 0) {
+        return NextResponse.json({ month, totalRenewals: 0, clients: [] });
+      }
+      paymentsQuery = paymentsQuery.in('client_id', clientIds);
+    }
+
+    if (user.role === 'LEAD_DESIGNER') {
+      const { data: designerClients } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('designer_id', user.id);
+      const clientIds = (designerClients || []).map((c) => c.id);
       if (clientIds.length === 0) {
         return NextResponse.json({ month, totalRenewals: 0, clients: [] });
       }

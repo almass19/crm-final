@@ -173,7 +173,7 @@ export default function Sidebar() {
             <NavLink href="/tasks" icon="tasks" label="Задачи" />
           )}
 
-          {['ADMIN', 'TARGETOLOGIST'].includes(user.role || '') && (
+          {['ADMIN', 'TARGETOLOGIST', 'LEAD_DESIGNER'].includes(user.role || '') && (
             <NavLink href="/renewals" icon="renewals" label="Продлеваемые" />
           )}
 
