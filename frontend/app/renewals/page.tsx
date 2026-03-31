@@ -80,9 +80,13 @@ export default function RenewalsPage() {
           .catch(() => {});
       }
       if (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') {
-        Promise.all([api.getUsers('lead_designer'), api.getUsers('designer')])
-          .then(([leads, designers]) => setDesigners([...leads, ...designers]))
-          .catch(() => {});
+        Promise.allSettled([api.getUsers('lead_designer'), api.getUsers('designer')])
+          .then((results) => {
+            const all = results
+              .filter((r): r is PromiseFulfilledResult<UserOption[]> => r.status === 'fulfilled')
+              .flatMap((r) => r.value);
+            setDesigners(all);
+          });
       }
     }
   }, [authLoading, user, fetchRenewals, router]);
