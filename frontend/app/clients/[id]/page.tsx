@@ -245,7 +245,7 @@ export default function ClientDetailPage() {
     if (!confirm('Архивировать клиента?')) return;
     try {
       await api.archiveClient(id);
-      router.push('/clients');
+      router.back();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка');
     }
@@ -254,7 +254,7 @@ export default function ClientDetailPage() {
   const handleDelete = async () => {
     try {
       await api.deleteClient(id);
-      router.push('/clients');
+      router.back();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка удаления');
       setConfirmDelete(false);
@@ -331,7 +331,7 @@ export default function ClientDetailPage() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <button
-          onClick={() => router.push('/clients')}
+          onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
