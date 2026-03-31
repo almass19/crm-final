@@ -17,7 +17,7 @@ interface Client {
   purchaseDate: string | null;
   launchDate: string | null;
   assignedTo: { id: string; fullName: string } | null;
-  designer: { fullName: string } | null;
+  designer: { id: string; fullName: string } | null;
 }
 
 interface UserOption {
@@ -34,11 +34,12 @@ export default function RenewalsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
-  const [totalRenewals, setTotalRenewals] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
   const [specialistFilter, setSpecialistFilter] = useState('');
+  const [designers, setDesigners] = useState<UserOption[]>([]);
+  const [designerFilter, setDesignerFilter] = useState('');
 
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -59,7 +60,6 @@ export default function RenewalsPage() {
     try {
       const result = await api.getRenewals(getMonthString());
       setClients(result.clients);
-      setTotalRenewals(result.totalRenewals);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -78,6 +78,9 @@ export default function RenewalsPage() {
         Promise.all([api.getUsers('targetologist'), api.getUsers('admin'), api.getUsers('lead_designer')])
           .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
           .catch(() => {});
+      }
+      if (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') {
+        api.getUsers('lead_designer').then(setDesigners).catch(() => {});
       }
     }
   }, [authLoading, user, fetchRenewals, router]);
@@ -110,10 +113,17 @@ export default function RenewalsPage() {
 
   const isAdmin = user.role === 'ADMIN';
   const isLeadDesigner = user.role === 'LEAD_DESIGNER';
+  const showDesignerCol = isAdmin || isLeadDesigner;
 
-  const displayedClients = specialistFilter
-    ? clients.filter((c) => c.assignedTo?.id === specialistFilter)
-    : clients;
+  const displayedClients = clients
+    .filter((c) => !specialistFilter || c.assignedTo?.id === specialistFilter)
+    .filter((c) => !designerFilter || c.designer?.id === designerFilter);
+
+  const headers = isAdmin
+    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+    : isLeadDesigner
+    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
+    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска'];
 
   return (
     <AppShell>
@@ -153,6 +163,18 @@ export default function RenewalsPage() {
               ))}
             </select>
           )}
+          {(isAdmin || isLeadDesigner) && designers.length > 0 && (
+            <select
+              value={designerFilter}
+              onChange={(e) => setDesignerFilter(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 text-slate-700"
+            >
+              <option value="">Все дизайнеры</option>
+              {designers.map((d) => (
+                <option key={d.id} value={d.id}>{d.fullName}</option>
+              ))}
+            </select>
+          )}
           <NotificationBell />
         </div>
       </div>
@@ -175,10 +197,7 @@ export default function RenewalsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {(isAdmin
-                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
-                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
-                  ).map((h) => (
+                  {headers.map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -188,7 +207,7 @@ export default function RenewalsPage() {
               <tbody className="bg-white divide-y divide-slate-100">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: isAdmin ? 6 : 5 }).map((_, j) => (
+                    {Array.from({ length: headers.length }).map((_, j) => (
                       <td key={j} className="px-6 py-4">
                         <div className="h-4 bg-slate-100 rounded animate-pulse w-24" />
                       </td>
@@ -207,10 +226,7 @@ export default function RenewalsPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {(isAdmin
-                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
-                    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
-                  ).map((h) => (
+                  {headers.map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -240,7 +256,7 @@ export default function RenewalsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {isAdmin ? (client.designer?.fullName || '—') : client.phone}
+                      {showDesignerCol ? (client.designer?.fullName || '—') : client.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">

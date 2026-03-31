@@ -43,18 +43,6 @@ export async function GET(request: NextRequest) {
       paymentsQuery = paymentsQuery.in('client_id', clientIds);
     }
 
-    if (user.role === 'LEAD_DESIGNER') {
-      const { data: designerClients } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('designer_id', user.id);
-      const clientIds = (designerClients || []).map((c) => c.id);
-      if (clientIds.length === 0) {
-        return NextResponse.json({ month, totalRenewals: 0, clients: [] });
-      }
-      paymentsQuery = paymentsQuery.in('client_id', clientIds);
-    }
-
     const { data: payments, error: paymentsError } = await paymentsQuery;
     if (paymentsError) throw paymentsError;
 
@@ -70,7 +58,7 @@ export async function GET(request: NextRequest) {
         created_by:profiles!clients_created_by_id_fkey(full_name),
         sold_by:profiles!clients_sold_by_id_fkey(full_name),
         assigned_to:profiles!clients_assigned_to_id_fkey(id, full_name),
-        designer:profiles!clients_designer_id_fkey(full_name)
+        designer:profiles!clients_designer_id_fkey(id, full_name)
       `)
       .in('id', clientIds)
       .eq('archived', false)
