@@ -399,6 +399,8 @@ export default function ClientsPage() {
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    : isLeadDesigner
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -425,6 +427,8 @@ export default function ClientsPage() {
                     ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    : isLeadDesigner
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -503,7 +507,7 @@ export default function ClientsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                        {isAdmin ? (client.designer?.fullName || '—') : client.phone}
+                        {(isAdmin || isLeadDesigner) ? (client.designer?.fullName || '—') : client.phone}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                       {(isAdmin || isSalesManager) && (
