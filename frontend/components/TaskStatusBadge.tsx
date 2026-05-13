@@ -12,7 +12,7 @@ export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
 
   return (
     <span
-      className={`inline-block px-2 py-1 text-xs font-medium rounded ${colorClass}`}
+      className={`inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full tracking-wide ${colorClass}`}
     >
       {label}
     </span>

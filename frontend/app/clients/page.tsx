@@ -105,6 +105,9 @@ export default function ClientsPage() {
   const [sortOption, setSortOption] = useState('purchaseDate:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
   const [specialists, setSpecialists] = useState<UserOption[]>([]);
+  const [designers, setDesigners] = useState<UserOption[]>([]);
+  const [designerFilter, setDesignerFilter] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [urlInitialized, setUrlInitialized] = useState(false);
 
   // Initialize filters from URL on first client render
@@ -116,6 +119,7 @@ export default function ClientsPage() {
     setSalesManagerFilter(getUrlParam('soldById'));
     setSpecialistFilter(getUrlParam('specialistId'));
     setShowUnassigned(getUrlParam('unassigned') === 'true');
+    setDesignerFilter(getUrlParam('designerId'));
     const sort = getUrlParam('sort');
     if (sort) setSortOption(sort);
     setUrlInitialized(true);
@@ -131,11 +135,12 @@ export default function ClientsPage() {
     if (monthFilter) sp.set('month', monthFilter);
     if (salesManagerFilter) sp.set('soldById', salesManagerFilter);
     if (specialistFilter) sp.set('specialistId', specialistFilter);
+    if (designerFilter) sp.set('designerId', designerFilter);
     if (showUnassigned) sp.set('unassigned', 'true');
     if (sortOption !== 'purchaseDate:desc') sp.set('sort', sortOption);
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-  }, [search, statusFilter, nicheFilter, monthFilter, salesManagerFilter, specialistFilter, showUnassigned, sortOption, urlInitialized]);
+  }, [search, statusFilter, nicheFilter, monthFilter, salesManagerFilter, specialistFilter, designerFilter, showUnassigned, sortOption, urlInitialized]);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -147,6 +152,7 @@ export default function ClientsPage() {
       if (showUnassigned) params.unassigned = 'true';
       if (salesManagerFilter) params.soldById = salesManagerFilter;
       if (specialistFilter) params.specialistId = specialistFilter;
+      if (designerFilter) params.designerId = designerFilter;
       if (nicheFilter) params.niche = nicheFilter;
       const [sortBy, sortOrder] = sortOption.split(':');
       params.sortBy = sortBy;
@@ -158,7 +164,7 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, search, statusFilter, showUnassigned, salesManagerFilter, specialistFilter, nicheFilter, sortOption]);
+  }, [user, search, statusFilter, showUnassigned, salesManagerFilter, specialistFilter, designerFilter, nicheFilter, sortOption]);
 
   useEffect(() => {
     if (!authLoading && !user) { router.replace('/login'); return; }
@@ -171,6 +177,13 @@ export default function ClientsPage() {
         Promise.all([api.getUsers('targetologist'), api.getUsers('admin'), api.getUsers('lead_designer')])
           .then(([specs, admins, leads]) => setSpecialists([...specs, ...admins, ...leads]))
           .catch(() => {});
+        Promise.allSettled([api.getUsers('lead_designer'), api.getUsers('designer')])
+          .then((results) => {
+            const all = results
+              .filter((r): r is PromiseFulfilledResult<UserOption[]> => r.status === 'fulfilled')
+              .flatMap((r) => r.value);
+            setDesigners(all);
+          });
       }
     }
   }, [authLoading, user, fetchClients, router]);
@@ -179,6 +192,13 @@ export default function ClientsPage() {
     const timer = setTimeout(() => { if (user) fetchClients(); }, 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    if (!urlInitialized) return;
+    if (salesManagerFilter || specialistFilter || designerFilter || showUnassigned) {
+      setShowAdvancedFilters(true);
+    }
+  }, [urlInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (authLoading || !user) {
     return (
@@ -234,10 +254,10 @@ export default function ClientsPage() {
 
   const clearFilters = () => {
     setSearch(''); setStatusFilter(''); setShowUnassigned(false);
-    setSalesManagerFilter(''); setSpecialistFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('purchaseDate:desc');
+    setSalesManagerFilter(''); setSpecialistFilter(''); setDesignerFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('purchaseDate:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
+  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || designerFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
 
   return (
     <AppShell>
@@ -300,13 +320,14 @@ export default function ClientsPage() {
       {/* Content */}
       <div className="p-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Клиенты</h1>
+          <h1 className="text-3xl font-bold font-display tracking-tight text-slate-900">Клиенты</h1>
           <p className="text-slate-500 mt-1">Управление базой клиентов и назначениями</p>
         </div>
 
         {/* Filters */}
         {!isDesigner && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6">
+          <div className="card p-4 mb-6">
+            {/* Row 1: Primary filters */}
             <div className="flex flex-wrap gap-3 items-center">
               <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={selectCls}>
                 {SORT_OPTIONS.map((opt) => (
@@ -321,14 +342,6 @@ export default function ClientsPage() {
                 ))}
               </select>
 
-              <input
-                type="text"
-                placeholder="Фильтр по нише..."
-                value={nicheFilter}
-                onChange={(e) => setNicheFilter(e.target.value)}
-                className={selectCls}
-              />
-
               {availableMonths.length > 0 && (
                 <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className={selectCls}>
                   <option value="">Все месяцы</option>
@@ -338,32 +351,37 @@ export default function ClientsPage() {
                 </select>
               )}
 
+              <input
+                type="text"
+                placeholder="Ниша..."
+                value={nicheFilter}
+                onChange={(e) => setNicheFilter(e.target.value)}
+                className={selectCls}
+              />
+
               {(isAdmin || isLeadDesigner) && (
-                <>
-                  <select value={salesManagerFilter} onChange={(e) => setSalesManagerFilter(e.target.value)} className={selectCls}>
-                    <option value="">Все менеджеры</option>
-                    {salesManagers.map((sm) => (<option key={sm.id} value={sm.id}>{sm.fullName}</option>))}
-                  </select>
-
-                  <select value={specialistFilter} onChange={(e) => setSpecialistFilter(e.target.value)} className={selectCls}>
-                    <option value="">Все специалисты</option>
-                    {specialists.map((sp) => (<option key={sp.id} value={sp.id}>{sp.fullName}</option>))}
-                  </select>
-
-                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={showUnassigned}
-                      onChange={(e) => setShowUnassigned(e.target.checked)}
-                      className="rounded border-slate-300 text-primary focus:ring-primary/40"
-                    />
-                    <span>Без специалиста</span>
-                  </label>
-                </>
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showAdvancedFilters || salesManagerFilter || specialistFilter || designerFilter || showUnassigned
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                  </svg>
+                  Фильтры
+                  {(salesManagerFilter || specialistFilter || designerFilter || showUnassigned) && (
+                    <span className="ml-0.5 bg-primary text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                      {[salesManagerFilter, specialistFilter, designerFilter, showUnassigned].filter(Boolean).length}
+                    </span>
+                  )}
+                </button>
               )}
 
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="text-sm text-primary hover:underline font-medium">
+                <button onClick={clearFilters} className="text-sm text-slate-500 hover:text-primary font-medium transition-colors">
                   Сбросить
                 </button>
               )}
@@ -378,6 +396,38 @@ export default function ClientsPage() {
                 Обновить
               </button>
             </div>
+
+            {/* Row 2: Advanced filters (admin/lead-designer, collapsible) */}
+            {(isAdmin || isLeadDesigner) && showAdvancedFilters && (
+              <div className="flex flex-wrap gap-3 items-center mt-3 pt-3 border-t border-slate-100">
+                <select value={salesManagerFilter} onChange={(e) => setSalesManagerFilter(e.target.value)} className={selectCls}>
+                  <option value="">Все менеджеры</option>
+                  {salesManagers.map((sm) => (<option key={sm.id} value={sm.id}>{sm.fullName}</option>))}
+                </select>
+
+                <select value={specialistFilter} onChange={(e) => setSpecialistFilter(e.target.value)} className={selectCls}>
+                  <option value="">Все специалисты</option>
+                  {specialists.map((sp) => (<option key={sp.id} value={sp.id}>{sp.fullName}</option>))}
+                </select>
+
+                {designers.length > 0 && (
+                  <select value={designerFilter} onChange={(e) => setDesignerFilter(e.target.value)} className={selectCls}>
+                    <option value="">Все дизайнеры</option>
+                    {designers.map((d) => (<option key={d.id} value={d.id}>{d.fullName}</option>))}
+                  </select>
+                )}
+
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showUnassigned}
+                    onChange={(e) => setShowUnassigned(e.target.checked)}
+                    className="rounded border-slate-300 text-primary focus:ring-primary/40"
+                  />
+                  <span>Без специалиста</span>
+                </label>
+              </div>
+            )}
           </div>
         )}
 
@@ -415,8 +465,23 @@ export default function ClientsPage() {
             </table>
           </div>
         ) : displayedClients.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
-            {isDesigner && activeTab === 'new' ? 'Нет новых назначений' : 'Клиенты не найдены'}
+          <div className="card p-16 text-center">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+            </div>
+            <h3 className="font-display font-semibold text-slate-900 mb-1">
+              {isDesigner && activeTab === 'new' ? 'Нет новых назначений' : hasActiveFilters ? 'Ничего не найдено' : 'Нет клиентов'}
+            </h3>
+            <p className="text-sm text-slate-500">
+              {isDesigner && activeTab === 'new' ? 'Новые назначения появятся здесь' : hasActiveFilters ? 'Попробуйте изменить фильтры или сбросить их' : 'Добавьте первого клиента, чтобы начать работу'}
+            </p>
+            {hasActiveFilters && !isDesigner && (
+              <button onClick={clearFilters} className="mt-4 btn-secondary">
+                Сбросить фильтры
+              </button>
+            )}
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">

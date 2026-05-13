@@ -40,10 +40,10 @@ function NavLink({ href, icon, label }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm ${
         isActive
-          ? 'bg-primary/10 text-primary font-semibold'
-          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+          ? 'bg-sidebar-active text-sidebar-text-active font-semibold border-l-[3px] border-primary -ml-[3px] pl-[calc(0.75rem+3px)]'
+          : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active'
       }`}
     >
       <NavIcon path={ICONS[icon]} />
@@ -139,33 +139,33 @@ export default function Sidebar() {
     : 'U';
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-slate-200 bg-white overflow-y-auto flex flex-col">
+    <aside className="w-64 flex-shrink-0 bg-sidebar-bg scrollbar-none overflow-y-auto flex flex-col">
       <div className="flex flex-col h-full p-4">
         {/* Logo */}
         <div className="flex items-center gap-3 px-2 mb-8 mt-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white flex-shrink-0">
+          <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">CRM</h2>
+          <h2 className="text-xl font-bold tracking-tight text-white font-display">CRM</h2>
         </div>
 
         {/* User Profile Card */}
-        <div className="flex items-center gap-3 px-3 py-3 mb-6 rounded-xl bg-slate-50 border border-slate-100">
+        <div className="flex items-center gap-3 px-3 py-3 mb-6 rounded-xl bg-sidebar-hover border border-sidebar-border">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
             {initials}
           </div>
           <div className="flex flex-col overflow-hidden min-w-0">
-            <span className="text-sm font-semibold text-slate-900 truncate">{user.fullName}</span>
-            <span className="text-xs text-slate-500 truncate">
+            <span className="text-sm font-semibold text-sidebar-text-active truncate">{user.fullName}</span>
+            <span className="text-xs text-sidebar-text-muted truncate">
               {user.role ? ROLE_LABELS[user.role] : 'Без роли'}
             </span>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-0.5">
           <NavLink href="/clients" icon="clients" label="Клиенты" />
           <NavLink href="/news" icon="news" label="Новости" />
 
@@ -183,7 +183,7 @@ export default function Sidebar() {
 
           {user.role === 'ADMIN' && (
             <>
-              <div className="pt-4 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">
+              <div className="pt-5 pb-1.5 text-[10px] font-bold text-sidebar-text-muted uppercase tracking-widest px-3">
                 Администрирование
               </div>
               <NavLink href="/admin-dashboard" icon="chart" label="Дашборды" />
@@ -192,11 +192,11 @@ export default function Sidebar() {
           )}
         </nav>
 
-        {/* Logout */}
-        <div className="mt-auto pt-4 border-t border-slate-100 space-y-1">
+        {/* Bottom Actions */}
+        <div className="mt-auto pt-4 border-t border-sidebar-border space-y-0.5">
           <button
             onClick={() => setShowPasswordModal(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active transition-all duration-150 text-sm"
           >
             <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
@@ -206,10 +206,10 @@ export default function Sidebar() {
           <button
             onClick={handleTelegramConnect}
             disabled={telegramLoading}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 ${
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm disabled:opacity-50 ${
               telegramConnected
-                ? 'text-blue-600 hover:bg-blue-50'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                ? 'text-blue-400 hover:bg-sidebar-hover'
+                : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active'
             }`}
           >
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -225,7 +225,7 @@ export default function Sidebar() {
           </button>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors text-sm"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-text hover:bg-red-950 hover:text-red-400 transition-all duration-150 text-sm"
           >
             <NavIcon path={ICONS.logout} />
             <span>Выйти</span>
@@ -236,7 +236,7 @@ export default function Sidebar() {
       {/* Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full mx-4 p-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-modal max-w-sm w-full mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-slate-900">Сменить пароль</h2>
               <button onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordForm({ newPassword: '', confirm: '' }); }} className="text-slate-400 hover:text-slate-600">✕</button>
@@ -246,7 +246,7 @@ export default function Sidebar() {
             ) : (
               <form onSubmit={handleChangePassword} className="space-y-4">
                 {passwordError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{passwordError}</div>
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{passwordError}</div>
                 )}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Новый пароль</label>
@@ -269,10 +269,10 @@ export default function Sidebar() {
                   />
                 </div>
                 <div className="flex justify-end gap-3 pt-1">
-                  <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordForm({ newPassword: '', confirm: '' }); }} className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 text-sm">
+                  <button type="button" onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordForm({ newPassword: '', confirm: '' }); }} className="btn-secondary">
                     Отмена
                   </button>
-                  <button type="submit" disabled={passwordSubmitting} className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 text-sm font-medium">
+                  <button type="submit" disabled={passwordSubmitting} className="btn-primary">
                     {passwordSubmitting ? 'Сохранение...' : 'Сохранить'}
                   </button>
                 </div>

@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const createdById = sp.get('createdById');
     const soldById = sp.get('soldById');
     const specialistId = sp.get('specialistId');
+    const designerId = sp.get('designerId');
     const niche = sp.get('niche');
     const sortBy = sp.get('sortBy') || 'created_at';
     const sortOrder = sp.get('sortOrder') || 'desc';
@@ -98,6 +99,10 @@ export async function GET(request: NextRequest) {
 
     if (specialistId && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
       query = query.eq('assigned_to_id', specialistId);
+    }
+
+    if (designerId && (user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER')) {
+      query = query.eq('designer_id', designerId);
     }
 
     if (niche) {

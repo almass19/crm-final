@@ -465,7 +465,7 @@ export default function ClientDetailPage() {
                 {canAcknowledgeDesigner && (
                   <button
                     onClick={handleAcknowledge}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                    className="btn-primary"
                   >
                     Принять в работу (дизайнер)
                   </button>
@@ -474,7 +474,7 @@ export default function ClientDetailPage() {
                 {canEditClient && (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
+                    className="btn-secondary"
                   >
                     Редактировать
                   </button>
@@ -499,7 +499,7 @@ export default function ClientDetailPage() {
                     </button>
                     <button
                       onClick={handleArchive}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
+                      className="btn-danger"
                     >
                       Архивировать
                     </button>
@@ -523,7 +523,7 @@ export default function ClientDetailPage() {
                 {isLeadDesigner && (
                   <button
                     onClick={() => setShowAssignDesignerModal(true)}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                    className="btn-primary"
                   >
                     Назначить дизайнера
                   </button>
@@ -702,7 +702,7 @@ export default function ClientDetailPage() {
                   {canAddCreative && (
                     <button
                       onClick={() => setShowAddCreativeModal(true)}
-                      className="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                      className="text-xs px-2 py-1 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors"
                     >
                       + Добавить
                     </button>
@@ -1501,7 +1501,7 @@ function AddCreativeModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm font-medium"
+              className="btn-primary"
             >
               {submitting ? 'Сохранение...' : 'Добавить'}
             </button>

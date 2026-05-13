@@ -112,7 +112,7 @@ export default function DashboardPage() {
       {/* Content */}
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Мой дашборд</h1>
+          <h1 className="text-3xl font-bold font-display tracking-tight text-slate-900">Мой дашборд</h1>
           <p className="text-slate-500 mt-1">{ROLE_LABELS[user.role || ''] || user.role}</p>
         </div>
 
@@ -123,25 +123,43 @@ export default function DashboardPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-12 text-slate-500">Загрузка...</div>
+          <div className="space-y-4">
+            <div className="card p-6">
+              <div className="skeleton h-3 w-32 mb-3" />
+              <div className="skeleton h-10 w-20 mb-2" />
+              <div className="skeleton h-3 w-40" />
+            </div>
+            <div className="card overflow-hidden">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                  <div className="skeleton w-8 h-8 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="skeleton h-3.5 w-1/3" />
+                    <div className="skeleton h-3 w-1/5" />
+                  </div>
+                  <div className="skeleton h-6 w-20 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : dashboardData ? (
           <>
             {/* Stats Card */}
             {user.role === 'ADMIN' && dashboardData.createdCount !== undefined ? (
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="card p-6 border-l-4 border-primary">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Созданные клиенты</p>
                   <div className="text-4xl font-black text-primary">{dashboardData.createdCount}</div>
                   <p className="text-sm text-slate-500 mt-1">за выбранный месяц</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="card p-6 border-l-4 border-success">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Как специалист</p>
-                  <div className="text-4xl font-black text-green-600">{dashboardData.specialistCount}</div>
+                  <div className="text-4xl font-black text-success-text">{dashboardData.specialistCount}</div>
                   <p className="text-sm text-slate-500 mt-1">за выбранный месяц</p>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+              <div className="card p-6 mb-6 border-l-4 border-primary">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                   {getRoleDashboardTitle()}
                 </p>
@@ -154,7 +172,7 @@ export default function DashboardPage() {
 
             {/* Clients Table */}
             {dashboardData.clients.length > 0 ? (
-              <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+              <div className="card overflow-hidden">
                 <table className="min-w-full divide-y divide-slate-100">
                   <thead className="bg-slate-50">
                     <tr>
@@ -199,8 +217,14 @@ export default function DashboardPage() {
                 </table>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
-                Нет клиентов за выбранный период
+              <div className="card p-12 text-center">
+                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Нет клиентов</p>
+                <p className="text-sm text-slate-500">За выбранный период активности не найдено</p>
               </div>
             )}
           </>

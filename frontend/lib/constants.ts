@@ -10,14 +10,14 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-700',
-  ASSIGNED: 'bg-amber-100 text-amber-700',
-  ONBOARDING: 'bg-sky-100 text-sky-700',
-  SETUP: 'bg-orange-100 text-orange-700',
-  IN_WORK: 'bg-green-100 text-green-700',
-  PAUSED: 'bg-yellow-100 text-yellow-700',
-  RENEWAL: 'bg-purple-100 text-purple-700',
-  DONE: 'bg-slate-100 text-slate-600',
+  NEW:        'bg-primary-100 text-primary-600 ring-1 ring-primary-200',
+  ASSIGNED:   'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+  ONBOARDING: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
+  SETUP:      'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200',
+  IN_WORK:    'bg-success-light text-success-text ring-1 ring-green-200',
+  PAUSED:     'bg-warning-light text-warning-text ring-1 ring-amber-200',
+  RENEWAL:    'bg-purple-50 text-purple-700 ring-1 ring-purple-200',
+  DONE:       'bg-slate-100 text-slate-500 ring-1 ring-slate-200',
 };
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -43,7 +43,7 @@ export const TASK_STATUS_LABELS: Record<string, string> = {
 };
 
 export const TASK_STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-  DONE: 'bg-green-100 text-green-800',
+  NEW:         'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+  IN_PROGRESS: 'bg-warning-light text-warning-text ring-1 ring-amber-200',
+  DONE:        'bg-success-light text-success-text ring-1 ring-green-200',
 };
