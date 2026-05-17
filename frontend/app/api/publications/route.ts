@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { createPublicationNotification } from '@/lib/notifications';
 
 export async function GET() {
   try {
@@ -47,6 +48,12 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
+
+    await createPublicationNotification(supabase, {
+      authorId: user.id,
+      title: body.title,
+      content: body.content,
+    });
 
     return NextResponse.json(snakeToCamel(data));
   } catch (e) {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
-import { createTaskAssignedNotification } from '@/lib/notifications';
+import { createTaskAssignedNotification, createTaskDoneNotification } from '@/lib/notifications';
 
 const taskSelect = `
   *,
@@ -49,7 +49,7 @@ export async function PATCH(
 
     const { data: existing } = await supabase
       .from('tasks')
-      .select('id, assignee_id, title, client_id')
+      .select('id, assignee_id, creator_id, title, client_id, status')
       .eq('id', id)
       .single();
 
@@ -84,6 +84,19 @@ export async function PATCH(
         taskTitle: existing.title,
         clientId: existing.client_id,
         assignerName: user.fullName,
+      });
+    }
+
+    if (
+      body.status === 'DONE' &&
+      existing.status !== 'DONE' &&
+      existing.creator_id &&
+      existing.creator_id !== user.id
+    ) {
+      await createTaskDoneNotification(supabase, {
+        creatorId: existing.creator_id,
+        taskTitle: existing.title,
+        clientId: existing.client_id,
       });
     }
 

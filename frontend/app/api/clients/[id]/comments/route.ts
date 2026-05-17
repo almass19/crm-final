@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { createCommentNotification } from '@/lib/notifications';
 
 export async function GET(
   _request: Request,
@@ -49,7 +50,7 @@ export async function POST(
 
     const { data: client } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, full_name, company_name, assigned_to_id')
       .eq('id', clientId)
       .single();
 
@@ -71,6 +72,17 @@ export async function POST(
       .single();
 
     if (error) throw error;
+
+    if (client.assigned_to_id && client.assigned_to_id !== user.id) {
+      const clientName = client.company_name || client.full_name || 'Клиент';
+      await createCommentNotification(supabase, {
+        specialistId: client.assigned_to_id,
+        clientId,
+        clientName,
+        commentText: content,
+        authorName: user.fullName,
+      });
+    }
 
     return NextResponse.json(snakeToCamel(data));
   } catch (e) {

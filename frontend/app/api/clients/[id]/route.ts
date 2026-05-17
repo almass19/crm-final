@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth, requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { createClientStatusChangedNotification } from '@/lib/notifications';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
   if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
@@ -181,13 +182,23 @@ export async function PATCH(
 
     if (error) throw error;
 
-    if (body.status) {
+    if (body.status && body.status !== client.status) {
       await supabase.from('audit_logs').insert({
         action: 'STATUS_CHANGED',
         user_id: user.id,
         client_id: id,
         details: `Статус изменён: ${client.status} → ${body.status}`,
       });
+
+      if (client.assigned_to_id && client.assigned_to_id !== user.id) {
+        const clientName = client.company_name || client.full_name || 'Клиент';
+        await createClientStatusChangedNotification(supabase, {
+          specialistId: client.assigned_to_id,
+          clientId: id,
+          clientName,
+          newStatus: body.status,
+        });
+      }
     }
 
     const sanitized = sanitizeClient(updated as Record<string, unknown>, user.role);

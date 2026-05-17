@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/stale-clients", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/task-reminders", "schedule": "0 9 * * *" }
+    { "path": "/api/cron/task-reminders", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/no-launch-date", "schedule": "0 9 * * *" }
   ]
 }
