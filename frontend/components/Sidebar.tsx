@@ -61,6 +61,7 @@ export default function Sidebar() {
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
   const [telegramConnected, setTelegramConnected] = useState<boolean | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
+  const [telegramSuccess, setTelegramSuccess] = useState(false);
 
   const checkTelegramStatus = async () => {
     try {
@@ -70,6 +71,24 @@ export default function Sidebar() {
     } catch {
       // ignore
     }
+  };
+
+  const pollTelegramStatus = () => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch('/api/telegram/status');
+        const data = await res.json();
+        if (data.connected) {
+          setTelegramConnected(true);
+          setTelegramSuccess(true);
+          setTimeout(() => setTelegramSuccess(false), 3000);
+          clearInterval(interval);
+        }
+      } catch { /* ignore */ }
+      if (attempts >= 30) clearInterval(interval);
+    }, 2000);
   };
 
   const handleTelegramConnect = async () => {
@@ -86,7 +105,10 @@ export default function Sidebar() {
       } else {
         const res = await fetch('/api/telegram/connect', { method: 'POST' });
         const data = await res.json();
-        if (data.url) window.open(data.url, '_blank');
+        if (data.url) {
+          window.open(data.url, '_blank');
+          pollTelegramStatus();
+        }
       }
     } catch {
       // ignore
@@ -140,6 +162,14 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 flex-shrink-0 bg-sidebar-bg scrollbar-none overflow-y-auto flex flex-col">
+      {telegramSuccess && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-xl shadow-lg animate-fade-in">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.5l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.958.059z"/>
+          </svg>
+          Telegram успешно подключён ✓
+        </div>
+      )}
       <div className="flex flex-col h-full p-4">
         {/* Logo */}
         <div className="flex items-center gap-3 px-2 mb-8 mt-2">
