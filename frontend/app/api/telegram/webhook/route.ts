@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { sendTelegramMessage } from '@/lib/telegram';
 
 export async function POST(request: NextRequest) {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   const code = match[1];
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: verification } = await supabase
     .from('telegram_verifications')
