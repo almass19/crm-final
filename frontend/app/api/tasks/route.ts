@@ -55,6 +55,21 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    // Targetologist can only assign to self or designer
+    if (body.assigneeId && user.role === 'TARGETOLOGIST' && body.assigneeId !== user.id) {
+      const { data: assigneeProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', body.assigneeId)
+        .single();
+      if (!assigneeProfile || !['DESIGNER', 'LEAD_DESIGNER'].includes(assigneeProfile.role)) {
+        return NextResponse.json(
+          { message: 'Можно назначить задачу только себе или дизайнеру' },
+          { status: 403 },
+        );
+      }
+    }
+
     if (body.assigneeId && body.assigneeId !== user.id) {
       await createTaskAssignedNotification(supabase, {
         assigneeId: body.assigneeId,
