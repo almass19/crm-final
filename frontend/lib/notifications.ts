@@ -36,16 +36,17 @@ interface TaskAssignedParams {
   assigneeId: string;
   taskTitle: string;
   clientId: string;
+  clientName: string;
   assignerName: string;
 }
 
 export async function createTaskAssignedNotification(
   supabase: SupabaseClient,
-  { assigneeId, taskTitle, clientId, assignerName }: TaskAssignedParams,
+  { assigneeId, taskTitle, clientId, clientName, assignerName }: TaskAssignedParams,
 ) {
   const title = 'Новая задача';
-  const message = `${assignerName} назначил вам задачу: ${taskTitle}`;
-  const tgText = `<b>📋 Новая задача</b>\n${assignerName} назначил вам задачу: <b>${taskTitle}</b>`;
+  const message = `${assignerName} назначил вам задачу: ${taskTitle} (${clientName})`;
+  const tgText = `<b>📋 Новая задача</b>\n${assignerName} назначил вам задачу: <b>${taskTitle}</b>\nКлиент: <b>${clientName}</b>`;
   await notifyUser(supabase, assigneeId, 'TASK_ASSIGNED', title, message, `/clients/${clientId}`, tgText);
 }
 

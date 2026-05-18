@@ -66,10 +66,14 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     if (body.assigneeId && body.assigneeId !== user.id) {
+      const clientName = (data.client as { company_name: string | null; full_name: string | null } | null)?.company_name
+        || (data.client as { company_name: string | null; full_name: string | null } | null)?.full_name
+        || '';
       await createTaskAssignedNotification(supabase, {
         assigneeId: body.assigneeId,
         taskTitle: body.title,
         clientId: body.clientId,
+        clientName,
         assignerName: user.fullName,
       });
     }
