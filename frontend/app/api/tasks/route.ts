@@ -26,12 +26,22 @@ export async function POST(request: Request) {
 
     const { data: client } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, designer_id')
       .eq('id', body.clientId)
       .single();
 
     if (!client) {
       return NextResponse.json({ message: 'Клиент не найден' }, { status: 404 });
+    }
+
+    // Targetologist can only assign to self or the client's specific designer
+    if (body.assigneeId && user.role === 'TARGETOLOGIST' && body.assigneeId !== user.id) {
+      if (!client.designer_id || body.assigneeId !== client.designer_id) {
+        return NextResponse.json(
+          { message: 'Можно назначить задачу только себе или дизайнеру этого клиента' },
+          { status: 403 },
+        );
+      }
     }
 
     const { data, error } = await supabase
@@ -54,21 +64,6 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
-
-    // Targetologist can only assign to self or designer
-    if (body.assigneeId && user.role === 'TARGETOLOGIST' && body.assigneeId !== user.id) {
-      const { data: assigneeProfile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', body.assigneeId)
-        .single();
-      if (!assigneeProfile || !['DESIGNER', 'LEAD_DESIGNER'].includes(assigneeProfile.role)) {
-        return NextResponse.json(
-          { message: 'Можно назначить задачу только себе или дизайнеру' },
-          { status: 403 },
-        );
-      }
-    }
 
     if (body.assigneeId && body.assigneeId !== user.id) {
       await createTaskAssignedNotification(supabase, {

@@ -26,6 +26,8 @@ interface Client {
   id: string;
   fullName: string | null;
   companyName: string | null;
+  designerId: string | null;
+  designer: { fullName: string } | null;
 }
 
 interface UserOption {
@@ -84,13 +86,8 @@ export default function TasksPage() {
 
     // Load assignee options based on role
     if (user.role === 'TARGETOLOGIST') {
-      Promise.allSettled([api.getUsers('designer'), api.getUsers('lead_designer')])
-        .then((results) => {
-          const designers = results
-            .filter((r): r is PromiseFulfilledResult<UserOption[]> => r.status === 'fulfilled')
-            .flatMap((r) => r.value);
-          setAssigneeOptions([{ id: user.id, fullName: user.fullName + ' (я)', role: 'TARGETOLOGIST' }, ...designers]);
-        });
+      // For targetologist, options are built dynamically per client selection
+      setAssigneeOptions([{ id: user.id, fullName: user.fullName + ' (я)', role: 'TARGETOLOGIST' }]);
     } else {
       api.getUsers().then(setAssigneeOptions).catch(() => {});
     }
@@ -319,6 +316,7 @@ export default function TasksPage() {
       {showCreateModal && (
         <CreateTaskModal
           clients={clients}
+          currentUser={user}
           assigneeOptions={assigneeOptions}
           defaultAssigneeId={user.role === 'TARGETOLOGIST' ? user.id : ''}
           onClose={() => setShowCreateModal(false)}
@@ -331,12 +329,14 @@ export default function TasksPage() {
 
 function CreateTaskModal({
   clients,
+  currentUser,
   assigneeOptions,
   defaultAssigneeId,
   onClose,
   onCreated,
 }: {
   clients: Client[];
+  currentUser: { id: string; fullName: string; role: string | null };
   assigneeOptions: UserOption[];
   defaultAssigneeId: string;
   onClose: () => void;
@@ -354,6 +354,7 @@ function CreateTaskModal({
   const [submitting, setSubmitting] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientList, setShowClientList] = useState(false);
+  const [dynamicAssigneeOptions, setDynamicAssigneeOptions] = useState<UserOption[]>(assigneeOptions);
   const clientDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -367,8 +368,32 @@ function CreateTaskModal({
   }, []);
 
   const filteredClients = clients.filter((c) =>
-    (c.fullName || c.companyName || '').toLowerCase().includes(clientSearch.toLowerCase())
+    `${c.fullName || ''} ${c.companyName || ''}`.toLowerCase().includes(clientSearch.toLowerCase())
   );
+
+  const handleClientSelect = (client: Client) => {
+    setForm((prev) => ({ ...prev, clientId: client.id, assigneeId: defaultAssigneeId }));
+    setClientSearch(client.companyName || client.fullName || '');
+    setShowClientList(false);
+
+    if (currentUser.role === 'TARGETOLOGIST') {
+      const selfOption = { id: currentUser.id, fullName: currentUser.fullName + ' (я)', role: 'TARGETOLOGIST' };
+      if (client.designerId && client.designer) {
+        setDynamicAssigneeOptions([selfOption, { id: client.designerId, fullName: client.designer.fullName }]);
+      } else {
+        setDynamicAssigneeOptions([selfOption]);
+      }
+    }
+  };
+
+  const handleClientSearchChange = (value: string) => {
+    setClientSearch(value);
+    setForm((prev) => ({ ...prev, clientId: '', assigneeId: defaultAssigneeId }));
+    setShowClientList(true);
+    if (currentUser.role === 'TARGETOLOGIST') {
+      setDynamicAssigneeOptions(assigneeOptions);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,7 +452,7 @@ function CreateTaskModal({
               <input
                 type="text"
                 value={clientSearch}
-                onChange={(e) => { setClientSearch(e.target.value); setForm({ ...form, clientId: '' }); setShowClientList(true); }}
+                onChange={(e) => handleClientSearchChange(e.target.value)}
                 onFocus={() => setShowClientList(true)}
                 className={inputCls}
                 placeholder="Поиск клиента..."
@@ -446,7 +471,7 @@ function CreateTaskModal({
                     <li
                       key={c.id}
                       className="px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 text-slate-700"
-                      onMouseDown={() => { setForm({ ...form, clientId: c.id }); setClientSearch(c.companyName || c.fullName || ''); setShowClientList(false); }}
+                      onMouseDown={() => handleClientSelect(c)}
                     >
                       {c.companyName || c.fullName}
                     </li>
@@ -488,7 +513,7 @@ function CreateTaskModal({
               <label className={labelCls}>Исполнитель</label>
               <select value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })} className={inputCls}>
                 <option value="">Не назначен</option>
-                {assigneeOptions.map((u) => (
+                {dynamicAssigneeOptions.map((u) => (
                   <option key={u.id} value={u.id}>{u.fullName}</option>
                 ))}
               </select>
