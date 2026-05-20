@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
-import { STATUS_LABELS, ROLE_LABELS, SERVICE_OPTIONS } from '@/lib/constants';
+import { STATUS_LABELS, ROLE_LABELS, SERVICE_OPTIONS, CLIENT_TYPE_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
@@ -21,6 +21,7 @@ interface Client {
   niche: string | null;
   services: string[];
   notes: string | null;
+  clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount?: string | number | null;
   status: string;
   assignmentSeen: boolean;
@@ -405,6 +406,20 @@ export default function ClientDetailPage() {
                 <div>
                   <span className="text-slate-500">Продавец:</span>
                   <p className="font-medium">{client.soldBy?.fullName || '—'}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">Тип оплаты:</span>
+                  <p className="font-medium">
+                    {client.clientType ? (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${
+                        client.clientType === 'LEGAL'
+                          ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
+                          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                      }`}>
+                        {CLIENT_TYPE_LABELS[client.clientType]}
+                      </span>
+                    ) : '—'}
+                  </p>
                 </div>
                 {!isSalesManager && (
                   <div>
@@ -1189,6 +1204,7 @@ function EditClientModal({
     soldById: client.soldById || '',
     purchaseDate: client.purchaseDate ? client.purchaseDate.split('T')[0] : '',
     paymentAmount: client.paymentAmount ? String(client.paymentAmount) : '',
+    clientType: (client.clientType || '') as 'LEGAL' | 'INDIVIDUAL' | '',
   });
   const [salesManagers, setSalesManagers] = useState<{ id: string; fullName: string }[]>([]);
   const [error, setError] = useState('');
@@ -1220,6 +1236,7 @@ function EditClientModal({
         fullName: form.fullName || null,
         companyName: form.companyName || null,
         phone: form.phone,
+        clientType: form.clientType || null,
         groupName: form.groupName || null,
         niche: form.niche || null,
         services: form.services,
@@ -1257,6 +1274,25 @@ function EditClientModal({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Тип оплаты</label>
+              <div className="flex gap-3">
+                {(['LEGAL', 'INDIVIDUAL'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm({ ...form, clientType: type })}
+                    className={`flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-colors ${
+                      form.clientType === type
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    {type === 'LEGAL' ? 'Юр. лицо' : 'Физ. лицо'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">ФИО</label>
               <input

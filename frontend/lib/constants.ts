@@ -36,6 +36,11 @@ export const SERVICE_OPTIONS = [
   'Контекстная реклама',
 ];
 
+export const CLIENT_TYPE_LABELS: Record<string, string> = {
+  LEGAL: 'Юр. лицо',
+  INDIVIDUAL: 'Физ. лицо',
+};
+
 export const TASK_STATUS_LABELS: Record<string, string> = {
   NEW: 'Новая',
   IN_PROGRESS: 'В работе',

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const specialistId = sp.get('specialistId');
     const designerId = sp.get('designerId');
     const niche = sp.get('niche');
+    const clientType = sp.get('clientType');
     const sortBy = sp.get('sortBy') || 'created_at';
     const sortOrder = sp.get('sortOrder') || 'desc';
 
@@ -109,6 +110,10 @@ export async function GET(request: NextRequest) {
       query = query.ilike('niche', `%${niche}%`);
     }
 
+    if (clientType && (clientType === 'LEGAL' || clientType === 'INDIVIDUAL')) {
+      query = query.eq('client_type', clientType);
+    }
+
     if (search) {
       query = query.or(
         `full_name.ilike.%${search}%,company_name.ilike.%${search}%,phone.ilike.%${search}%,group_name.ilike.%${search}%,niche.ilike.%${search}%`,
@@ -151,6 +156,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!body.clientType || !['LEGAL', 'INDIVIDUAL'].includes(body.clientType)) {
+      return NextResponse.json(
+        { message: 'Выберите тип оплаты: Юр. лицо или Физ. лицо' },
+        { status: 400 },
+      );
+    }
+
     if (!body.services || !Array.isArray(body.services) || body.services.length === 0) {
       return NextResponse.json(
         { message: 'Выберите хотя бы одну услугу' },
@@ -164,6 +176,7 @@ export async function POST(request: Request) {
         full_name: body.fullName || null,
         company_name: body.companyName || null,
         phone: body.phone,
+        client_type: body.clientType,
         group_name: body.groupName || null,
         niche: body.niche || null,
         services: body.services,

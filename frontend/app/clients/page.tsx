@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
-import { STATUS_LABELS, SERVICE_OPTIONS } from '@/lib/constants';
+import { STATUS_LABELS, SERVICE_OPTIONS, CLIENT_TYPE_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
@@ -19,6 +19,7 @@ interface Client {
   niche: string | null;
   services: string[];
   status: string;
+  clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount: number | null;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
@@ -101,6 +102,7 @@ export default function ClientsPage() {
   const [salesManagerFilter, setSalesManagerFilter] = useState('');
   const [specialistFilter, setSpecialistFilter] = useState('');
   const [nicheFilter, setNicheFilter] = useState('');
+  const [clientTypeFilter, setClientTypeFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
   const [sortOption, setSortOption] = useState('purchaseDate:desc');
   const [salesManagers, setSalesManagers] = useState<UserOption[]>([]);
@@ -115,6 +117,7 @@ export default function ClientsPage() {
     setSearch(getUrlParam('search'));
     setStatusFilter(getUrlParam('status'));
     setNicheFilter(getUrlParam('niche'));
+    setClientTypeFilter(getUrlParam('clientType'));
     setMonthFilter(getUrlParam('month'));
     setSalesManagerFilter(getUrlParam('soldById'));
     setSpecialistFilter(getUrlParam('specialistId'));
@@ -132,6 +135,7 @@ export default function ClientsPage() {
     if (search) sp.set('search', search);
     if (statusFilter) sp.set('status', statusFilter);
     if (nicheFilter) sp.set('niche', nicheFilter);
+    if (clientTypeFilter) sp.set('clientType', clientTypeFilter);
     if (monthFilter) sp.set('month', monthFilter);
     if (salesManagerFilter) sp.set('soldById', salesManagerFilter);
     if (specialistFilter) sp.set('specialistId', specialistFilter);
@@ -140,7 +144,7 @@ export default function ClientsPage() {
     if (sortOption !== 'purchaseDate:desc') sp.set('sort', sortOption);
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-  }, [search, statusFilter, nicheFilter, monthFilter, salesManagerFilter, specialistFilter, designerFilter, showUnassigned, sortOption, urlInitialized]);
+  }, [search, statusFilter, nicheFilter, clientTypeFilter, monthFilter, salesManagerFilter, specialistFilter, designerFilter, showUnassigned, sortOption, urlInitialized]);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -149,6 +153,7 @@ export default function ClientsPage() {
       const params: Record<string, string> = {};
       if (search) params.search = search;
       if (statusFilter) params.status = statusFilter;
+      if (clientTypeFilter) params.clientType = clientTypeFilter;
       if (showUnassigned) params.unassigned = 'true';
       if (salesManagerFilter) params.soldById = salesManagerFilter;
       if (specialistFilter) params.specialistId = specialistFilter;
@@ -164,7 +169,7 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, search, statusFilter, showUnassigned, salesManagerFilter, specialistFilter, designerFilter, nicheFilter, sortOption]);
+  }, [user, search, statusFilter, clientTypeFilter, showUnassigned, salesManagerFilter, specialistFilter, designerFilter, nicheFilter, sortOption]);
 
   useEffect(() => {
     if (!authLoading && !user) { router.replace('/login'); return; }
@@ -253,11 +258,11 @@ export default function ClientsPage() {
     });
 
   const clearFilters = () => {
-    setSearch(''); setStatusFilter(''); setShowUnassigned(false);
+    setSearch(''); setStatusFilter(''); setClientTypeFilter(''); setShowUnassigned(false);
     setSalesManagerFilter(''); setSpecialistFilter(''); setDesignerFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('purchaseDate:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || showUnassigned || salesManagerFilter || specialistFilter || designerFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
+  const hasActiveFilters = search || statusFilter || clientTypeFilter || showUnassigned || salesManagerFilter || specialistFilter || designerFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
 
   return (
     <AppShell>
@@ -338,6 +343,13 @@ export default function ClientsPage() {
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectCls}>
                 <option value="">Все статусы</option>
                 {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+
+              <select value={clientTypeFilter} onChange={(e) => setClientTypeFilter(e.target.value)} className={selectCls}>
+                <option value="">Все типы</option>
+                {Object.entries(CLIENT_TYPE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
@@ -638,6 +650,7 @@ function CreateClientModal({
     fullName: '', companyName: '', phone: '', groupName: '',
     services: [] as string[], notes: '', paymentAmount: '',
     soldById: userRole === 'SALES_MANAGER' ? userId : '', purchaseDate: '', niche: '',
+    clientType: '' as 'LEGAL' | 'INDIVIDUAL' | '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -661,6 +674,7 @@ function CreateClientModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName && !form.companyName) { setError('Укажите ФИО или название компании'); return; }
+    if (!form.clientType) { setError('Выберите тип оплаты: Юр. лицо или Физ. лицо'); return; }
     if (form.services.length === 0) { setError('Выберите хотя бы одну услугу'); return; }
     setError('');
     setSubmitting(true);
@@ -669,6 +683,7 @@ function CreateClientModal({
       if (form.fullName) data.fullName = form.fullName;
       if (form.companyName) data.companyName = form.companyName;
       data.phone = form.phone;
+      data.clientType = form.clientType;
       if (form.groupName) data.groupName = form.groupName;
       if (form.niche) data.niche = form.niche;
       data.services = form.services;
@@ -708,6 +723,25 @@ function CreateClientModal({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className={labelCls}>Тип оплаты *</label>
+              <div className="flex gap-3">
+                {(['LEGAL', 'INDIVIDUAL'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm({ ...form, clientType: type })}
+                    className={`flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-colors ${
+                      form.clientType === type
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    {type === 'LEGAL' ? 'Юр. лицо' : 'Физ. лицо'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className={labelCls}>ФИО</label>
               <input type="text" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className={fieldCls} placeholder="Иванов Иван Иванович" />

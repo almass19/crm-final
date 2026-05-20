@@ -117,7 +117,7 @@ export async function PATCH(
     }
 
     // Only ADMIN and SALES_MANAGER can edit core client fields
-    const adminManagerFields = ['fullName', 'companyName', 'phone', 'groupName', 'niche', 'services', 'notes', 'purchaseDate'];
+    const adminManagerFields = ['fullName', 'companyName', 'phone', 'groupName', 'niche', 'services', 'notes', 'purchaseDate', 'clientType'];
     const hasAdminManagerFields = adminManagerFields.some(f => body[f] !== undefined);
     if (hasAdminManagerFields && user.role !== 'ADMIN' && user.role !== 'SALES_MANAGER') {
       return NextResponse.json({ message: 'Недостаточно прав' }, { status: 403 });
@@ -157,6 +157,7 @@ export async function PATCH(
     if (body.fullName !== undefined) updateData.full_name = body.fullName;
     if (body.companyName !== undefined) updateData.company_name = body.companyName;
     if (body.phone !== undefined) updateData.phone = body.phone;
+    if (body.clientType !== undefined && ['LEGAL', 'INDIVIDUAL'].includes(body.clientType)) updateData.client_type = body.clientType;
     if (body.groupName !== undefined) updateData.group_name = body.groupName;
     if (body.niche !== undefined) updateData.niche = body.niche;
     if (body.launchDate !== undefined) updateData.launch_date = body.launchDate || null;

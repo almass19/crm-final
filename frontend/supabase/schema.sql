@@ -63,6 +63,8 @@ create table clients (
   designer_assigned_at timestamptz,
   designer_assignment_seen boolean default false not null,
 
+  client_type text check (client_type in ('LEGAL', 'INDIVIDUAL')),
+
   purchase_date date,
   launch_date date,
   niche text,
