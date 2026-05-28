@@ -27,7 +27,7 @@ interface Client {
   launchDate: string | null;
   createdAt: string;
   createdBy: { fullName: string };
-  assignedTo: { id: string; fullName: string } | null;
+  assignedTo: { fullName: string } | null;
   designer: { fullName: string } | null;
 }
 
@@ -249,8 +249,8 @@ export default function ClientsPage() {
   const isLeadDesigner = user.role === 'LEAD_DESIGNER';
   const hasNoRole = !user.role;
 
-  const canChangeStatus = (client: Client) =>
-    isAdmin || (isSpecialist && client.assignedTo?.id === user.id);
+  const canChangeStatus = (_client: Client) =>
+    isAdmin || isSpecialist;
 
   const openStatusDropdown = (e: React.MouseEvent<HTMLButtonElement>, clientId: string) => {
     e.stopPropagation();
