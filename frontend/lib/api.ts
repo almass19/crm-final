@@ -112,6 +112,9 @@ export const api = {
   getUserDashboard: (userId: string, year: number, month: number) =>
     request(`/dashboard/user/${userId}?year=${year}&month=${month}`),
 
+  getKpi: (year: number, month: number) =>
+    request(`/dashboard/kpi?year=${year}&month=${month}`),
+
   // Employees (for admin dashboard)
   getEmployees: () => request('/users/employees'),
 

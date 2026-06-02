@@ -58,7 +58,42 @@ interface AnalyticsData {
   creativesByDesigner: { name: string; count: number }[];
 }
 
-type Tab = 'analytics' | 'employees';
+interface SalesManagerKpi {
+  id: string;
+  name: string;
+  newClients: number;
+  newClientsRevenue: number;
+  paymentsCount: number;
+  paymentsRevenue: number;
+  renewalsCount: number;
+  renewalsRevenue: number;
+}
+
+interface TargetologistKpi {
+  id: string;
+  name: string;
+  assignedThisMonth: number;
+  activeClients: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+}
+
+interface DesignerKpi {
+  id: string;
+  name: string;
+  creativesCount: number;
+  assignedThisMonth: number;
+  tasksCompleted: number;
+  tasksTotal: number;
+}
+
+interface KpiData {
+  salesManagers: SalesManagerKpi[];
+  targetologists: TargetologistKpi[];
+  designers: DesignerKpi[];
+}
+
+type Tab = 'analytics' | 'employees' | 'kpi';
 
 export default function AdminDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -72,6 +107,9 @@ export default function AdminDashboardPage() {
 
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  const [kpiData, setKpiData] = useState<KpiData | null>(null);
+  const [kpiLoading, setKpiLoading] = useState(false);
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
@@ -97,9 +135,25 @@ export default function AdminDashboardPage() {
     }
   }, [selectedYear, selectedMonth]);
 
+  const fetchKpi = useCallback(async () => {
+    setKpiLoading(true);
+    try {
+      const data = await api.getKpi(selectedYear, selectedMonth);
+      setKpiData(data);
+    } catch {
+      setKpiData(null);
+    } finally {
+      setKpiLoading(false);
+    }
+  }, [selectedYear, selectedMonth]);
+
   useEffect(() => {
     if (user && tab === 'analytics') fetchAnalytics();
   }, [user, tab, fetchAnalytics]);
+
+  useEffect(() => {
+    if (user && tab === 'kpi') fetchKpi();
+  }, [user, tab, fetchKpi]);
 
   const fetchEmployeeDashboard = useCallback(async () => {
     if (!selectedEmployeeId) return;
@@ -201,6 +255,14 @@ export default function AdminDashboardPage() {
             }`}
           >
             По сотрудникам
+          </button>
+          <button
+            onClick={() => setTab('kpi')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              tab === 'kpi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            KPI / Бонусы
           </button>
         </div>
 
@@ -305,6 +367,105 @@ export default function AdminDashboardPage() {
           ) : null
         )}
 
+        {/* ============ KPI TAB ============ */}
+        {tab === 'kpi' && (
+          kpiLoading ? (
+            <div className="text-center py-12 text-slate-500">Загрузка KPI...</div>
+          ) : kpiData ? (
+            <div className="space-y-8">
+              {/* Sales Managers */}
+              {kpiData.salesManagers.length > 0 && (
+                <KpiSection title="Менеджеры по продажам">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Сотрудник', 'Клиентов', 'Сумма клиентов', 'Платежей', 'Сумма платежей', 'Продлений', 'Сумма продлений'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {kpiData.salesManagers.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-4 text-sm font-semibold text-slate-900">{row.name}</td>
+                          <td className="px-5 py-4"><KpiValue value={row.newClients} /></td>
+                          <td className="px-5 py-4"><KpiValue value={formatCurrency(row.newClientsRevenue)} highlight={row.newClientsRevenue > 0} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.paymentsCount} /></td>
+                          <td className="px-5 py-4"><KpiValue value={formatCurrency(row.paymentsRevenue)} highlight={row.paymentsRevenue > 0} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.renewalsCount} /></td>
+                          <td className="px-5 py-4"><KpiValue value={formatCurrency(row.renewalsRevenue)} highlight={row.renewalsRevenue > 0} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </KpiSection>
+              )}
+
+              {/* Targetologists */}
+              {kpiData.targetologists.length > 0 && (
+                <KpiSection title="Таргетологи">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Сотрудник', 'Принято за месяц', 'Активных клиентов', 'Задач выполнено', '% выполнения'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {kpiData.targetologists.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-4 text-sm font-semibold text-slate-900">{row.name}</td>
+                          <td className="px-5 py-4"><KpiValue value={row.assignedThisMonth} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.activeClients} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.tasksCompleted} /></td>
+                          <td className="px-5 py-4"><KpiPercent done={row.tasksCompleted} total={row.tasksTotal} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </KpiSection>
+              )}
+
+              {/* Designers */}
+              {kpiData.designers.length > 0 && (
+                <KpiSection title="Дизайнеры">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Сотрудник', 'Креативов', 'Принято за месяц', 'Задач выполнено', '% выполнения'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {kpiData.designers.map(row => (
+                        <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-4 text-sm font-semibold text-slate-900">{row.name}</td>
+                          <td className="px-5 py-4"><KpiValue value={row.creativesCount} highlight={row.creativesCount > 0} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.assignedThisMonth} /></td>
+                          <td className="px-5 py-4"><KpiValue value={row.tasksCompleted} /></td>
+                          <td className="px-5 py-4"><KpiPercent done={row.tasksCompleted} total={row.tasksTotal} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </KpiSection>
+              )}
+
+              {kpiData.salesManagers.length === 0 && kpiData.targetologists.length === 0 && kpiData.designers.length === 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
+                  Нет данных за выбранный период
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
+              Нет данных
+            </div>
+          )
+        )}
+
         {/* ============ EMPLOYEES TAB ============ */}
         {tab === 'employees' && (
           !selectedEmployeeId ? (
@@ -402,4 +563,30 @@ function EmptyChart() {
       Нет данных за выбранный период
     </div>
   );
+}
+
+function KpiSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100">
+        <h3 className="text-sm font-bold text-slate-700">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function KpiValue({ value, highlight = false }: { value: string | number; highlight?: boolean }) {
+  return (
+    <span className={`text-sm font-semibold ${highlight ? 'text-green-600' : 'text-slate-700'}`}>
+      {value}
+    </span>
+  );
+}
+
+function KpiPercent({ done, total }: { done: number; total: number }) {
+  if (total === 0) return <span className="text-sm text-slate-400">—</span>;
+  const pct = Math.round((done / total) * 100);
+  const color = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500';
+  return <span className={`text-sm font-semibold ${color}`}>{pct}%</span>;
 }
