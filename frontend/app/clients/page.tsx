@@ -19,6 +19,7 @@ interface Client {
   niche: string | null;
   services: string[];
   status: string;
+  archived: boolean;
   clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount: number | null;
   assignmentSeen: boolean;
@@ -154,7 +155,10 @@ export default function ClientsPage() {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
-      if (search) params.search = search;
+      if (search) {
+        params.search = search;
+        params.includeArchived = 'true';
+      }
       if (statusFilter) params.status = statusFilter;
       if (clientTypeFilter) params.clientType = clientTypeFilter;
       if (showUnassigned) params.unassigned = 'true';
@@ -619,7 +623,7 @@ export default function ClientsPage() {
                     <tr
                       key={client.id}
                       onClick={() => router.push(`/clients/${client.id}`)}
-                      className="hover:bg-slate-50 cursor-pointer transition-colors"
+                      className={`cursor-pointer transition-colors ${client.archived ? 'opacity-60 hover:opacity-80 bg-slate-50/50' : 'hover:bg-slate-50'}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -640,20 +644,27 @@ export default function ClientsPage() {
                         {(isAdmin || isLeadDesigner) ? (client.designer?.fullName || '—') : client.phone}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        {canChangeStatus(client) ? (
-                          <button
-                            onClick={(e) => openStatusDropdown(e, client.id)}
-                            disabled={updatingStatusId === client.id}
-                            className="group flex items-center gap-1 disabled:opacity-50"
-                          >
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {canChangeStatus(client) && !client.archived ? (
+                            <button
+                              onClick={(e) => openStatusDropdown(e, client.id)}
+                              disabled={updatingStatusId === client.id}
+                              className="group flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <StatusBadge status={client.status} />
+                              <svg className="w-3 h-3 text-slate-400 group-hover:text-slate-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                              </svg>
+                            </button>
+                          ) : (
                             <StatusBadge status={client.status} />
-                            <svg className="w-3 h-3 text-slate-400 group-hover:text-slate-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                            </svg>
-                          </button>
-                        ) : (
-                          <StatusBadge status={client.status} />
-                        )}
+                          )}
+                          {client.archived && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-500">
+                              Архив
+                            </span>
+                          )}
+                        </div>
                       </td>
                       {(isAdmin || isSalesManager) && (
                         <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">

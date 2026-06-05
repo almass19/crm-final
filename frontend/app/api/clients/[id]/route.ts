@@ -164,7 +164,10 @@ export async function PATCH(
     if (body.purchaseDate !== undefined) updateData.purchase_date = body.purchaseDate || null;
     if (body.services !== undefined) updateData.services = body.services;
     if (body.notes !== undefined) updateData.notes = body.notes;
-    if (body.status !== undefined) updateData.status = body.status;
+    if (body.status !== undefined) {
+      updateData.status = body.status;
+      if (body.status === 'DONE') updateData.archived = true;
+    }
     if (body.paymentAmount !== undefined) updateData.payment_amount = body.paymentAmount;
     if (body.soldById !== undefined) updateData.sold_by_id = body.soldById || null;
 

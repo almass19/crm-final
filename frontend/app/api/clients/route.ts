@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
 
     const search = sp.get('search');
     const status = sp.get('status');
+    const archivedParam = sp.get('archived');
+    const includeArchived = sp.get('includeArchived') === 'true';
     const unassigned = sp.get('unassigned') === 'true';
     const createdById = sp.get('createdById');
     const soldById = sp.get('soldById');
@@ -65,8 +67,13 @@ export async function GET(request: NextRequest) {
         assigned_to:profiles!clients_assigned_to_id_fkey(full_name),
         designer:profiles!clients_designer_id_fkey(full_name)
       `)
-      .eq('archived', false)
       .order(dbSortField, { ascending: sortOrder === 'asc' });
+
+    if (archivedParam === 'true') {
+      query = query.eq('archived', true);
+    } else if (!includeArchived) {
+      query = query.eq('archived', false);
+    }
 
     // Role-based access restrictions
     if (user.role === 'SALES_MANAGER') {
