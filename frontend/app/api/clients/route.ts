@@ -70,9 +70,9 @@ export async function GET(request: NextRequest) {
       .order(dbSortField, { ascending: sortOrder === 'asc' });
 
     if (archivedParam === 'true') {
-      query = query.eq('archived', true);
+      query = query.or('archived.eq.true,status.eq.DONE');
     } else if (!includeArchived) {
-      query = query.eq('archived', false);
+      query = query.or('archived.eq.false,archived.is.null').neq('status', 'DONE');
     }
 
     // Role-based access restrictions
