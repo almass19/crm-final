@@ -13,6 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import { SERVICE_OPTIONS } from '@/lib/constants';
 
 const CHART_COLORS = ['#197fe6', '#10B981', '#F59E0B', '#EF4444', '#6B7280'];
 
@@ -31,6 +32,7 @@ interface DashboardClient {
   groupName: string | null;
   status: string;
   services: string[];
+  paymentAmount: number | null;
   purchaseDate: string | null;
   createdAt: string;
   assignedAt: string | null;
@@ -490,12 +492,35 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              {dashboardData.clients.length > 0 && (() => {
+                const totalRevenue = dashboardData.clients.reduce((sum, c) => sum + (c.paymentAmount || 0), 0);
+                const serviceCounts = SERVICE_OPTIONS.map(svc => ({
+                  label: svc,
+                  count: dashboardData.clients.filter(c => c.services?.includes(svc)).length,
+                })).filter(s => s.count > 0);
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                    <div className="col-span-2 sm:col-span-1 lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Общая сумма продаж</p>
+                      <p className="text-2xl font-black text-green-600">{formatCurrency(totalRevenue)}</p>
+                    </div>
+                    {serviceCounts.map(s => (
+                      <div key={s.label} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 leading-tight">{s.label}</p>
+                        <p className="text-2xl font-black text-slate-900">{s.count}</p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {dashboardData.clients.length > 0 ? (
                 <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
                   <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50">
                       <tr>
-                        {['Имя / Компания', 'Контакты', 'Услуги', 'Статус', 'Дата'].map((h) => (
+                        {['Имя / Компания', 'Контакты', 'Услуги', 'Цена', 'Статус', 'Дата'].map((h) => (
                           <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{h}</th>
                         ))}
                       </tr>
@@ -516,6 +541,9 @@ export default function AdminDashboardPage() {
                             <div className="text-xs text-slate-400">{client.groupName || ''}</div>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-500">{client.services?.join(', ') || '—'}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800 whitespace-nowrap">
+                            {client.paymentAmount ? formatCurrency(client.paymentAmount) : '—'}
+                          </td>
                           <td className="px-6 py-4"><StatusBadge status={client.status} /></td>
                           <td className="px-6 py-4 text-sm text-slate-500">
                             {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : (client.assignedAt || client.designerAssignedAt ? new Date(client.assignedAt || client.designerAssignedAt!).toLocaleDateString('ru-RU') : '—')}
