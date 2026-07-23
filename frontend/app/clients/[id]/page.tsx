@@ -10,6 +10,7 @@ import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
 import TaskPriorityBadge from '@/components/TaskPriorityBadge';
 import TaskStatusBadge from '@/components/TaskStatusBadge';
+import ClientAttachments from '@/components/ClientAttachments';
 import { useToast } from '@/components/Toast';
 
 interface Client {
@@ -620,6 +621,9 @@ export default function ClientDetailPage() {
                 </button>
               </div>
             </div>
+
+            {/* Attachments */}
+            <ClientAttachments clientId={id} currentUserId={user.id} isAdmin={isAdmin} />
 
             {/* Tasks - hidden for SALES_MANAGER */}
             {!isSalesManager && (

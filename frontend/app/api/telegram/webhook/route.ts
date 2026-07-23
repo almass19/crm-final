@@ -4,11 +4,13 @@ import { sendTelegramMessage } from '@/lib/telegram';
 
 export async function POST(request: NextRequest) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (secret) {
-    const headerSecret = request.headers.get('x-telegram-bot-api-secret-token');
-    if (headerSecret !== secret) {
-      return NextResponse.json({ ok: false }, { status: 403 });
-    }
+  if (!secret) {
+    console.error('TELEGRAM_WEBHOOK_SECRET is not configured; refusing webhook request');
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+  const headerSecret = request.headers.get('x-telegram-bot-api-secret-token');
+  if (headerSecret !== secret) {
+    return NextResponse.json({ ok: false }, { status: 403 });
   }
 
   let body: Record<string, unknown>;

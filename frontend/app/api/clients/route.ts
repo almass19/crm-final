@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { escapePostgrestValue } from '@/lib/utils/postgrest-filter';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
   if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
@@ -122,8 +123,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
+      const safeSearch = escapePostgrestValue(`%${search}%`);
       query = query.or(
-        `full_name.ilike.%${search}%,company_name.ilike.%${search}%,phone.ilike.%${search}%,group_name.ilike.%${search}%,niche.ilike.%${search}%`,
+        `full_name.ilike.${safeSearch},company_name.ilike.${safeSearch},phone.ilike.${safeSearch},group_name.ilike.${safeSearch},niche.ilike.${safeSearch}`,
       );
     }
 

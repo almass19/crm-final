@@ -1,182 +1,103 @@
-# CRM System (MVP)
+# CRM System
 
-Web-based CRM system for managing clients and internal assignments with role-based access control.
+Web + mobile CRM for managing clients, task assignments, and payments with role-based access control.
 
 ## Tech Stack
 
-- **Backend:** Node.js + TypeScript + NestJS
-- **Database:** PostgreSQL
-- **ORM:** Prisma v5
-- **Frontend:** Next.js 14 (TypeScript, App Router)
-- **UI:** Tailwind CSS
-- **Auth:** JWT (access token, stateless)
+- **Backend:** Next.js Route Handlers (`frontend/app/api`) — there is no separate backend service
+- **Database & Auth:** Supabase (PostgreSQL, Row Level Security, Supabase Auth)
+- **Frontend:** Next.js 14 (TypeScript, App Router), Tailwind CSS
+- **Mobile:** Expo / React Native (`mobile/`)
+- **Notifications:** In-app + Telegram bot integration
 
-### Why JWT?
-
-JWT was chosen over sessions for simplicity in the MVP: no server-side session store is needed, the frontend stores the token in localStorage and sends it as a Bearer header. For production, consider adding refresh tokens and httpOnly cookies.
+Auth uses Supabase Auth sessions (cookie-based via `@supabase/ssr`), not a hand-rolled JWT layer. Every request is additionally scoped by Postgres Row Level Security policies (see `frontend/supabase/schema.sql` and `frontend/supabase/migrations/`), so access control is enforced both in the API route handlers and at the database layer.
 
 ## Prerequisites
 
 - Node.js 18+
-- PostgreSQL 14+ (running locally or via Docker)
+- A Supabase project (cloud or local via the Supabase CLI)
 
 ## Setup
 
-### 1. PostgreSQL
+### 1. Supabase project
 
-#### Option A: Local PostgreSQL (Homebrew / macOS)
-
-If PostgreSQL was installed via Homebrew, it typically creates a DB role matching your macOS username (e.g. `almas`). You can verify with:
+Create a project at [supabase.com](https://supabase.com), then apply the schema:
 
 ```bash
-psql postgres          # connects as your OS user
-# You should see: postgres=>
+# Using the Supabase CLI, from frontend/
+npx supabase db push
 ```
 
-Create the project database:
+or run `frontend/supabase/schema.sql` followed by the files in `frontend/supabase/migrations/` (in numeric order) via the SQL editor in the Supabase dashboard.
 
-```bash
-createdb crm_db
-# or explicitly:
-psql -d postgres -c "CREATE DATABASE crm_db;"
-```
+### 2. Environment variables
 
-> **Note:** If your local Postgres uses a different user or requires a password, adjust `DATABASE_URL` in `backend/.env` accordingly.
-
-#### Option B: Docker
-
-If you prefer an isolated setup (no local password/user issues):
-
-```bash
-docker compose up -d
-```
-
-This starts PostgreSQL on port 5432 with user `almas`, password `almas`, database `crm_db` (configured in `docker-compose.yml`).
-
-### 2. Configure DATABASE_URL
-
-Edit `backend/.env` and set your connection string:
+Create `frontend/.env.local`:
 
 ```env
-# Local Postgres (no password):
-DATABASE_URL="postgresql://almas@localhost:5432/crm_db?schema=public"
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key   # server-only, never exposed to the client
 
-# Local Postgres (with password):
-DATABASE_URL="postgresql://almas:YOUR_PASSWORD@localhost:5432/crm_db?schema=public"
-
-# Docker:
-DATABASE_URL="postgresql://almas:almas@localhost:5432/crm_db?schema=public"
+# Required in production — these endpoints fail closed without them
+CRON_SECRET=generate-a-random-secret
+TELEGRAM_WEBHOOK_SECRET=generate-a-random-secret
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 ```
 
-### 3. Backend Setup
-
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate dev --name init
-
-# Seed the database with test users
-npx prisma db seed
-
-# Start the backend (dev mode)
-npm run start:dev
-```
-
-Backend runs on http://localhost:3001
-
-### 4. Frontend Setup
+### 3. Frontend (web) setup
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the frontend (dev mode)
 npm run dev
 ```
 
-Frontend runs on http://localhost:3000
+Runs on http://localhost:3000
 
-## Test Accounts
+### 4. Mobile setup
 
-| Role             | Email            | Password    |
-|------------------|------------------|-------------|
-| Project Manager  | pm@crm.local     | password123 |
-| Sales Manager    | sales@crm.local  | password123 |
-| Specialist 1     | spec1@crm.local  | password123 |
-| Specialist 2     | spec2@crm.local  | password123 |
+```bash
+cd mobile
+npm install
+npm run start
+```
+
+Update the Supabase URL/anon key in `mobile/lib/supabase.ts` (or migrate to `EXPO_PUBLIC_*` env vars) to point at the same Supabase project as the frontend.
 
 ## User Roles
 
-### Sales Manager (Менеджер по продажам)
-- Creates new client records
-- Views all clients and their statuses
-- Cannot assign specialists or delete clients
-
-### Project Manager (Проект-менеджер)
-- Views all clients
-- Assigns specialists to clients
-- Changes client status (NEW → ASSIGNED → IN_WORK → DONE / REJECTED)
-- Can reassign specialists and archive clients
-- All assignments are stored in history
-
-### Specialist (Специалист)
-- Sees only clients assigned to them
-- New assignments appear in "Новые клиенты" tab
-- Must click "Принять в работу" to acknowledge assignment
-- Can add comments and internal notes
-
-## API Endpoints
-
-| Method | Path                          | Description           | Access          |
-|--------|-------------------------------|-----------------------|-----------------|
-| POST   | /api/auth/login               | Login                 | Public          |
-| GET    | /api/auth/me                  | Get current user      | Authenticated   |
-| GET    | /api/users?role=specialist    | List specialists      | PM only         |
-| POST   | /api/clients                  | Create client         | Sales Manager   |
-| GET    | /api/clients                  | List clients          | Authenticated   |
-| GET    | /api/clients/:id              | Get client details    | Authenticated   |
-| PATCH  | /api/clients/:id              | Update client         | Authenticated   |
-| PATCH  | /api/clients/:id/archive      | Archive client        | PM only         |
-| POST   | /api/clients/:id/assign       | Assign specialist     | PM only         |
-| POST   | /api/clients/:id/acknowledge  | Acknowledge assignment| Specialist only |
-| POST   | /api/clients/:id/comments     | Add comment           | Authenticated   |
-| GET    | /api/clients/:id/comments     | List comments         | Authenticated   |
+| Role | Access |
+|------|--------|
+| ADMIN | Full access to all clients, users, payments, and settings |
+| SALES_MANAGER | Creates clients, sees only clients they sold |
+| LEAD_DESIGNER | Views all clients, manages designer assignments |
+| TARGETOLOGIST | Sees only clients assigned to them |
+| DESIGNER | Sees only clients assigned to them for creative work |
 
 ## Project Structure
 
 ```
 crm-system/
-├── backend/
-│   ├── src/
-│   │   ├── common/
-│   │   │   ├── decorators/    # @Roles, @CurrentUser
-│   │   │   └── guards/        # RolesGuard
-│   │   ├── modules/
-│   │   │   ├── auth/          # JWT auth, login, strategy
-│   │   │   ├── users/         # User listing
-│   │   │   ├── clients/       # CRUD, assign, acknowledge
-│   │   │   ├── comments/      # Client comments
-│   │   │   └── audit/         # Audit logging
-│   │   └── prisma/            # PrismaService (global)
-│   └── prisma/
-│       ├── schema.prisma      # Database schema
-│       └── seed.ts            # Seed data
 ├── frontend/
 │   ├── app/
-│   │   ├── login/             # Login page
-│   │   ├── clients/           # Client list
-│   │   └── clients/[id]/      # Client details
-│   ├── components/            # Shared components
-│   └── lib/                   # API client, auth context
-├── docker-compose.yml
+│   │   ├── api/                # Route handlers — the application's backend
+│   │   ├── clients/            # Client list & detail pages
+│   │   ├── dashboard/          # KPI / analytics dashboards
+│   │   └── tasks/              # Task management
+│   ├── components/             # Shared UI components
+│   ├── lib/
+│   │   ├── supabase/           # Browser, server, and admin Supabase clients
+│   │   └── utils/              # Case transforms, filter escaping, etc.
+│   └── supabase/
+│       ├── schema.sql          # Base schema, enums, RLS policies
+│       └── migrations/         # Incremental migrations, applied in order
+├── mobile/                     # Expo app (shares the same Supabase backend)
 └── README.md
 ```
+
+## Security Notes
+
+- Row Level Security is enabled on every table; API routes additionally enforce role checks before querying.
+- `CRON_SECRET` and `TELEGRAM_WEBHOOK_SECRET` are required in production — the cron and Telegram webhook routes reject requests if these are unset rather than allowing them through.
+- The Supabase **service role key** (`SUPABASE_SERVICE_ROLE_KEY`) bypasses RLS and is only used server-side in a small number of privileged routes (password resets, Telegram account linking, file attachments). Never expose it to the client.

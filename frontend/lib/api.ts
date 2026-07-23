@@ -1,13 +1,6 @@
 const API_URL = '/api';
 
-async function request(path: string, options: RequestInit = {}) {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-
+async function handleResponse(res: Response) {
   if (res.status === 401) {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -21,6 +14,23 @@ async function request(path: string, options: RequestInit = {}) {
   }
 
   return res.json();
+}
+
+async function request(path: string, options: RequestInit = {}) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  return handleResponse(res);
+}
+
+// No Content-Type header here — the browser sets the multipart boundary
+// itself when the body is a FormData instance.
+async function requestUpload(path: string, formData: FormData) {
+  const res = await fetch(`${API_URL}${path}`, { method: 'POST', body: formData });
+  return handleResponse(res);
 }
 
 export const api = {
@@ -163,6 +173,22 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  // Attachments
+  getClientAttachments: (clientId: string) =>
+    request(`/clients/${clientId}/attachments`),
+
+  uploadClientAttachment: (clientId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return requestUpload(`/clients/${clientId}/attachments`, formData);
+  },
+
+  deleteClientAttachment: (clientId: string, attachmentId: string) =>
+    request(`/clients/${clientId}/attachments/${attachmentId}`, { method: 'DELETE' }),
+
+  getClientAttachmentDownloadUrl: (clientId: string, attachmentId: string) =>
+    request(`/clients/${clientId}/attachments/${attachmentId}/download`),
 
   // Renewals
   getRenewals: (month: string) =>

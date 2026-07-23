@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "CRM Система",
+    "slug": "crm-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "crm",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.crm.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#197fe6",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "package": "com.crm.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

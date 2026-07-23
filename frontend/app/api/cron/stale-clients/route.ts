@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { checkCronAuth } from '@/lib/cron-auth';
 
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-  }
+  const authError = checkCronAuth(request);
+  if (authError) return authError;
 
   const supabase = await createClient();
 
