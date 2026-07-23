@@ -766,6 +766,7 @@ function CreateClientModal({
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [salesManagers, setSalesManagers] = useState<{ id: string; fullName: string }[]>([]);
+  const [contractFile, setContractFile] = useState<File | null>(null);
   const isAdmin = userRole === 'ADMIN';
 
   useEffect(() => {
@@ -802,7 +803,17 @@ function CreateClientModal({
       if (form.paymentAmount) data.paymentAmount = parseFloat(form.paymentAmount);
       if (form.soldById) data.soldById = form.soldById;
       if (form.purchaseDate) data.purchaseDate = form.purchaseDate;
-      await api.createClient(data);
+      const created = await api.createClient(data);
+
+      if (contractFile) {
+        try {
+          await api.uploadClientAttachment(created.id, contractFile);
+        } catch (uploadErr: unknown) {
+          const msg = uploadErr instanceof Error ? uploadErr.message : 'Ошибка загрузки договора';
+          onError(`Клиент создан, но договор не загружен: ${msg}`);
+        }
+      }
+
       onCreated(form.companyName || form.fullName || 'Клиент');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ошибка создания';
@@ -908,6 +919,44 @@ function CreateClientModal({
             <div>
               <label className={labelCls}>Дата покупки</label>
               <input type="date" value={form.purchaseDate} onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })} className={fieldCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Договор (PDF)</label>
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium">
+                  Выбрать файл
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      e.target.value = '';
+                      if (file && file.type !== 'application/pdf') {
+                        setError('Договор должен быть в формате PDF');
+                        return;
+                      }
+                      setError('');
+                      setContractFile(file);
+                    }}
+                  />
+                </label>
+                {contractFile && (
+                  <span className="flex items-center gap-2 text-sm text-slate-600 min-w-0">
+                    <span className="truncate">{contractFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setContractFile(null)}
+                      className="text-red-400 hover:text-red-600 flex-shrink-0"
+                      title="Убрать файл"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <label className={labelCls}>Заметки</label>
