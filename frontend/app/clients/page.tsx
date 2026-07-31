@@ -22,6 +22,7 @@ interface Client {
   archived: boolean;
   clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount: number | null;
+  paidTotal: number | null;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;
@@ -506,7 +507,7 @@ export default function ClientsPage() {
                     : isLeadDesigner
                     ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
                     : isSpecialist
-                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    ? ['Компания', 'Телефон', 'Статус', 'Оплачено', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -551,7 +552,7 @@ export default function ClientsPage() {
                     : isLeadDesigner
                     ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
                     : isSpecialist
-                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+                    ? ['Компания', 'Телефон', 'Статус', 'Оплачено', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -611,8 +612,15 @@ export default function ClientsPage() {
                                 <StatusBadge status={client.status} />
                               )}
                             </td>
-                            <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                              {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-semibold text-slate-900">
+                                {`${Number(client.paidTotal || 0).toLocaleString('ru-RU')} ₸`}
+                              </div>
+                              {client.paymentAmount ? (
+                                <div className="text-xs text-slate-400">
+                                  {`из ${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸`}
+                                </div>
+                              ) : null}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                               {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}

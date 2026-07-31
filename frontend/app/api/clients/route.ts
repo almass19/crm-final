@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
 import { escapePostgrestValue } from '@/lib/utils/postgrest-filter';
+import { canSeePayments, getPaidTotals } from '@/lib/payments';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
   // TARGETOLOGIST sees the payment amount of their own clients (the query is
@@ -134,7 +135,18 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const sanitized = (data || []).map((c) => sanitizeClient(c, user.role));
+    // How much each client actually paid, so list views don't need a drill-down
+    const paidTotals = await getPaidTotals(
+      supabase,
+      (data || []).map((c) => c.id),
+      user,
+    );
+
+    const sanitized = (data || []).map((c) => {
+      const client = sanitizeClient(c, user.role);
+      if (!canSeePayments(user.role)) return client;
+      return { ...client, paid_total: paidTotals.get(c.id) ?? 0 };
+    });
     return NextResponse.json(snakeToCamel(sanitized));
   } catch (e) {
     if (e instanceof NextResponse) return e;

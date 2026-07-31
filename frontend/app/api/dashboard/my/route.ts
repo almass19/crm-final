@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireRoles } from '@/lib/supabase/auth-helpers';
 import { snakeToCamel } from '@/lib/utils/case-transform';
+import { canSeePayments, getPaidTotals } from '@/lib/payments';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,24 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(year, month - 1, 1).toISOString();
     const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
 
-    const clientSelect = 'id, full_name, company_name, phone, group_name, status, services, purchase_date, created_at, assigned_at, designer_assigned_at';
+    // payment_amount is filtered back out below for roles that must not see it
+    const clientSelect = 'id, full_name, company_name, phone, group_name, status, services, purchase_date, created_at, assigned_at, designer_assigned_at, payment_amount';
+
+    // Attaches payment_amount / paid_total only for roles allowed to see them
+    const withPayments = async (clients: Record<string, unknown>[]) => {
+      if (!canSeePayments(user.role)) {
+        return clients.map(({ payment_amount, ...rest }) => rest);
+      }
+      const paidTotals = await getPaidTotals(
+        supabase,
+        clients.map((c) => c.id as string),
+        user,
+      );
+      return clients.map((c) => ({
+        ...c,
+        paid_total: paidTotals.get(c.id as string) ?? 0,
+      }));
+    };
 
     let query;
 
@@ -98,7 +116,7 @@ export async function GET(request: NextRequest) {
           count: merged.length,
           createdCount: (createdRes.data || []).length,
           specialistCount: (specialistRes.data || []).length,
-          clients: snakeToCamel(merged),
+          clients: snakeToCamel(await withPayments(merged)),
           month,
           year,
           role: user.role,
@@ -120,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       count: (clients || []).length,
-      clients: snakeToCamel(clients || []),
+      clients: snakeToCamel(await withPayments(clients || [])),
       month,
       year,
       role: user.role,
