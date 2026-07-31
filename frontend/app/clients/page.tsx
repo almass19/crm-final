@@ -505,6 +505,8 @@ export default function ClientsPage() {
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
                     ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
+                    : isSpecialist
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -548,6 +550,8 @@ export default function ClientsPage() {
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
                     ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
+                    : isSpecialist
+                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
                   ).map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -564,7 +568,7 @@ export default function ClientsPage() {
                     return (
                       <React.Fragment key={key}>
                         <tr>
-                          <td colSpan={5} className="px-6 py-2 bg-slate-50 border-y border-slate-100">
+                          <td colSpan={6} className="px-6 py-2 bg-slate-50 border-y border-slate-100">
                             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
                             <span className="ml-2 text-xs text-slate-400">{groupClients.length}</span>
                           </td>
@@ -606,6 +610,9 @@ export default function ClientsPage() {
                               ) : (
                                 <StatusBadge status={client.status} />
                               )}
+                            </td>
+                            <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
+                              {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                               {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
