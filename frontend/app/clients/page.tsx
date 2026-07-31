@@ -22,6 +22,7 @@ interface Client {
   archived: boolean;
   clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount: number | null;
+  paidTotal: number | null;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;

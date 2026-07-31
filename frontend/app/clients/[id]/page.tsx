@@ -779,6 +779,14 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-slate-500">Платежей пока нет</p>
                 ) : (
                   <div className="space-y-3">
+                    <div className="flex justify-between items-baseline pb-3 border-b">
+                      <span className="text-sm text-slate-500">Всего оплачено:</span>
+                      <span className="text-base font-bold text-slate-900">
+                        {payments
+                          .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+                          .toLocaleString('ru-RU')} ₸
+                      </span>
+                    </div>
                     {payments.map((p) => (
                       <div key={p.id} className="text-sm border-b pb-3 last:border-0">
                         <div className="flex justify-between items-start">

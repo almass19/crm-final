@@ -22,6 +22,8 @@ interface DashboardClient {
   createdAt: string;
   assignedAt: string | null;
   designerAssignedAt: string | null;
+  paymentAmount: number | null;
+  paidTotal: number | null;
 }
 
 interface DashboardData {
@@ -80,6 +82,11 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const isTargetologist = user.role === 'TARGETOLOGIST';
+  // TARGETOLOGIST sees the deal amount only, not the paid-total (payment records
+  // aggregate) — same split as the clients list and client detail pages.
+  const canSeePaidTotal = user.role !== 'DESIGNER' && !isTargetologist;
 
   const getRoleDashboardTitle = () => {
     switch (user.role) {
@@ -176,7 +183,14 @@ export default function DashboardPage() {
                 <table className="min-w-full divide-y divide-slate-100">
                   <thead className="bg-slate-50">
                     <tr>
-                      {['Имя / Компания', 'Контакты', 'Услуги', 'Статус', 'Дата'].map((h) => (
+                      {[
+                        'Имя / Компания',
+                        'Контакты',
+                        'Услуги',
+                        'Статус',
+                        ...(canSeePaidTotal ? ['Оплачено'] : isTargetologist ? ['Сумма'] : []),
+                        'Дата',
+                      ].map((h) => (
                         <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                           {h}
                         </th>
@@ -208,6 +222,23 @@ export default function DashboardPage() {
                         <td className="px-6 py-4">
                           <StatusBadge status={client.status} />
                         </td>
+                        {canSeePaidTotal && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-semibold text-slate-900">
+                              {`${Number(client.paidTotal || 0).toLocaleString('ru-RU')} ₸`}
+                            </div>
+                            {client.paymentAmount ? (
+                              <div className="text-xs text-slate-400">
+                                {`из ${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸`}
+                              </div>
+                            ) : null}
+                          </td>
+                        )}
+                        {isTargetologist && (
+                          <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
+                            {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                          </td>
+                        )}
                         <td className="px-6 py-4 text-sm text-slate-500">
                           {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : (client.assignedAt || client.designerAssignedAt ? new Date(client.assignedAt || client.designerAssignedAt!).toLocaleDateString('ru-RU') : '—')}
                         </td>
