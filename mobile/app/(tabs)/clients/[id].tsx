@@ -150,7 +150,7 @@ export default function ClientDetailScreen() {
   const isLeadDesigner = user?.role === 'LEAD_DESIGNER';
 
   const canSeePaymentAmount = isAdmin || isSalesManager || isTargetologist;
-  const canSeePayments = isAdmin || isSalesManager;
+  const canSeePayments = isAdmin || isSalesManager || isTargetologist;
   const canAddPayment = isAdmin || isSalesManager;
   const canDeletePayment = isAdmin;
   const canSeeCreatives = isAdmin || isDesigner || isLeadDesigner;
