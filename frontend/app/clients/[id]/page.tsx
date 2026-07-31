@@ -137,7 +137,7 @@ export default function ClientDetailPage() {
 
   const fetchPayments = useCallback(async () => {
     if (!user) return;
-    if (!['ADMIN', 'SALES_MANAGER', 'TARGETOLOGIST'].includes(user.role || '')) return;
+    if (!['ADMIN', 'SALES_MANAGER'].includes(user.role || '')) return;
     try {
       const data = await api.getClientPayments(id);
       setPayments(data);
@@ -313,7 +313,7 @@ export default function ClientDetailPage() {
   const isSpecialist = user.role === 'TARGETOLOGIST';
   const isDesigner = user.role === 'DESIGNER';
   const isLeadDesigner = user.role === 'LEAD_DESIGNER';
-  const canSeePayment = isAdmin || isSalesManager;
+  const canSeePayment = isAdmin || isSalesManager || isSpecialist;
   const canEditClient = isAdmin || isSalesManager;
   const canSeeCreatives = isAdmin || isDesigner || isLeadDesigner;
   const canAddCreative = isDesigner || isLeadDesigner;
@@ -761,8 +761,8 @@ export default function ClientDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Payments - Admin and Sales Manager can manage, Targetologist can view */}
-            {(isAdmin || isSalesManager || isSpecialist) && (
+            {/* Payments - Admin and Sales Manager only */}
+            {(isAdmin || isSalesManager) && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-bold text-slate-900">Платежи</h2>

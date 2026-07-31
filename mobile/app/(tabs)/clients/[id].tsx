@@ -149,7 +149,8 @@ export default function ClientDetailScreen() {
   const isDesigner = user?.role === 'DESIGNER';
   const isLeadDesigner = user?.role === 'LEAD_DESIGNER';
 
-  const canSeePayments = isAdmin || isSalesManager || isTargetologist;
+  const canSeePaymentAmount = isAdmin || isSalesManager || isTargetologist;
+  const canSeePayments = isAdmin || isSalesManager;
   const canAddPayment = isAdmin || isSalesManager;
   const canDeletePayment = isAdmin;
   const canSeeCreatives = isAdmin || isDesigner || isLeadDesigner;
@@ -420,7 +421,7 @@ export default function ClientDetailScreen() {
                 <InfoRow label="Ниша" value={client.niche} />
                 <InfoRow label="Группа" value={client.group_name} />
                 <InfoRow label="Услуги" value={(client.services || []).join(', ') || null} />
-                {canSeePayments && (
+                {canSeePaymentAmount && (
                   <InfoRow
                     label="Сумма оплаты"
                     value={client.payment_amount != null ? `${Number(client.payment_amount).toLocaleString('ru-RU')} ₸` : null}

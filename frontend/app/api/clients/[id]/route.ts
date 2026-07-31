@@ -5,7 +5,7 @@ import { snakeToCamel } from '@/lib/utils/case-transform';
 import { createClientStatusChangedNotification } from '@/lib/notifications';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
-  if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
+  if (role === 'DESIGNER') {
     const { payment_amount, ...rest } = client;
     return rest;
   }
