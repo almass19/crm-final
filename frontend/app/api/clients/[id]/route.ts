@@ -5,7 +5,9 @@ import { snakeToCamel } from '@/lib/utils/case-transform';
 import { createClientStatusChangedNotification } from '@/lib/notifications';
 
 function sanitizeClient(client: Record<string, unknown>, role: string | null) {
-  if (role === 'TARGETOLOGIST' || role === 'DESIGNER') {
+  // TARGETOLOGIST sees the payment amount of their own clients (queries above are
+  // already scoped to assigned_to_id), DESIGNER never does.
+  if (role === 'DESIGNER') {
     const { payment_amount, ...rest } = client;
     return rest;
   }

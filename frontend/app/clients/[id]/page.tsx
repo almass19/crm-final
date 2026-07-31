@@ -313,7 +313,7 @@ export default function ClientDetailPage() {
   const isSpecialist = user.role === 'TARGETOLOGIST';
   const isDesigner = user.role === 'DESIGNER';
   const isLeadDesigner = user.role === 'LEAD_DESIGNER';
-  const canSeePayment = isAdmin || isSalesManager;
+  const canSeePayment = isAdmin || isSalesManager || isSpecialist;
   const canEditClient = isAdmin || isSalesManager;
   const canSeeCreatives = isAdmin || isDesigner || isLeadDesigner;
   const canAddCreative = isDesigner || isLeadDesigner;
@@ -779,6 +779,14 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-slate-500">Платежей пока нет</p>
                 ) : (
                   <div className="space-y-3">
+                    <div className="flex justify-between items-baseline pb-3 border-b">
+                      <span className="text-sm text-slate-500">Всего оплачено:</span>
+                      <span className="text-base font-bold text-slate-900">
+                        {payments
+                          .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+                          .toLocaleString('ru-RU')} ₸
+                      </span>
+                    </div>
                     {payments.map((p) => (
                       <div key={p.id} className="text-sm border-b pb-3 last:border-0">
                         <div className="flex justify-between items-start">
