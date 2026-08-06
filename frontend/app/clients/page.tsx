@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -222,6 +222,29 @@ export default function ClientsPage() {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, [statusDropdown]);
+
+  // Flip the dropdown above the button (and clamp horizontally) when it would
+  // otherwise render past the viewport edge, e.g. for rows near the bottom.
+  useLayoutEffect(() => {
+    if (!statusDropdown || !statusDropdownRef.current) return;
+    const el = statusDropdownRef.current;
+    const { rect } = statusDropdown;
+    const margin = 8;
+
+    let top = rect.bottom + 4;
+    if (top + el.offsetHeight > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - el.offsetHeight - 4);
+    }
+
+    let left = rect.left;
+    if (left + el.offsetWidth > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - el.offsetWidth - margin);
+    }
+
+    el.style.top = `${top}px`;
+    el.style.left = `${left}px`;
+    el.style.visibility = 'visible';
   }, [statusDropdown]);
 
   const handleInlineStatusChange = async (clientId: string, newStatus: string) => {
@@ -704,9 +727,10 @@ export default function ClientsPage() {
             position: 'fixed',
             top: statusDropdown.rect.bottom + 4,
             left: statusDropdown.rect.left,
+            visibility: 'hidden',
             zIndex: 100,
           }}
-          className="bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[190px]"
+          className="bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[190px] max-h-[80vh] overflow-y-auto"
         >
           {Object.entries(STATUS_LABELS).map(([key, label]) => {
             const currentClient = clients.find((c) => c.id === statusDropdown.clientId);
