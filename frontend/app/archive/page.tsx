@@ -8,6 +8,7 @@ import { STATUS_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
+import { useToast } from '@/components/Toast';
 
 interface Client {
   id: string;
@@ -51,6 +52,7 @@ function SkeletonRow() {
 export default function ArchivePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,7 @@ export default function ArchivePage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [nicheFilter, setNicheFilter] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
+  const [unarchivingId, setUnarchivingId] = useState<string | null>(null);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -75,6 +78,21 @@ export default function ArchivePage() {
       setLoading(false);
     }
   }, [user, search, statusFilter, nicheFilter]);
+
+  const handleUnarchive = async (clientId: string) => {
+    if (!confirm('Разархивировать клиента?')) return;
+    setUnarchivingId(clientId);
+    try {
+      await api.unarchiveClient(clientId);
+      setClients((prev) => prev.filter((c) => c.id !== clientId));
+      showToast('Клиент разархивирован');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Ошибка';
+      showToast(msg, 'error');
+    } finally {
+      setUnarchivingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { router.replace('/login'); return; }
@@ -247,8 +265,8 @@ export default function ArchivePage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['Компания', 'Дизайнер', 'Статус', ...(isAdmin ? ['Сумма'] : []), 'Дата покупки', 'Дата запуска', 'Специалист'].map((h) => (
-                    <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  {['Компания', 'Дизайнер', 'Статус', ...(isAdmin ? ['Сумма'] : []), 'Дата покупки', 'Дата запуска', 'Специалист', ...(isAdmin ? [''] : [])].map((h, i) => (
+                    <th key={`${h}-${i}`} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -294,6 +312,17 @@ export default function ArchivePage() {
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.assignedTo?.fullName || '—'}
                     </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleUnarchive(client.id)}
+                          disabled={unarchivingId === client.id}
+                          className="text-xs px-2 py-1 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 disabled:opacity-50 transition-colors"
+                        >
+                          Разархивировать
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

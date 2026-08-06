@@ -4,7 +4,7 @@ const CLIENT_SELECT = `
   id, full_name, company_name, phone, group_name, niche, services, notes,
   client_type, payment_amount, status, assignment_seen, designer_assignment_seen,
   purchase_date, launch_date, created_at, assigned_at, designer_assigned_at,
-  sold_by_id, assigned_to_id, designer_id, created_by_id, is_archived,
+  sold_by_id, assigned_to_id, designer_id, created_by_id, archived,
   assigned_to:profiles!clients_assigned_to_id_fkey(id, full_name, role),
   designer:profiles!clients_designer_id_fkey(id, full_name, role),
   sold_by:profiles!clients_sold_by_id_fkey(id, full_name),
@@ -30,7 +30,7 @@ export const mobileApi = {
     let query = supabase
       .from('clients')
       .select(CLIENT_SELECT)
-      .eq('is_archived', false);
+      .eq('archived', false);
 
     if (role === 'TARGETOLOGIST') {
       query = query.eq('assigned_to_id', userId);
@@ -98,7 +98,27 @@ export const mobileApi = {
   async archiveClient(id: string) {
     const { error } = await supabase
       .from('clients')
-      .update({ is_archived: true })
+      .update({ archived: true })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+
+  async unarchiveClient(id: string) {
+    const { data: client, error: fetchError } = await supabase
+      .from('clients')
+      .select('status')
+      .eq('id', id)
+      .single();
+    if (fetchError) throw new Error(fetchError.message);
+
+    // A DONE status keeps a client filtered into the archive view regardless
+    // of the archived flag, so resume it into active work.
+    const updateData: Record<string, unknown> = { archived: false };
+    if (client?.status === 'DONE') updateData.status = 'IN_WORK';
+
+    const { error } = await supabase
+      .from('clients')
+      .update(updateData)
       .eq('id', id);
     if (error) throw new Error(error.message);
   },
@@ -384,7 +404,7 @@ export const mobileApi = {
         .from('clients')
         .select(MINI, { count: 'exact' })
         .eq('assigned_to_id', userId)
-        .eq('is_archived', false)
+        .eq('archived', false)
         .gte('assigned_at', start)
         .lte('assigned_at', end);
       if (error) throw new Error(error.message);
@@ -396,7 +416,7 @@ export const mobileApi = {
         .from('clients')
         .select(MINI, { count: 'exact' })
         .eq('designer_id', userId)
-        .eq('is_archived', false)
+        .eq('archived', false)
         .gte('designer_assigned_at', start)
         .lte('designer_assigned_at', end);
       if (error) throw new Error(error.message);
@@ -408,7 +428,7 @@ export const mobileApi = {
         .from('clients')
         .select(MINI, { count: 'exact' })
         .eq('sold_by_id', userId)
-        .eq('is_archived', false)
+        .eq('archived', false)
         .gte('created_at', start)
         .lte('created_at', end);
       if (error) throw new Error(error.message);
@@ -421,14 +441,14 @@ export const mobileApi = {
           .from('clients')
           .select(MINI, { count: 'exact' })
           .eq('created_by_id', userId)
-          .eq('is_archived', false)
+          .eq('archived', false)
           .gte('created_at', start)
           .lte('created_at', end),
         supabase
           .from('clients')
           .select(MINI, { count: 'exact' })
           .eq('assigned_to_id', userId)
-          .eq('is_archived', false)
+          .eq('archived', false)
           .gte('assigned_at', start)
           .lte('assigned_at', end),
       ]);

@@ -39,6 +39,7 @@ type ClientDetail = {
   client_type: 'LEGAL' | 'INDIVIDUAL' | null;
   payment_amount: number | null;
   status: string;
+  archived: boolean;
   assignment_seen: boolean;
   designer_assignment_seen: boolean;
   purchase_date: string | null;
@@ -277,6 +278,18 @@ export default function ClientDetailScreen() {
     ]);
   };
 
+  const handleUnarchive = () => {
+    Alert.alert('Разархивировать', 'Разархивировать этого клиента?', [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Разархивировать', onPress: async () => {
+          await mobileApi.unarchiveClient(id!);
+          await loadClient();
+        },
+      },
+    ]);
+  };
+
   const handleDelete = () => {
     Alert.alert('Удалить клиента', 'Это действие нельзя отменить. Продолжить?', [
       { text: 'Отмена', style: 'cancel' },
@@ -484,11 +497,15 @@ export default function ClientDetailScreen() {
                       <Text style={[s.actionBtnText, { color: COLORS.purple }]}>Назначить дизайнера</Text>
                     </TouchableOpacity>
                   )}
-                  {canArchive && (
+                  {canArchive && (client.archived ? (
+                    <TouchableOpacity style={s.actionBtn} onPress={handleUnarchive}>
+                      <Text style={s.actionBtnText}>Разархивировать</Text>
+                    </TouchableOpacity>
+                  ) : (
                     <TouchableOpacity style={[s.actionBtn, { backgroundColor: COLORS.warningLight }]} onPress={handleArchive}>
                       <Text style={[s.actionBtnText, { color: COLORS.warning }]}>Архивировать</Text>
                     </TouchableOpacity>
-                  )}
+                  ))}
                   {canDelete && (
                     <TouchableOpacity style={[s.actionBtn, { backgroundColor: COLORS.dangerLight }]} onPress={handleDelete}>
                       <Text style={[s.actionBtnText, { color: COLORS.danger }]}>Удалить</Text>

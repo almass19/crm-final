@@ -85,6 +85,9 @@ export const api = {
   archiveClient: (id: string) =>
     request(`/clients/${id}/archive`, { method: 'PATCH' }),
 
+  unarchiveClient: (id: string) =>
+    request(`/clients/${id}/archive`, { method: 'DELETE' }),
+
   deleteClient: (id: string) =>
     request(`/clients/${id}`, { method: 'DELETE' }),
 

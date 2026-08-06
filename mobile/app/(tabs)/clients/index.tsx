@@ -179,7 +179,7 @@ function CreateClientModal({
         sold_by_id: userId,
         created_by_id: userId,
         status: 'NEW',
-        is_archived: false,
+        archived: false,
         assignment_seen: false,
         designer_assignment_seen: false,
       });

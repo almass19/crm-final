@@ -25,6 +25,7 @@ interface Client {
   clientType: 'LEGAL' | 'INDIVIDUAL' | null;
   paymentAmount?: string | number | null;
   status: string;
+  archived: boolean;
   assignmentSeen: boolean;
   designerAssignmentSeen: boolean;
   purchaseDate: string | null;
@@ -250,6 +251,19 @@ export default function ClientDetailPage() {
       router.back();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка');
+    }
+  };
+
+  const handleUnarchive = async () => {
+    if (!confirm('Разархивировать клиента?')) return;
+    try {
+      await api.unarchiveClient(id);
+      fetchClient();
+      showToast('Клиент разархивирован');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Ошибка';
+      setError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -513,12 +527,21 @@ export default function ClientDetailPage() {
                     >
                       Назначить специалиста
                     </button>
-                    <button
-                      onClick={handleArchive}
-                      className="btn-danger"
-                    >
-                      Архивировать
-                    </button>
+                    {client.archived ? (
+                      <button
+                        onClick={handleUnarchive}
+                        className="btn-secondary"
+                      >
+                        Разархивировать
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleArchive}
+                        className="btn-danger"
+                      >
+                        Архивировать
+                      </button>
+                    )}
                     {confirmDelete ? (
                       <span className="flex items-center gap-2 text-sm">
                         <span className="text-slate-600">Удалить?</span>
