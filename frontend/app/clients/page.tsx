@@ -289,7 +289,7 @@ export default function ClientsPage() {
   if (hasNoRole) {
     return (
       <AppShell>
-        <div className="p-8 flex items-center justify-center min-h-[60vh]">
+        <div className="p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-[60vh]">
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-md text-center">
             <h2 className="text-xl font-bold text-slate-900 mb-2">Ожидание роли</h2>
             <p className="text-slate-500">Ваш аккаунт ожидает назначения роли администратором.</p>
@@ -333,7 +333,7 @@ export default function ClientsPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-3 flex-1">
           {isDesigner && (
             <div className="flex bg-slate-100 rounded-lg p-1 flex-shrink-0">
@@ -364,7 +364,7 @@ export default function ClientsPage() {
             />
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
           <NotificationBell />
           {isAdmin && (
             <button
@@ -389,7 +389,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold font-display tracking-tight text-slate-900">Клиенты</h1>
           <p className="text-slate-500 mt-1">Управление базой клиентов и назначениями</p>
@@ -520,6 +520,7 @@ export default function ClientsPage() {
 
         {loading ? (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -543,6 +544,7 @@ export default function ClientsPage() {
                 {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
               </tbody>
             </table>
+            </div>
           </div>
         ) : displayedClients.length === 0 ? (
           <div className="card p-16 text-center">
@@ -565,6 +567,7 @@ export default function ClientsPage() {
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -716,6 +719,7 @@ export default function ClientsPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

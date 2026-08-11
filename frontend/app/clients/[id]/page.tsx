@@ -345,7 +345,7 @@ export default function ClientDetailPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium"
@@ -355,12 +355,12 @@ export default function ClientDetailPage() {
           </svg>
           Назад к списку
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <NotificationBell />
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center justify-between">
             <span>{error}</span>
@@ -386,7 +386,7 @@ export default function ClientDetailPage() {
                 {!isSalesManager && <StatusBadge status={client.status} />}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-slate-500">Телефон:</span>
                   <p className="font-medium">{client.phone}</p>
@@ -872,7 +872,7 @@ export default function ClientDetailPage() {
       {/* Assign Specialist Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-slate-900">
                 Назначить специалиста
@@ -911,7 +911,7 @@ export default function ClientDetailPage() {
       {/* Assign Designer Modal */}
       {showAssignDesignerModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-slate-900">
                 Назначить дизайнера
@@ -950,7 +950,7 @@ export default function ClientDetailPage() {
       {/* Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full mx-4 p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-slate-900">
                 Изменить статус

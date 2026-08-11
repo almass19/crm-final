@@ -148,7 +148,7 @@ export default function ArchivePage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -166,7 +166,7 @@ export default function ArchivePage() {
         <NotificationBell />
       </div>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold font-display tracking-tight text-slate-900">Архив</h1>
           <p className="text-slate-500 mt-1">Завершённые клиенты</p>
@@ -228,6 +228,7 @@ export default function ArchivePage() {
 
         {loading ? (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -240,6 +241,7 @@ export default function ArchivePage() {
                 {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
               </tbody>
             </table>
+            </div>
           </div>
         ) : displayedClients.length === 0 ? (
           <div className="card p-16 text-center">
@@ -262,6 +264,7 @@ export default function ArchivePage() {
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -327,6 +330,7 @@ export default function ArchivePage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

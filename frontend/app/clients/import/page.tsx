@@ -141,7 +141,7 @@ export default function ImportClientsPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex items-center gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <button
           onClick={() => router.push('/clients')}
           className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
@@ -155,7 +155,7 @@ export default function ImportClientsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 sm:p-6 md:p-8 max-w-4xl">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
           <h2 className="text-sm font-semibold text-slate-700 mb-2">Формат CSV</h2>
           <div className="bg-slate-50 rounded-lg p-3 text-xs font-mono text-slate-600 overflow-x-auto border border-slate-200">

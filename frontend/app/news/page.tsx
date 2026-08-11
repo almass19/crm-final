@@ -85,9 +85,9 @@ export default function NewsPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <NotificationBell />
           {isAdmin && (
             <button
@@ -104,7 +104,7 @@ export default function NewsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-8 max-w-3xl">
+      <div className="p-4 sm:p-6 md:p-8 max-w-3xl">
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Новости</h1>
           <p className="text-slate-500 mt-1">Публикации и объявления для команды</p>
@@ -159,7 +159,7 @@ export default function NewsPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">Новая публикация</h3>
               <button

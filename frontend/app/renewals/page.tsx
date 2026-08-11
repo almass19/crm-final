@@ -134,7 +134,7 @@ export default function RenewalsPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
@@ -156,7 +156,7 @@ export default function RenewalsPage() {
             </svg>
           </button>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 ml-auto">
           {isAdmin && specialists.length > 0 && (
             <select
               value={specialistFilter}
@@ -186,7 +186,7 @@ export default function RenewalsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         <div className="mb-6">
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Продляемые</h1>
           <p className="text-slate-500 mt-1">
@@ -200,6 +200,7 @@ export default function RenewalsPage() {
 
         {loading ? (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -222,6 +223,7 @@ export default function RenewalsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         ) : displayedClients.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-500">
@@ -229,6 +231,7 @@ export default function RenewalsPage() {
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
@@ -280,6 +283,7 @@ export default function RenewalsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

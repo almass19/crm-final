@@ -7,6 +7,11 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { ROLE_LABELS } from '@/lib/constants';
 
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 function NavIcon({ path, path2 }: { path: string; path2?: string }) {
   return (
     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -32,15 +37,17 @@ interface NavLinkProps {
   href: string;
   icon: keyof typeof ICONS;
   label: string;
+  onNavigate?: () => void;
 }
 
-function NavLink({ href, icon, label }: NavLinkProps) {
+function NavLink({ href, icon, label, onNavigate }: NavLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
 
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-sm ${
         isActive
           ? 'bg-sidebar-active text-sidebar-text-active font-semibold border-l-[3px] border-primary -ml-[3px] pl-[calc(0.75rem+3px)]'
@@ -53,8 +60,9 @@ function NavLink({ href, icon, label }: NavLinkProps) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirm: '' });
   const [passwordError, setPasswordError] = useState('');
@@ -150,6 +158,26 @@ export default function Sidebar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Close the mobile drawer whenever the route changes
+  useEffect(() => {
+    onClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Close on Escape and lock background scroll while the mobile drawer is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
   if (!user) return null;
 
   const initials = user.fullName
@@ -162,27 +190,51 @@ export default function Sidebar() {
     : 'U';
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-sidebar-bg scrollbar-none overflow-y-auto flex flex-col">
-      {telegramSuccess && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-xl shadow-lg animate-fade-in">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.5l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.958.059z"/>
-          </svg>
-          Telegram успешно подключён ✓
-        </div>
+    <>
+      {/* Backdrop (mobile only) */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
+          onClick={onClose}
+          aria-hidden="true"
+        />
       )}
-      <div className="flex flex-col h-full p-4">
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-2 mb-8 mt-2">
-          <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-white font-display">CRM</h2>
-        </div>
 
-        {/* User Profile Card */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex flex-col bg-sidebar-bg scrollbar-none overflow-y-auto
+          transform transition-transform duration-300 ease-in-out
+          md:static md:z-auto md:w-64 md:flex-shrink-0 md:translate-x-0
+          ${isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none md:pointer-events-auto'}`}
+      >
+        {telegramSuccess && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-xl shadow-lg animate-fade-in">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.5l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.958.059z"/>
+            </svg>
+            Telegram успешно подключён ✓
+          </div>
+        )}
+        <div className="flex flex-col h-full p-4">
+          {/* Logo */}
+          <div className="flex items-center gap-3 px-2 mb-8 mt-2">
+            <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-white font-display flex-1">CRM</h2>
+            <button
+              onClick={onClose}
+              aria-label="Закрыть меню"
+              className="md:hidden p-1.5 -mr-1.5 rounded-lg text-sidebar-text hover:text-white hover:bg-sidebar-hover transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* User Profile Card */}
         <div className="flex items-center gap-3 px-3 py-3 mb-6 rounded-xl bg-sidebar-hover border border-sidebar-border">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
             {initials}
@@ -197,20 +249,20 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-0.5">
-          <NavLink href="/clients" icon="clients" label="Клиенты" />
-          <NavLink href="/news" icon="news" label="Новости" />
+          <NavLink href="/clients" icon="clients" label="Клиенты" onNavigate={onClose} />
+          <NavLink href="/news" icon="news" label="Новости" onNavigate={onClose} />
 
           {user.role !== 'SALES_MANAGER' && (
-            <NavLink href="/tasks" icon="tasks" label="Задачи" />
+            <NavLink href="/tasks" icon="tasks" label="Задачи" onNavigate={onClose} />
           )}
 
           {['ADMIN', 'TARGETOLOGIST', 'LEAD_DESIGNER'].includes(user.role || '') && (
-            <NavLink href="/renewals" icon="renewals" label="Продлеваемые" />
+            <NavLink href="/renewals" icon="renewals" label="Продлеваемые" onNavigate={onClose} />
           )}
 
           {['ADMIN', 'TARGETOLOGIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(
             user.role || ''
-          ) && <NavLink href="/dashboard" icon="dashboard" label="Мой дашборд" />}
+          ) && <NavLink href="/dashboard" icon="dashboard" label="Мой дашборд" onNavigate={onClose} />}
 
           {(user.role === 'ADMIN' || user.role === 'LEAD_DESIGNER') && (
             <>
@@ -219,11 +271,11 @@ export default function Sidebar() {
               </div>
               {user.role === 'ADMIN' && (
                 <>
-                  <NavLink href="/admin-dashboard" icon="chart" label="Дашборды" />
-                  <NavLink href="/users" icon="users" label="Пользователи" />
+                  <NavLink href="/admin-dashboard" icon="chart" label="Дашборды" onNavigate={onClose} />
+                  <NavLink href="/users" icon="users" label="Пользователи" onNavigate={onClose} />
                 </>
               )}
-              <NavLink href="/archive" icon="archive" label="Архив" />
+              <NavLink href="/archive" icon="archive" label="Архив" onNavigate={onClose} />
             </>
           )}
         </nav>
@@ -317,6 +369,7 @@ export default function Sidebar() {
           </div>
         </div>
       )}
-    </aside>
+      </aside>
+    </>
   );
 }

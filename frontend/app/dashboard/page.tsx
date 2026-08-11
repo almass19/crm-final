@@ -102,7 +102,7 @@ export default function DashboardPage() {
   return (
     <AppShell>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 md:gap-4 px-4 sm:px-6 md:px-8 py-3 md:py-4 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="flex items-center gap-4 flex-1">
           <MonthSelector
             year={selectedYear}
@@ -111,13 +111,13 @@ export default function DashboardPage() {
             onMonthChange={setSelectedMonth}
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <NotificationBell />
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold font-display tracking-tight text-slate-900">Мой дашборд</h1>
           <p className="text-slate-500 mt-1">{ROLE_LABELS[user.role || ''] || user.role}</p>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           <>
             {/* Stats Card */}
             {user.role === 'ADMIN' && dashboardData.createdCount !== undefined ? (
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="card p-6 border-l-4 border-primary">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Созданные клиенты</p>
                   <div className="text-4xl font-black text-primary">{dashboardData.createdCount}</div>
@@ -180,6 +180,7 @@ export default function DashboardPage() {
             {/* Clients Table */}
             {dashboardData.clients.length > 0 ? (
               <div className="card overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-100">
                   <thead className="bg-slate-50">
                     <tr>
@@ -246,6 +247,7 @@ export default function DashboardPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             ) : (
               <div className="card p-12 text-center">

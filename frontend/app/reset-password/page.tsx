@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
   const fieldCls = "w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background-light">
+    <div className="min-h-screen flex items-center justify-center bg-background-light px-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
           <h1 className="text-2xl font-bold text-slate-900">CRM Система</h1>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
           <h2 className="text-lg font-bold text-slate-900 mb-6">Новый пароль</h2>
 
           {success ? (
