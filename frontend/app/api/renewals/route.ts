@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
         designer:profiles!clients_designer_id_fkey(id, full_name)
       `)
       .in('id', clientIds)
-      .eq('archived', false)
       .order('created_at', { ascending: false });
 
     if (clientsError) throw clientsError;
