@@ -102,6 +102,7 @@ export default function ClientsPage() {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [showUnassigned, setShowUnassigned] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<'new' | 'inwork'>('new');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [salesManagerFilter, setSalesManagerFilter] = useState('');
@@ -127,6 +128,7 @@ export default function ClientsPage() {
     setSalesManagerFilter(getUrlParam('soldById'));
     setSpecialistFilter(getUrlParam('specialistId'));
     setShowUnassigned(getUrlParam('unassigned') === 'true');
+    setShowArchived(getUrlParam('archived') === 'true');
     setDesignerFilter(getUrlParam('designerId'));
     const sort = getUrlParam('sort');
     if (sort) setSortOption(sort);
@@ -146,10 +148,11 @@ export default function ClientsPage() {
     if (specialistFilter) sp.set('specialistId', specialistFilter);
     if (designerFilter) sp.set('designerId', designerFilter);
     if (showUnassigned) sp.set('unassigned', 'true');
+    if (showArchived) sp.set('archived', 'true');
     if (sortOption !== 'purchaseDate:desc') sp.set('sort', sortOption);
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-  }, [search, statusFilter, nicheFilter, clientTypeFilter, monthFilter, salesManagerFilter, specialistFilter, designerFilter, showUnassigned, sortOption, urlInitialized]);
+  }, [search, statusFilter, nicheFilter, clientTypeFilter, monthFilter, salesManagerFilter, specialistFilter, designerFilter, showUnassigned, showArchived, sortOption, urlInitialized]);
 
   const fetchClients = useCallback(async () => {
     if (!user) return;
@@ -158,8 +161,8 @@ export default function ClientsPage() {
       const params: Record<string, string> = {};
       if (search) {
         params.search = search;
-        params.includeArchived = 'true';
       }
+      if (search || showArchived) params.includeArchived = 'true';
       if (statusFilter) params.status = statusFilter;
       if (clientTypeFilter) params.clientType = clientTypeFilter;
       if (showUnassigned) params.unassigned = 'true';
@@ -177,7 +180,7 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, search, statusFilter, clientTypeFilter, showUnassigned, salesManagerFilter, specialistFilter, designerFilter, nicheFilter, sortOption]);
+  }, [user, search, statusFilter, clientTypeFilter, showUnassigned, showArchived, salesManagerFilter, specialistFilter, designerFilter, nicheFilter, sortOption]);
 
   useEffect(() => {
     if (!authLoading && !user) { router.replace('/login'); return; }
@@ -324,11 +327,11 @@ export default function ClientsPage() {
     });
 
   const clearFilters = () => {
-    setSearch(''); setStatusFilter(''); setClientTypeFilter(''); setShowUnassigned(false);
+    setSearch(''); setStatusFilter(''); setClientTypeFilter(''); setShowUnassigned(false); setShowArchived(false);
     setSalesManagerFilter(''); setSpecialistFilter(''); setDesignerFilter(''); setNicheFilter(''); setMonthFilter(''); setSortOption('purchaseDate:desc');
   };
 
-  const hasActiveFilters = search || statusFilter || clientTypeFilter || showUnassigned || salesManagerFilter || specialistFilter || designerFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
+  const hasActiveFilters = search || statusFilter || clientTypeFilter || showUnassigned || showArchived || salesManagerFilter || specialistFilter || designerFilter || nicheFilter || monthFilter || sortOption !== 'purchaseDate:desc';
 
   return (
     <AppShell>
@@ -436,6 +439,18 @@ export default function ClientsPage() {
                 onChange={(e) => setNicheFilter(e.target.value)}
                 className={selectCls}
               />
+
+              {(isAdmin || isLeadDesigner) && (
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer px-1">
+                  <input
+                    type="checkbox"
+                    checked={showArchived}
+                    onChange={(e) => setShowArchived(e.target.checked)}
+                    className="rounded border-slate-300 text-primary focus:ring-primary/40"
+                  />
+                  <span>Показывать архив</span>
+                </label>
+              )}
 
               {(isAdmin || isLeadDesigner) && (
                 <button
