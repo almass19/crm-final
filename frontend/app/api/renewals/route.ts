@@ -27,9 +27,10 @@ export async function GET(request: NextRequest) {
     // Get distinct client IDs with renewals in this month
     let paymentsQuery = supabase
       .from('payments')
-      .select('client_id')
+      .select('client_id, amount, created_at')
       .eq('is_renewal', true)
-      .eq('month', month);
+      .eq('month', month)
+      .order('created_at', { ascending: false });
 
     if (user.role === 'TARGETOLOGIST') {
       const { data: assignedClients } = await supabase
@@ -51,6 +52,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ month, totalRenewals: 0, clients: [] });
     }
 
+    // payments is already ordered newest-first, so the first amount seen per
+    // client is that client's most recent renewal payment this month.
+    const lastRenewalAmountByClient = new Map<string, number>();
+    for (const p of payments || []) {
+      if (!lastRenewalAmountByClient.has(p.client_id)) {
+        lastRenewalAmountByClient.set(p.client_id, Number(p.amount) || 0);
+      }
+    }
+
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
       .select(`
@@ -65,10 +75,15 @@ export async function GET(request: NextRequest) {
 
     if (clientsError) throw clientsError;
 
+    const clientsWithRenewalAmount = (clients || []).map((c) => ({
+      ...c,
+      last_renewal_amount: lastRenewalAmountByClient.get(c.id) ?? null,
+    }));
+
     return NextResponse.json({
       month,
       totalRenewals: clientIds.length,
-      clients: snakeToCamel(clients || []),
+      clients: snakeToCamel(clientsWithRenewalAmount),
     });
   } catch (e) {
     if (e instanceof NextResponse) return e;

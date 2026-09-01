@@ -16,6 +16,7 @@ interface Client {
   status: string;
   purchaseDate: string | null;
   launchDate: string | null;
+  lastRenewalAmount: number | null;
   assignedTo: { id: string; fullName: string } | null;
   designer: { id: string; fullName: string } | null;
 }
@@ -126,10 +127,10 @@ export default function RenewalsPage() {
     .filter((c) => !designerFilter || c.designer?.id === designerFilter);
 
   const headers = isAdmin
-    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска', 'Специалист']
+    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
     : isLeadDesigner
-    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
-    : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска'];
+    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
+    : ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска'];
 
   return (
     <AppShell>
@@ -268,6 +269,9 @@ export default function RenewalsPage() {
                       {showDesignerCol ? (client.designer?.fullName || '—') : client.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {client.lastRenewalAmount ? `${Number(client.lastRenewalAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                    </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
                     </td>
