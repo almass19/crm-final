@@ -119,6 +119,9 @@ export const api = {
   getMyDashboard: (year: number, month: number) =>
     request(`/dashboard/my?year=${year}&month=${month}`),
 
+  getSalary: (year: number, month: number) =>
+    request(`/dashboard/salary?year=${year}&month=${month}`),
+
   getAnalytics: (year: number, month: number) =>
     request(`/dashboard/analytics?year=${year}&month=${month}`),
 

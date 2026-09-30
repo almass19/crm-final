@@ -36,10 +36,64 @@ interface DashboardData {
   role: string;
 }
 
+interface SalaryTier {
+  amount: number;
+  count: number;
+  bonusEach: number;
+  bonusTotal: number;
+  clients: { id: string; name: string }[];
+}
+
+interface SalaryGroup {
+  tiers: SalaryTier[];
+  total: number;
+}
+
+interface SalaryData {
+  month: number;
+  year: number;
+  newClients: SalaryGroup;
+  renewals: SalaryGroup;
+  totalSalary: number;
+}
+
+function SalaryGroupCard({ title, hint, group }: { title: string; hint: string; group: SalaryGroup }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+      <div className="flex items-baseline justify-between gap-2 mb-1">
+        <h3 className="text-sm font-bold text-slate-700">{title}</h3>
+        <span className="text-sm font-bold text-slate-900 whitespace-nowrap">
+          {`+${Number(group.total).toLocaleString('ru-RU')} ₸`}
+        </span>
+      </div>
+      <p className="text-xs text-slate-400 mb-3">{hint}</p>
+      {group.tiers.length === 0 ? (
+        <p className="text-xs text-slate-400">Нет данных за этот месяц</p>
+      ) : (
+        <div className="space-y-1.5">
+          {group.tiers.map((tier) => (
+            <div key={tier.amount} className="flex items-center justify-between text-xs gap-2">
+              <span className="text-slate-600 whitespace-nowrap">
+                {`${Number(tier.amount).toLocaleString('ru-RU')} ₸`}
+                <span className="text-slate-400"> × {tier.count}</span>
+              </span>
+              <span className={tier.bonusEach ? 'font-semibold text-success-text whitespace-nowrap' : 'text-slate-400 whitespace-nowrap'}>
+                {tier.bonusEach ? `+${Number(tier.bonusTotal).toLocaleString('ru-RU')} ₸` : 'бонус не задан'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [salaryData, setSalaryData] = useState<SalaryData | null>(null);
+  const [salaryLoading, setSalaryLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -61,6 +115,19 @@ export default function DashboardPage() {
     }
   }, [user, selectedYear, selectedMonth]);
 
+  const fetchSalary = useCallback(async () => {
+    if (!user || user.role !== 'TARGETOLOGIST') return;
+    setSalaryLoading(true);
+    try {
+      const data = await api.getSalary(selectedYear, selectedMonth);
+      setSalaryData(data);
+    } catch {
+      // salary card just stays hidden on failure — the client list above still loads
+    } finally {
+      setSalaryLoading(false);
+    }
+  }, [user, selectedYear, selectedMonth]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace('/login');
@@ -72,8 +139,9 @@ export default function DashboardPage() {
         return;
       }
       fetchDashboard();
+      fetchSalary();
     }
-  }, [authLoading, user, fetchDashboard, router]);
+  }, [authLoading, user, fetchDashboard, fetchSalary, router]);
 
   if (authLoading || !user) {
     return (
@@ -126,6 +194,29 @@ export default function DashboardPage() {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
             {error}
+          </div>
+        )}
+
+        {isTargetologist && (
+          <div className="card p-6 mb-6 border-l-4 border-success">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Зарплата за месяц
+            </p>
+            {salaryLoading ? (
+              <div className="skeleton h-10 w-40 mt-2" />
+            ) : salaryData ? (
+              <>
+                <div className="text-4xl font-black text-success-text">
+                  {`${Number(salaryData.totalSalary).toLocaleString('ru-RU')} ₸`}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                  <SalaryGroupCard title="Продления" hint="по последнему платежу в этом месяце" group={salaryData.renewals} />
+                  <SalaryGroupCard title="Новые клиенты" hint="по дате покупки в этом месяце" group={salaryData.newClients} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-slate-500 mt-1">Не удалось посчитать зарплату</p>
+            )}
           </div>
         )}
 
