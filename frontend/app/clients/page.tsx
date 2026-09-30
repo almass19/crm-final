@@ -544,7 +544,7 @@ export default function ClientsPage() {
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
-                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isSpecialist
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
@@ -591,7 +591,7 @@ export default function ClientsPage() {
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
-                    ? ['Компания', 'Дизайнер', 'Статус', 'Дата покупки', 'Дата запуска']
+                    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isSpecialist
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : ['Компания', 'Телефон', 'Статус', 'Дата покупки', 'Дата запуска']
@@ -715,7 +715,7 @@ export default function ClientsPage() {
                           )}
                         </div>
                       </td>
-                      {(isAdmin || isSalesManager) && (
+                      {(isAdmin || isSalesManager || isLeadDesigner) && (
                         <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
                           {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
                         </td>

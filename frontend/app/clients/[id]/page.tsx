@@ -327,7 +327,7 @@ export default function ClientDetailPage() {
   const isSpecialist = user.role === 'TARGETOLOGIST';
   const isDesigner = user.role === 'DESIGNER';
   const isLeadDesigner = user.role === 'LEAD_DESIGNER';
-  const canSeePayment = isAdmin || isSalesManager || isSpecialist;
+  const canSeePayment = isAdmin || isSalesManager || isSpecialist || isLeadDesigner;
   const canEditClient = isAdmin || isSalesManager;
   const canSeeCreatives = isAdmin || isDesigner || isLeadDesigner;
   const canAddCreative = isDesigner || isLeadDesigner;
