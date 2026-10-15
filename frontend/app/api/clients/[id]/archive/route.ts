@@ -71,10 +71,10 @@ export async function DELETE(
       details: 'Клиент разархивирован',
     });
 
-    // A DONE or REFUND status keeps a client in the archive view regardless
-    // of the archived flag (see GET /api/clients), so resume it into active work.
+    // A DONE status keeps a client in the archive view regardless of the
+    // archived flag (see GET /api/clients), so resume it into active work.
     const updateData: Record<string, unknown> = { archived: false };
-    if (client.status === 'DONE' || client.status === 'REFUND') updateData.status = 'IN_WORK';
+    if (client.status === 'DONE') updateData.status = 'IN_WORK';
 
     const { data: updated, error } = await supabase
       .from('clients')

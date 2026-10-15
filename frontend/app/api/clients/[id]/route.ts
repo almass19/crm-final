@@ -168,7 +168,7 @@ export async function PATCH(
     if (body.notes !== undefined) updateData.notes = body.notes;
     if (body.status !== undefined) {
       updateData.status = body.status;
-      if (body.status === 'DONE' || body.status === 'REFUND') updateData.archived = true;
+      if (body.status === 'DONE') updateData.archived = true;
     }
     if (body.paymentAmount !== undefined) updateData.payment_amount = body.paymentAmount;
     if (body.soldById !== undefined) updateData.sold_by_id = body.soldById || null;
