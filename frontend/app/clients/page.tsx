@@ -43,7 +43,8 @@ const SPECIALIST_GROUPS = [
   { key: 'new', label: 'Новые', statuses: ['ASSIGNED', 'ONBOARDING', 'SETUP'] },
   { key: 'inwork', label: 'В работе', statuses: ['IN_WORK', 'RENEWAL'] },
   { key: 'paused', label: 'На паузе', statuses: ['PAUSED'] },
-  { key: 'done', label: 'Завершённые', statuses: ['DONE', 'REFUND'] },
+  { key: 'done', label: 'Завершённые', statuses: ['DONE'] },
+  { key: 'refund', label: 'Возврат', statuses: ['REFUND'] },
 ];
 
 const SORT_OPTIONS = [
