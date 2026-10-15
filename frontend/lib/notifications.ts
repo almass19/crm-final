@@ -4,7 +4,7 @@ import { sendTelegramNotification } from './telegram';
 const STATUS_LABELS: Record<string, string> = {
   NEW: 'Новый', ASSIGNED: 'Назначен', ONBOARDING: 'Брифинг',
   SETUP: 'Настройка', IN_WORK: 'Ведение', PAUSED: 'На паузе',
-  RENEWAL: 'В процессе продления', DONE: 'Завершён',
+  RENEWAL: 'В процессе продления', DONE: 'Завершён', REFUND: 'Возврат',
 };
 
 async function getTelegramChatId(supabase: SupabaseClient, userId: string) {

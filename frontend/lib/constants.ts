@@ -7,6 +7,7 @@ export const STATUS_LABELS: Record<string, string> = {
   PAUSED: 'На паузе',
   RENEWAL: 'В процессе продления',
   DONE: 'Завершён',
+  REFUND: 'Возврат',
 };
 
 export const STATUS_COLORS: Record<string, string> = {
@@ -18,6 +19,7 @@ export const STATUS_COLORS: Record<string, string> = {
   PAUSED:     'bg-warning-light text-warning-text ring-1 ring-amber-200',
   RENEWAL:    'bg-purple-50 text-purple-700 ring-1 ring-purple-200',
   DONE:       'bg-slate-100 text-slate-500 ring-1 ring-slate-200',
+  REFUND:     'bg-red-50 text-red-700 ring-1 ring-red-200',
 };
 
 export const ROLE_LABELS: Record<string, string> = {
