@@ -7,6 +7,7 @@ import { handleStartCommand } from './handlers/linkAccount';
 import {
   isNewCreativeTrigger,
   startNewCreativeFlow,
+  sendClientListPage,
   handleClientSearch,
   handleClientPicked,
   handleTypePicked,
@@ -66,7 +67,7 @@ export async function routeUpdate(
 
   if (!stateRow) {
     if (profile.role === 'TARGETOLOGIST' && isNewCreativeTrigger(text)) {
-      await startNewCreativeFlow(supabase, chatId);
+      await startNewCreativeFlow(supabase, chatId, profile.id);
       return;
     }
     if (profile.role === 'TARGETOLOGIST') {
@@ -108,6 +109,13 @@ async function routeCallbackQuery(
 
   if (data.startsWith('client:')) {
     await handleClientPicked(supabase, chatId, data.slice('client:'.length));
+    return;
+  }
+
+  if (data.startsWith('clients_page:')) {
+    const offset = parseInt(data.slice('clients_page:'.length), 10) || 0;
+    await answerCallbackQuery(callbackQuery.id);
+    await sendClientListPage(supabase, chatId, profile.id, offset);
     return;
   }
 

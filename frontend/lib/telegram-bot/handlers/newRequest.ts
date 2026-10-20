@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendTelegramKeyboard, sendTelegramMessage, sendTelegramReplyKeyboard } from '@/lib/telegram';
+import { sendTelegramKeyboard, sendTelegramMessage, sendTelegramReplyKeyboard, type InlineButton } from '@/lib/telegram';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { escapePostgrestValue } from '@/lib/utils/postgrest-filter';
 import { setBotState, clearBotState, type BotStateRow } from '../state';
@@ -9,6 +9,7 @@ import type { TelegramMessage } from '../types';
 import type { BotProfile } from '../profile';
 
 const CLIENT_SEARCH_LIMIT = 8;
+const CLIENT_LIST_PAGE_SIZE = 8;
 
 export function isNewCreativeTrigger(text: string | undefined): boolean {
   if (!text) return false;
@@ -20,9 +21,52 @@ export async function startNewCreativeFlow(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: SupabaseClient<any, any, any>,
   chatId: number,
+  targetologistId: string,
 ): Promise<void> {
   await setBotState(supabase, chatId, 'AWAITING_CLIENT_SEARCH');
-  await sendTelegramReplyKeyboard(chatId, 'Напишите название компании или имя клиента для поиска.', CANCEL_KEYBOARD);
+  await sendTelegramReplyKeyboard(chatId, 'Выберите клиента ниже или напишите название для поиска.', CANCEL_KEYBOARD);
+  await sendClientListPage(supabase, chatId, targetologistId, 0);
+}
+
+// Shown right after "Новый креатив" (offset 0) and via the pagination
+// buttons — only active (non-archived) clients, so the list stays usable
+// even for a targetologist with a large book of archived/done accounts.
+export async function sendClientListPage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  chatId: number,
+  targetologistId: string,
+  offset: number,
+): Promise<void> {
+  const { data: clients, count } = await supabase
+    .from('clients')
+    .select('id, full_name, company_name', { count: 'exact' })
+    .eq('assigned_to_id', targetologistId)
+    .eq('archived', false)
+    .order('company_name', { ascending: true })
+    .range(offset, offset + CLIENT_LIST_PAGE_SIZE - 1);
+
+  if (!clients || clients.length === 0) {
+    await sendTelegramMessage(chatId, offset === 0 ? 'У вас нет активных клиентов.' : 'Это все клиенты.');
+    return;
+  }
+
+  const buttons: InlineButton[][] = clients.map(
+    (c: { id: string; full_name: string | null; company_name: string | null }) => [
+      { text: c.company_name || c.full_name || '—', callback_data: `client:${c.id}` },
+    ],
+  );
+
+  const navRow: InlineButton[] = [];
+  if (offset > 0) {
+    navRow.push({ text: '◀️ Назад', callback_data: `clients_page:${Math.max(0, offset - CLIENT_LIST_PAGE_SIZE)}` });
+  }
+  if (count != null && offset + CLIENT_LIST_PAGE_SIZE < count) {
+    navRow.push({ text: 'Дальше ▶️', callback_data: `clients_page:${offset + CLIENT_LIST_PAGE_SIZE}` });
+  }
+  if (navRow.length > 0) buttons.push(navRow);
+
+  await sendTelegramKeyboard(chatId, 'Ваши клиенты:', buttons);
 }
 
 export async function handleClientSearch(
