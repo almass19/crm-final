@@ -89,14 +89,18 @@ create policy "client_creative_briefs_select" on client_creative_briefs for sele
 );
 
 -- Ephemeral per-chat conversation state for the Telegram bot FSM — one row
--- per active chat, cleared on completion/cancel. No RLS needed: only ever
--- touched by the service-role webhook handler, never from the browser.
+-- per active chat, cleared on completion/cancel. Only ever touched by the
+-- service-role webhook handler (which bypasses RLS), never from the
+-- browser — RLS is enabled with no policies so anon/authenticated keys get
+-- nothing rather than relying on no one ever querying it from the client.
 create table telegram_bot_state (
   chat_id bigint primary key,
   state text not null,
   context jsonb not null default '{}',
   updated_at timestamptz default now() not null
 );
+
+alter table telegram_bot_state enable row level security;
 
 -- Tag each manually-or-bot-logged creative with the type that was actually
 -- requested, so designer payroll can eventually be broken down the same way
