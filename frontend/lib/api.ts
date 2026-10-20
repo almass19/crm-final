@@ -63,6 +63,14 @@ export const api = {
   resetUserPassword: (userId: string) =>
     request(`/users/${userId}/reset-password`, { method: 'POST' }),
 
+  getCreativeTypeAssignments: () => request('/creative-types'),
+
+  updateCreativeTypeAssignment: (type: string, designerId: string) =>
+    request('/creative-types', {
+      method: 'PUT',
+      body: JSON.stringify({ type, designerId }),
+    }),
+
   changePassword: (password: string) =>
     request('/auth/change-password', {
       method: 'POST',

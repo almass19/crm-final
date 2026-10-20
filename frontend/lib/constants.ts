@@ -54,3 +54,11 @@ export const TASK_STATUS_COLORS: Record<string, string> = {
   IN_PROGRESS: 'bg-warning-light text-warning-text ring-1 ring-amber-200',
   DONE:        'bg-success-light text-success-text ring-1 ring-green-200',
 };
+
+// Fixed creative types for the Telegram creative-request bot. One designer
+// is responsible for each type (see creative_type_assignments).
+export const CREATIVE_TYPE_LABELS: Record<string, string> = {
+  STATIC_TEMPLATE: 'Статика шаблон',
+  STATIC_CUSTOM: 'Статика новая',
+  VIDEO: 'Видео',
+};

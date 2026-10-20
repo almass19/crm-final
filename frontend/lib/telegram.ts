@@ -31,3 +31,83 @@ export async function sendTelegramNotification(
 export async function sendTelegramMessage(chatId: number | bigint, text: string) {
   await sendTelegramNotification(chatId, text);
 }
+
+export interface InlineButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+// Telegram webhooks must always resolve (Telegram retries on failure), so
+// every helper below swallows errors and reports failure via a null/falsy
+// return rather than throwing — callers decide whether that's fatal.
+async function callTelegramApi(
+  method: string,
+  payload: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return data.ok ? (data.result as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Sends a message with an arbitrary inline keyboard (rows of buttons), each
+// either a callback button (routed back through the webhook) or a plain URL
+// button. Returns the sent message's id so it can later be edited.
+export async function sendTelegramKeyboard(
+  chatId: number | bigint,
+  text: string,
+  keyboard: InlineButton[][],
+): Promise<number | null> {
+  const result = await callTelegramApi('sendMessage', {
+    chat_id: Number(chatId),
+    text,
+    parse_mode: 'HTML',
+    reply_markup: { inline_keyboard: keyboard },
+  });
+  return (result?.message_id as number) ?? null;
+}
+
+// Acknowledges a callback_query — Telegram shows a loading spinner on the
+// tapped button until this is called.
+export async function answerCallbackQuery(callbackQueryId: string, text?: string) {
+  await callTelegramApi('answerCallbackQuery', { callback_query_id: callbackQueryId, text });
+}
+
+// Replaces (or clears, with an empty array) the buttons on an already-sent
+// message — used to take the "Принять" button away once a designer accepts.
+export async function editMessageReplyMarkup(
+  chatId: number | bigint,
+  messageId: number,
+  keyboard: InlineButton[][],
+) {
+  await callTelegramApi('editMessageReplyMarkup', {
+    chat_id: Number(chatId),
+    message_id: messageId,
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
+// Relays a message (text/photo/video/document) into another chat without
+// re-uploading the file — how briefs and finished creatives move between
+// targetologist and designer.
+export async function forwardMessage(
+  toChatId: number | bigint,
+  fromChatId: number | bigint,
+  messageId: number,
+) {
+  await callTelegramApi('forwardMessage', {
+    chat_id: Number(toChatId),
+    from_chat_id: Number(fromChatId),
+    message_id: messageId,
+  });
+}

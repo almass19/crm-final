@@ -1,0 +1,139 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { answerCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
+import { getBotState, clearBotState } from './state';
+import { getProfileByChatId } from './profile';
+import { handleStartCommand } from './handlers/linkAccount';
+import {
+  isNewCreativeTrigger,
+  startNewCreativeFlow,
+  handleClientSearch,
+  handleClientPicked,
+  handleTypePicked,
+} from './handlers/newRequest';
+import { collectBriefMessage, finalizeBrief } from './handlers/brief';
+import {
+  handleAccept,
+  handleDeliverStart,
+  collectDeliveryMessage,
+  finalizeDelivery,
+} from './handlers/acceptDeliver';
+import { hasMedia, type TelegramUpdate, type TelegramCallbackQuery } from './types';
+
+export async function routeUpdate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  update: TelegramUpdate,
+): Promise<void> {
+  if (update.callback_query) {
+    await routeCallbackQuery(supabase, update.callback_query);
+    return;
+  }
+
+  const message = update.message;
+  if (!message) return;
+
+  const chatId = message.chat.id;
+  const text = message.text?.trim();
+
+  const startMatch = text?.match(/^\/start\s+(\d{6})$/);
+  if (startMatch) {
+    await handleStartCommand(supabase, chatId, startMatch[1]);
+    return;
+  }
+  if (text === '/start') {
+    await sendTelegramMessage(chatId, 'Отправьте команду из CRM для привязки аккаунта.');
+    return;
+  }
+
+  const profile = await getProfileByChatId(supabase, chatId);
+  if (!profile) {
+    await sendTelegramMessage(chatId, 'Сначала привяжите аккаунт — отправьте команду из CRM.');
+    return;
+  }
+
+  if (text === '/cancel' || text === '❌ Отмена') {
+    await clearBotState(supabase, chatId);
+    await sendTelegramMessage(chatId, 'Отменено.');
+    return;
+  }
+
+  const stateRow = await getBotState(supabase, chatId);
+
+  if (!stateRow) {
+    if (profile.role === 'TARGETOLOGIST' && isNewCreativeTrigger(text)) {
+      await startNewCreativeFlow(supabase, chatId);
+      return;
+    }
+    if (profile.role === 'TARGETOLOGIST') {
+      await sendTelegramMessage(chatId, 'Напишите «Новый креатив», чтобы запросить креатив у дизайнера.');
+    }
+    return;
+  }
+
+  switch (stateRow.state) {
+    case 'AWAITING_CLIENT_SEARCH':
+      await handleClientSearch(supabase, profile, chatId, message);
+      return;
+    case 'AWAITING_BRIEF':
+      if (text || hasMedia(message)) await collectBriefMessage(supabase, chatId, message, stateRow);
+      return;
+    case 'AWAITING_DELIVERY':
+      if (text || hasMedia(message)) await collectDeliveryMessage(supabase, chatId, message, stateRow);
+      return;
+    default:
+      return;
+  }
+}
+
+async function routeCallbackQuery(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  callbackQuery: TelegramCallbackQuery,
+): Promise<void> {
+  const data = callbackQuery.data;
+  const chatId = callbackQuery.message?.chat.id;
+  const messageId = callbackQuery.message?.message_id;
+  if (!data || !chatId) return;
+
+  const profile = await getProfileByChatId(supabase, chatId);
+  if (!profile) {
+    await answerCallbackQuery(callbackQuery.id, 'Аккаунт не привязан');
+    return;
+  }
+
+  if (data.startsWith('client:')) {
+    await handleClientPicked(supabase, chatId, data.slice('client:'.length));
+    return;
+  }
+
+  if (data.startsWith('type:')) {
+    const stateRow = await getBotState(supabase, chatId);
+    if (!stateRow) return;
+    await handleTypePicked(supabase, profile, chatId, stateRow, data.slice('type:'.length));
+    return;
+  }
+
+  if (data === 'brief_done') {
+    const stateRow = await getBotState(supabase, chatId);
+    if (!stateRow) return;
+    await finalizeBrief(supabase, profile, chatId, stateRow);
+    return;
+  }
+
+  if (data.startsWith('accept:') && messageId) {
+    await handleAccept(supabase, profile, chatId, messageId, callbackQuery.id, data.slice('accept:'.length));
+    return;
+  }
+
+  if (data.startsWith('deliver_start:')) {
+    await handleDeliverStart(supabase, chatId, callbackQuery.id, data.slice('deliver_start:'.length));
+    return;
+  }
+
+  if (data === 'deliver_done') {
+    const stateRow = await getBotState(supabase, chatId);
+    if (!stateRow) return;
+    await finalizeDelivery(supabase, profile, chatId, stateRow);
+    return;
+  }
+}

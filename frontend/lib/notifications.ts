@@ -170,3 +170,73 @@ export async function createTaskDoneNotification(
   const tgText = `<b>✅ Задача выполнена</b>\n«<b>${taskTitle}</b>»`;
   await notifyUser(supabase, creatorId, 'TASK_STATUS_CHANGED', title, message, `/clients/${clientId}`, tgText);
 }
+
+// ─── Creative requests (Telegram bot) ─────────────────────────────────────────
+//
+// The Telegram bot itself already delivers the interactive part (buttons,
+// forwarded files) directly — these just mirror each step into the regular
+// notifications feed, same as every other CRM event, via the same
+// notifyUser() used above.
+
+const CREATIVE_TYPE_LABELS: Record<string, string> = {
+  STATIC_TEMPLATE: 'Статика шаблон',
+  STATIC_CUSTOM: 'Статика новая',
+  VIDEO: 'Видео',
+};
+
+interface CreativeRequestedParams {
+  designerId: string;
+  clientId: string;
+  clientName: string;
+  type: string;
+  requesterName: string;
+}
+
+export async function createCreativeRequestedNotification(
+  supabase: SupabaseClient,
+  { designerId, clientId, clientName, type, requesterName }: CreativeRequestedParams,
+) {
+  const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
+  const title = 'Новая заявка на креатив';
+  const message = `${requesterName} запросил «${typeLabel}» для клиента «${clientName}»`;
+  const tgText = `<b>🎨 Новая заявка на креатив</b>\n${requesterName} запросил <b>${typeLabel}</b>\nКлиент: <b>${clientName}</b>`;
+  await notifyUser(supabase, designerId, 'CREATIVE_REQUESTED', title, message, `/clients/${clientId}`, tgText);
+}
+
+interface CreativeAcceptedParams {
+  requestedById: string;
+  clientId: string;
+  clientName: string;
+  type: string;
+  designerName: string;
+}
+
+export async function createCreativeAcceptedNotification(
+  supabase: SupabaseClient,
+  { requestedById, clientId, clientName, type, designerName }: CreativeAcceptedParams,
+) {
+  const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
+  const title = 'Заявка на креатив принята';
+  const message = `${designerName} взял в работу «${typeLabel}» для клиента «${clientName}»`;
+  const tgText = `<b>👍 Принято в работу</b>\n${designerName} взял <b>${typeLabel}</b>\nКлиент: <b>${clientName}</b>`;
+  await notifyUser(supabase, requestedById, 'CREATIVE_ACCEPTED', title, message, `/clients/${clientId}`, tgText);
+}
+
+interface CreativeDeliveredParams {
+  requestedById: string;
+  clientId: string;
+  clientName: string;
+  type: string;
+  designerName: string;
+}
+
+export async function createCreativeDeliveredNotification(
+  supabase: SupabaseClient,
+  { requestedById, clientId, clientName, type, designerName }: CreativeDeliveredParams,
+) {
+  const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
+  const title = 'Креатив готов';
+  const message = `${designerName} сдал «${typeLabel}» для клиента «${clientName}»`;
+  const tgText = `<b>✅ Креатив готов</b>\n${designerName} сдал <b>${typeLabel}</b>\nКлиент: <b>${clientName}</b>\nФайлы выше ⬆️ — не забудьте выложить в кейсы`;
+  await notifyUser(supabase, requestedById, 'CREATIVE_DELIVERED', title, message, `/clients/${clientId}`, tgText);
+}
