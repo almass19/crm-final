@@ -111,3 +111,34 @@ export async function forwardMessage(
     message_id: messageId,
   });
 }
+
+// Sets (or replaces) the persistent reply keyboard shown below the chat
+// input — unlike an inline keyboard, this isn't attached to one message:
+// it stays until a later message sets a different one or removes it.
+// `rows` is plain button labels; the bot matches them as ordinary text.
+export async function sendTelegramReplyKeyboard(
+  chatId: number | bigint,
+  text: string,
+  rows: string[][],
+) {
+  await callTelegramApi('sendMessage', {
+    chat_id: Number(chatId),
+    text,
+    parse_mode: 'HTML',
+    reply_markup: {
+      keyboard: rows.map((row) => row.map((label) => ({ text: label }))),
+      resize_keyboard: true,
+    },
+  });
+}
+
+// Removes the persistent reply keyboard (used once a flow that doesn't have
+// its own idle keyboard — e.g. a designer's delivery flow — finishes).
+export async function clearTelegramReplyKeyboard(chatId: number | bigint, text: string) {
+  await callTelegramApi('sendMessage', {
+    chat_id: Number(chatId),
+    text,
+    parse_mode: 'HTML',
+    reply_markup: { remove_keyboard: true },
+  });
+}

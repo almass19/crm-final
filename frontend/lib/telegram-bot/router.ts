@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { answerCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
+import { answerCallbackQuery, sendTelegramMessage, sendTelegramReplyKeyboard, clearTelegramReplyKeyboard } from '@/lib/telegram';
 import { getBotState, clearBotState } from './state';
 import { getProfileByChatId } from './profile';
+import { IDLE_TARGETOLOGIST_KEYBOARD, CANCEL_BUTTON } from './keyboards';
 import { handleStartCommand } from './handlers/linkAccount';
 import {
   isNewCreativeTrigger,
@@ -51,9 +52,13 @@ export async function routeUpdate(
     return;
   }
 
-  if (text === '/cancel' || text === '❌ Отмена') {
+  if (text === '/cancel' || text === CANCEL_BUTTON) {
     await clearBotState(supabase, chatId);
-    await sendTelegramMessage(chatId, 'Отменено.');
+    if (profile.role === 'TARGETOLOGIST') {
+      await sendTelegramReplyKeyboard(chatId, 'Отменено.', IDLE_TARGETOLOGIST_KEYBOARD);
+    } else {
+      await clearTelegramReplyKeyboard(chatId, 'Отменено.');
+    }
     return;
   }
 
@@ -65,7 +70,7 @@ export async function routeUpdate(
       return;
     }
     if (profile.role === 'TARGETOLOGIST') {
-      await sendTelegramMessage(chatId, 'Напишите «Новый креатив», чтобы запросить креатив у дизайнера.');
+      await sendTelegramReplyKeyboard(chatId, 'Нажмите кнопку ниже, чтобы запросить креатив у дизайнера.', IDLE_TARGETOLOGIST_KEYBOARD);
     }
     return;
   }

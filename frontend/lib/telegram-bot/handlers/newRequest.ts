@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendTelegramKeyboard, sendTelegramMessage } from '@/lib/telegram';
+import { sendTelegramKeyboard, sendTelegramMessage, sendTelegramReplyKeyboard } from '@/lib/telegram';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { escapePostgrestValue } from '@/lib/utils/postgrest-filter';
 import { setBotState, clearBotState, type BotStateRow } from '../state';
 import { createCreativeRequestAndNotify } from './createRequest';
+import { NEW_CREATIVE_BUTTON, CANCEL_KEYBOARD, IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
 import type { TelegramMessage } from '../types';
 import type { BotProfile } from '../profile';
 
@@ -11,7 +12,8 @@ const CLIENT_SEARCH_LIMIT = 8;
 
 export function isNewCreativeTrigger(text: string | undefined): boolean {
   if (!text) return false;
-  return text.replace(/^🎨\s*/, '').trim().toLowerCase() === 'новый креатив';
+  const normalized = text.replace(/^🎨\s*/, '').trim().toLowerCase();
+  return normalized === 'новый креатив' || text === NEW_CREATIVE_BUTTON;
 }
 
 export async function startNewCreativeFlow(
@@ -20,7 +22,7 @@ export async function startNewCreativeFlow(
   chatId: number,
 ): Promise<void> {
   await setBotState(supabase, chatId, 'AWAITING_CLIENT_SEARCH');
-  await sendTelegramMessage(chatId, 'Напишите название компании или имя клиента для поиска (или /cancel).');
+  await sendTelegramReplyKeyboard(chatId, 'Напишите название компании или имя клиента для поиска.', CANCEL_KEYBOARD);
 }
 
 export async function handleClientSearch(
@@ -68,8 +70,8 @@ export async function handleClientPicked(
     .single();
 
   if (!client) {
-    await sendTelegramMessage(chatId, 'Клиент не найден, начните заново: напишите «Новый креатив».');
     await clearBotState(supabase, chatId);
+    await sendTelegramReplyKeyboard(chatId, 'Клиент не найден, начните заново.', IDLE_TARGETOLOGIST_KEYBOARD);
     return;
   }
 

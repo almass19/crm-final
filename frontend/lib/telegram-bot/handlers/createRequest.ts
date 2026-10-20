@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendTelegramKeyboard, sendTelegramMessage, forwardMessage } from '@/lib/telegram';
+import { sendTelegramKeyboard, sendTelegramReplyKeyboard, forwardMessage } from '@/lib/telegram';
 import { createCreativeRequestedNotification } from '@/lib/notifications';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
+import { IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
 
 interface CreateRequestParams {
   clientId: string;
@@ -40,9 +41,10 @@ export async function createCreativeRequestAndNotify(
   } | null;
 
   if (!assignment?.designer) {
-    await sendTelegramMessage(
+    await sendTelegramReplyKeyboard(
       requesterChatId,
       `⚠️ На тип «${typeLabel}» ещё не назначен дизайнер. Попросите руководителя назначить его в CRM → «Типы креативов».`,
+      IDLE_TARGETOLOGIST_KEYBOARD,
     );
     return;
   }
@@ -54,7 +56,7 @@ export async function createCreativeRequestAndNotify(
     .single();
 
   if (error || !request) {
-    await sendTelegramMessage(requesterChatId, '⚠️ Не удалось создать заявку, попробуйте ещё раз.');
+    await sendTelegramReplyKeyboard(requesterChatId, '⚠️ Не удалось создать заявку, попробуйте ещё раз.', IDLE_TARGETOLOGIST_KEYBOARD);
     return;
   }
 
@@ -78,5 +80,9 @@ export async function createCreativeRequestAndNotify(
     requesterName,
   });
 
-  await sendTelegramMessage(requesterChatId, `✅ Заявка отправлена: ${assignment.designer.full_name}`);
+  await sendTelegramReplyKeyboard(
+    requesterChatId,
+    `✅ Заявка отправлена: ${assignment.designer.full_name}`,
+    IDLE_TARGETOLOGIST_KEYBOARD,
+  );
 }

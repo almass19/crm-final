@@ -5,10 +5,13 @@ import {
   forwardMessage,
   sendTelegramKeyboard,
   sendTelegramMessage,
+  sendTelegramReplyKeyboard,
+  clearTelegramReplyKeyboard,
 } from '@/lib/telegram';
 import { createCreativeAcceptedNotification, createCreativeDeliveredNotification } from '@/lib/notifications';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { setBotState, clearBotState, type BotStateRow } from '../state';
+import { CANCEL_KEYBOARD } from '../keyboards';
 import type { TelegramMessage } from '../types';
 import type { BotProfile } from '../profile';
 
@@ -95,6 +98,9 @@ export async function handleDeliverStart(
     'Пришлите готовый креатив (одним или несколькими сообщениями), затем нажмите «Готово».',
     [[{ text: '✅ Готово', callback_data: 'deliver_done' }]],
   );
+  // Inline and reply keyboards can't share one message — this short
+  // follow-up just establishes the persistent "Отмена" button.
+  await sendTelegramReplyKeyboard(chatId, 'Или нажмите «Отмена», чтобы прервать.', CANCEL_KEYBOARD);
 }
 
 export async function collectDeliveryMessage(
@@ -142,8 +148,8 @@ export async function finalizeDelivery(
   } | null;
 
   if (!request) {
-    await sendTelegramMessage(chatId, 'Заявка не найдена.');
     await clearBotState(supabase, chatId);
+    await clearTelegramReplyKeyboard(chatId, 'Заявка не найдена.');
     return;
   }
 
@@ -176,7 +182,7 @@ export async function finalizeDelivery(
     .eq('id', requestId);
 
   await clearBotState(supabase, chatId);
-  await sendTelegramMessage(chatId, '✅ Отправлено таргетологу и записано.');
+  await clearTelegramReplyKeyboard(chatId, '✅ Отправлено таргетологу и записано.');
 
   await createCreativeDeliveredNotification(supabase, {
     requestedById: request.requested_by_id,

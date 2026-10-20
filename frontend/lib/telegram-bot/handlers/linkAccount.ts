@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendTelegramMessage } from '@/lib/telegram';
+import { sendTelegramMessage, sendTelegramReplyKeyboard } from '@/lib/telegram';
+import { IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
 
 // Unchanged logic, moved out of the webhook route so it lives alongside the
 // rest of the bot's command handlers.
@@ -26,12 +27,19 @@ export async function handleStartCommand(
     return;
   }
 
-  await supabase
+  const { data: profile } = await supabase
     .from('profiles')
     .update({ telegram_chat_id: chatId })
-    .eq('id', verification.user_id);
+    .eq('id', verification.user_id)
+    .select('role')
+    .single();
 
   await supabase.from('telegram_verifications').delete().eq('code', code);
 
-  await sendTelegramMessage(chatId, '✅ Telegram успешно привязан к вашему CRM аккаунту!');
+  const successText = '✅ Telegram успешно привязан к вашему CRM аккаунту!';
+  if (profile?.role === 'TARGETOLOGIST') {
+    await sendTelegramReplyKeyboard(chatId, successText, IDLE_TARGETOLOGIST_KEYBOARD);
+  } else {
+    await sendTelegramMessage(chatId, successText);
+  }
 }
