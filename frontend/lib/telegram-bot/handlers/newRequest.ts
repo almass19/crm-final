@@ -10,6 +10,9 @@ import type { BotProfile } from '../profile';
 
 const CLIENT_SEARCH_LIMIT = 8;
 const CLIENT_LIST_PAGE_SIZE = 8;
+// Closed or paused accounts — a targetologist can't order creatives for them
+const INACTIVE_CLIENT_STATUSES = ['DONE', 'REJECTED', 'REFUND', 'PAUSED'] as const;
+const INACTIVE_STATUS_FILTER = `(${INACTIVE_CLIENT_STATUSES.join(',')})`;
 
 export function isNewCreativeTrigger(text: string | undefined): boolean {
   if (!text) return false;
@@ -29,7 +32,7 @@ export async function startNewCreativeFlow(
 }
 
 // Shown right after "Новый креатив" (offset 0) and via the pagination
-// buttons — only active (non-archived) clients, so the list stays usable
+// buttons — only active (non-archived, not closed) clients, so the list stays usable
 // even for a targetologist with a large book of archived/done accounts.
 export async function sendClientListPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +46,7 @@ export async function sendClientListPage(
     .select('id, full_name, company_name', { count: 'exact' })
     .eq('assigned_to_id', targetologistId)
     .eq('archived', false)
+    .not('status', 'in', INACTIVE_STATUS_FILTER)
     .order('company_name', { ascending: true })
     .range(offset, offset + CLIENT_LIST_PAGE_SIZE - 1);
 
@@ -87,11 +91,13 @@ export async function handleClientSearch(
     .from('clients')
     .select('id, full_name, company_name')
     .eq('assigned_to_id', profile.id)
+    .eq('archived', false)
+    .not('status', 'in', INACTIVE_STATUS_FILTER)
     .or(`company_name.ilike.${safeQuery},full_name.ilike.${safeQuery}`)
     .limit(CLIENT_SEARCH_LIMIT);
 
   if (!clients || clients.length === 0) {
-    await sendTelegramMessage(chatId, 'Ничего не найдено среди ваших клиентов. Попробуйте другое название или /cancel.');
+    await sendTelegramMessage(chatId, 'Ничего не найдено среди ваших активных клиентов. Попробуйте другое название или /cancel.');
     return;
   }
 
@@ -109,13 +115,20 @@ export async function handleClientPicked(
 ): Promise<void> {
   const { data: client } = await supabase
     .from('clients')
-    .select('id, full_name, company_name')
+    .select('id, full_name, company_name, archived, status')
     .eq('id', clientId)
     .single();
 
   if (!client) {
     await clearBotState(supabase, chatId);
     await sendTelegramReplyKeyboard(chatId, 'Клиент не найден, начните заново.', IDLE_TARGETOLOGIST_KEYBOARD);
+    return;
+  }
+
+  // Buttons from an old list may point to a client that has since been closed
+  if (client.archived || (INACTIVE_CLIENT_STATUSES as readonly string[]).includes(client.status)) {
+    await clearBotState(supabase, chatId);
+    await sendTelegramReplyKeyboard(chatId, 'Клиент неактивен — креатив для него заказать нельзя.', IDLE_TARGETOLOGIST_KEYBOARD);
     return;
   }
 
