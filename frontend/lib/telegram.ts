@@ -1,11 +1,24 @@
 const CRM_URL = 'https://crm.resultingagency.kz';
 
+// Two bots: CRM notifications go out through @resulting_notificationbot, the
+// creative-ordering dialog runs in @resultingagency_bot. Both chats share a
+// user's chat_id (a private chat id is the user's Telegram id), so one
+// telegram_chat_id link works for both.
+export type TelegramBot = 'notifications' | 'creative';
+
+function botToken(bot: TelegramBot): string | undefined {
+  if (bot === 'creative') {
+    return process.env.TELEGRAM_CREATIVE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  }
+  return process.env.TELEGRAM_BOT_TOKEN;
+}
+
 export async function sendTelegramNotification(
   chatId: number | bigint,
   text: string,
   path?: string,
 ) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = botToken('notifications');
   if (!token || !chatId) return;
   try {
     const body: Record<string, unknown> = {
@@ -28,8 +41,12 @@ export async function sendTelegramNotification(
   }
 }
 
-export async function sendTelegramMessage(chatId: number | bigint, text: string) {
-  await sendTelegramNotification(chatId, text);
+export async function sendTelegramMessage(
+  chatId: number | bigint,
+  text: string,
+  bot: TelegramBot = 'creative',
+) {
+  await callTelegramApi('sendMessage', { chat_id: Number(chatId), text, parse_mode: 'HTML' }, bot);
 }
 
 export interface InlineButton {
@@ -44,8 +61,9 @@ export interface InlineButton {
 async function callTelegramApi(
   method: string,
   payload: Record<string, unknown>,
+  bot: TelegramBot = 'creative',
 ): Promise<Record<string, unknown> | null> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = botToken(bot);
   if (!token) return null;
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {

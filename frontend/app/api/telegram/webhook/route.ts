@@ -1,25 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { routeUpdate } from '@/lib/telegram-bot/router';
-import type { TelegramUpdate } from '@/lib/telegram-bot/types';
+import { readTelegramUpdate } from '@/lib/telegram-bot/webhook';
 
+// Webhook of the creative bot (@resultingagency_bot).
 export async function POST(request: NextRequest) {
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!secret) {
-    console.error('TELEGRAM_WEBHOOK_SECRET is not configured; refusing webhook request');
-    return NextResponse.json({ ok: false }, { status: 500 });
-  }
-  const headerSecret = request.headers.get('x-telegram-bot-api-secret-token');
-  if (headerSecret !== secret) {
-    return NextResponse.json({ ok: false }, { status: 403 });
-  }
-
-  let update: TelegramUpdate;
-  try {
-    update = await request.json();
-  } catch {
-    return NextResponse.json({ ok: true });
-  }
+  const update = await readTelegramUpdate(request);
+  if (update instanceof NextResponse) return update;
 
   try {
     await routeUpdate(createAdminClient(), update);

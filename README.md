@@ -42,8 +42,15 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key   # server-only, never exposed t
 # Required in production — these endpoints fail closed without them
 CRON_SECRET=generate-a-random-secret
 TELEGRAM_WEBHOOK_SECRET=generate-a-random-secret
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token                  # notifications bot (@resulting_notificationbot)
+TELEGRAM_BOT_USERNAME=resulting_notificationbot
+TELEGRAM_CREATIVE_BOT_TOKEN=your-creative-bot-token         # creative bot (@resultingagency_bot)
+TELEGRAM_CREATIVE_BOT_USERNAME=resultingagency_bot
 ```
+
+Webhooks (same `TELEGRAM_WEBHOOK_SECRET` for both):
+- notifications bot → `https://<domain>/api/telegram/notifications-webhook`
+- creative bot → `https://<domain>/api/telegram/webhook`
 
 ### 3. Frontend (web) setup
 

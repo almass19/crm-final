@@ -42,14 +42,19 @@ export async function routeUpdate(
     await handleStartCommand(supabase, chatId, startMatch[1]);
     return;
   }
-  if (text === '/start') {
-    await sendTelegramMessage(chatId, 'Отправьте команду из CRM для привязки аккаунта.');
-    return;
-  }
 
   const profile = await getProfileByChatId(supabase, chatId);
   if (!profile) {
-    await sendTelegramMessage(chatId, 'Сначала привяжите аккаунт — отправьте команду из CRM.');
+    await sendTelegramMessage(chatId, 'Сначала привяжите Telegram в CRM (раздел уведомлений), затем вернитесь сюда.');
+    return;
+  }
+
+  if (text === '/start') {
+    if (profile.role === 'TARGETOLOGIST') {
+      await sendTelegramReplyKeyboard(chatId, 'Готово! Здесь вы заказываете креативы у дизайнеров.', IDLE_TARGETOLOGIST_KEYBOARD);
+    } else {
+      await sendTelegramMessage(chatId, 'Готово! Сюда будут приходить заявки на креативы.');
+    }
     return;
   }
 
