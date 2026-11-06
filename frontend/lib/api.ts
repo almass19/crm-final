@@ -57,6 +57,12 @@ export const api = {
       body: JSON.stringify({ role }),
     }),
 
+  updateUserBirthDate: (userId: string, birthDate: string | null) =>
+    request(`/users/${userId}/birth-date`, {
+      method: 'PATCH',
+      body: JSON.stringify({ birthDate }),
+    }),
+
   deleteUser: (userId: string) =>
     request(`/users/${userId}`, { method: 'DELETE' }),
 

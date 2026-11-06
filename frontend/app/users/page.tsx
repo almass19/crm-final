@@ -14,6 +14,12 @@ interface UserItem {
   fullName: string;
   role: string | null;
   createdAt: string;
+  birthDate: string | null;
+}
+
+function formatBirthDate(birthDate: string): string {
+  const [year, month, day] = birthDate.split('-');
+  return `${day}.${month}.${year}`;
 }
 
 const ROLES = ['ADMIN', 'TARGETOLOGIST', 'SALES_MANAGER', 'DESIGNER', 'LEAD_DESIGNER'] as const;
@@ -24,6 +30,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingBirthDateId, setEditingBirthDateId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -62,6 +69,17 @@ export default function UsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка назначения роли');
+    }
+  };
+
+  const handleBirthDateChange = async (userId: string, birthDate: string) => {
+    setError('');
+    try {
+      await api.updateUserBirthDate(userId, birthDate || null);
+      setEditingBirthDateId(null);
+      fetchUsers();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка сохранения даты рождения');
     }
   };
 
@@ -152,7 +170,7 @@ export default function UsersPage() {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50">
                 <tr>
-                  {['ФИО', 'Email', 'Роль', 'Дата регистрации', 'Действия'].map((h) => (
+                  {['ФИО', 'Email', 'Роль', 'День рождения', 'Дата регистрации', 'Действия'].map((h) => (
                     <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                       {h}
                     </th>
@@ -192,6 +210,36 @@ export default function UsersPage() {
                         <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold">
                           Ожидает назначения
                         </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                      {editingBirthDateId === u.id ? (
+                        <input
+                          type="date"
+                          defaultValue={u.birthDate || ''}
+                          max={new Date().toISOString().slice(0, 10)}
+                          onBlur={(e) => {
+                            if (e.target.value !== (u.birthDate || '')) {
+                              handleBirthDateChange(u.id, e.target.value);
+                            } else {
+                              setEditingBirthDateId(null);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') setEditingBirthDateId(null);
+                          }}
+                          autoFocus
+                          className="px-2 py-1.5 border border-primary/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => setEditingBirthDateId(u.id)}
+                          className="hover:text-primary hover:underline"
+                          title="Изменить дату рождения"
+                        >
+                          {u.birthDate ? formatBirthDate(u.birthDate) : '+ указать'}
+                        </button>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
