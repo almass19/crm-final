@@ -7,8 +7,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 export type BotState =
   | 'AWAITING_CLIENT_SEARCH'
   | 'AWAITING_TYPE'
+  | 'AWAITING_DESCRIPTION'
   | 'AWAITING_BRIEF'
-  | 'AWAITING_DELIVERY';
+  | 'AWAITING_DELIVERY'
+  | 'AWAITING_CASE_TOPIC'
+  | 'AWAITING_CASE_TOPIC_NAME';
 
 export interface BotStateRow {
   state: BotState;

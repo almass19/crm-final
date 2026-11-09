@@ -160,3 +160,45 @@ export async function clearTelegramReplyKeyboard(chatId: number | bigint, text: 
     reply_markup: { remove_keyboard: true },
   });
 }
+
+// Sends plain text into a forum topic of a group.
+export async function sendTelegramTopicMessage(
+  chatId: number | bigint,
+  threadId: number,
+  text: string,
+): Promise<boolean> {
+  const result = await callTelegramApi('sendMessage', {
+    chat_id: Number(chatId),
+    message_thread_id: threadId,
+    text,
+  });
+  return result !== null;
+}
+
+// Copies messages without the "Forwarded from" header, keeping albums
+// grouped — used to publish delivered creatives into the portfolio group.
+export async function copyMessages(
+  toChatId: number | bigint,
+  fromChatId: number | bigint,
+  messageIds: number[],
+  threadId?: number,
+): Promise<boolean> {
+  const result = await callTelegramApi('copyMessages', {
+    chat_id: Number(toChatId),
+    from_chat_id: Number(fromChatId),
+    message_ids: [...messageIds].sort((a, b) => a - b),
+    ...(threadId ? { message_thread_id: threadId } : {}),
+  });
+  return result !== null;
+}
+
+// Creates a forum topic; returns its thread id. The bot must be a group
+// admin with the "Manage topics" right.
+export async function createForumTopic(chatId: number | bigint, name: string): Promise<number | null> {
+  const result = await callTelegramApi('createForumTopic', { chat_id: Number(chatId), name });
+  return (result?.message_thread_id as number) ?? null;
+}
+
+export async function deleteTelegramMessage(chatId: number | bigint, messageId: number) {
+  await callTelegramApi('deleteMessage', { chat_id: Number(chatId), message_id: messageId });
+}

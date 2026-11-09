@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendTelegramMessage, sendTelegramReplyKeyboard, type TelegramBot } from '@/lib/telegram';
-import { IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
+import { sendTelegramMessage, type TelegramBot } from '@/lib/telegram';
+import { sendIdle } from '../idle';
 
 const CREATIVE_BOT_ROLES = ['TARGETOLOGIST', 'DESIGNER', 'LEAD_DESIGNER'];
 
@@ -52,9 +52,5 @@ export async function handleStartCommand(
     await sendTelegramMessage(chatId, successText + hint, 'notifications');
     return;
   }
-  if (profile?.role === 'TARGETOLOGIST') {
-    await sendTelegramReplyKeyboard(chatId, successText, IDLE_TARGETOLOGIST_KEYBOARD);
-  } else {
-    await sendTelegramMessage(chatId, successText);
-  }
+  await sendIdle(chatId, successText, profile?.role ?? null);
 }

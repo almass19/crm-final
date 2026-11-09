@@ -6,7 +6,6 @@ import {
   sendTelegramKeyboard,
   sendTelegramMessage,
   sendTelegramReplyKeyboard,
-  clearTelegramReplyKeyboard,
 } from '@/lib/telegram';
 import { createCreativeAcceptedNotification, createCreativeDeliveredNotification } from '@/lib/notifications';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
@@ -14,6 +13,9 @@ import { setBotState, clearBotState, type BotStateRow } from '../state';
 import { CANCEL_KEYBOARD } from '../keyboards';
 import type { TelegramMessage } from '../types';
 import type { BotProfile } from '../profile';
+import { askCaseTopic } from './caseTopics';
+import { sendIdle } from '../idle';
+import { escapeHtml } from '../format';
 
 export async function handleAccept(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,7 +73,7 @@ export async function handleAccept(
 
   await sendTelegramKeyboard(
     chatId,
-    `📎 ${clientName} — ${typeLabel}\nКогда будет готово — нажмите кнопку и пришлите файл(ы).`,
+    `📎 ${escapeHtml(clientName)} — ${typeLabel}\nКогда будет готово — нажмите кнопку и пришлите файл(ы).`,
     [[{ text: '📎 Готово, отправляю', callback_data: `deliver_start:${requestId}` }]],
   );
 
@@ -149,7 +151,7 @@ export async function finalizeDelivery(
 
   if (!request) {
     await clearBotState(supabase, chatId);
-    await clearTelegramReplyKeyboard(chatId, 'Заявка не найдена.');
+    await sendIdle(chatId, 'Заявка не найдена.', profile.role);
     return;
   }
 
@@ -163,7 +165,7 @@ export async function finalizeDelivery(
     }
     await sendTelegramMessage(
       requesterChatId,
-      `✅ Готово: ${clientName} — ${typeLabel}\nФайлы выше ⬆️ — не забудьте выложить в группу с кейсами.`,
+      `✅ Готово: ${escapeHtml(clientName)} — ${typeLabel}\nФайлы выше ⬆️`,
     );
   }
 
@@ -182,7 +184,7 @@ export async function finalizeDelivery(
     .eq('id', requestId);
 
   await clearBotState(supabase, chatId);
-  await clearTelegramReplyKeyboard(chatId, '✅ Отправлено таргетологу и записано.');
+  await sendIdle(chatId, '✅ Отправлено таргетологу и записано.', profile.role);
 
   await createCreativeDeliveredNotification(supabase, {
     requestedById: request.requested_by_id,
@@ -190,5 +192,12 @@ export async function finalizeDelivery(
     clientName,
     type: request.type,
     designerName: profile.full_name,
+  });
+
+  await askCaseTopic(supabase, chatId, {
+    clientId: request.client_id,
+    caption: `${clientName} — ${typeLabel}`,
+    fromChatId: chatId,
+    messageIds,
   });
 }

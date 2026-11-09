@@ -3,11 +3,13 @@ import { sendTelegramKeyboard, sendTelegramReplyKeyboard, forwardMessage } from 
 import { createCreativeRequestedNotification } from '@/lib/notifications';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
+import { escapeHtml, formatAlmatyTime } from '../format';
 
 interface CreateRequestParams {
   clientId: string;
   clientName: string;
   type: string;
+  description: string | null;
   requestedById: string;
   requesterName: string;
   requesterChatId: number;
@@ -23,7 +25,7 @@ export async function createCreativeRequestAndNotify(
   params: CreateRequestParams,
 ): Promise<void> {
   const {
-    clientId, clientName, type, requestedById, requesterName,
+    clientId, clientName, type, description, requestedById, requesterName,
     requesterChatId, briefChatId, briefMessageIds,
   } = params;
 
@@ -51,8 +53,8 @@ export async function createCreativeRequestAndNotify(
 
   const { data: request, error } = await supabase
     .from('creative_requests')
-    .insert({ client_id: clientId, type, requested_by_id: requestedById, designer_id: assignment.designer_id })
-    .select('id')
+    .insert({ client_id: clientId, type, description, requested_by_id: requestedById, designer_id: assignment.designer_id })
+    .select('id, created_at')
     .single();
 
   if (error || !request) {
@@ -67,7 +69,10 @@ export async function createCreativeRequestAndNotify(
     }
     await sendTelegramKeyboard(
       designerChatId,
-      `🎨 Заявка от ${requesterName}\nКлиент: ${clientName}\nТип: ${typeLabel}`,
+      `🎨 <b>Заявка от ${escapeHtml(requesterName)}</b>\n`
+        + `Клиент: <b>${escapeHtml(clientName)}</b>\nТип: ${typeLabel}\n`
+        + `🕒 Поступила: ${formatAlmatyTime(request.created_at)}`
+        + (description ? `\n\n📝 ${escapeHtml(description)}` : ''),
       [[{ text: '✅ Принять в работу', callback_data: `accept:${request.id}` }]],
     );
   }
@@ -82,7 +87,7 @@ export async function createCreativeRequestAndNotify(
 
   await sendTelegramReplyKeyboard(
     requesterChatId,
-    `✅ Заявка отправлена: ${assignment.designer.full_name}`,
+    `✅ Заявка отправлена: ${escapeHtml(assignment.designer.full_name)}`,
     IDLE_TARGETOLOGIST_KEYBOARD,
   );
 }

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendTelegramKeyboard, sendTelegramMessage, sendTelegramReplyKeyboard, type InlineButton } from '@/lib/telegram';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { escapePostgrestValue } from '@/lib/utils/postgrest-filter';
+import { escapeHtml } from '../format';
 import { setBotState, clearBotState, type BotStateRow } from '../state';
 import { createCreativeRequestAndNotify } from './createRequest';
 import { NEW_CREATIVE_BUTTON, CANCEL_KEYBOARD, IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
@@ -138,19 +139,54 @@ export async function handleClientPicked(
   const buttons = Object.entries(CREATIVE_TYPE_LABELS).map(([type, label]) => [
     { text: label, callback_data: `type:${type}` },
   ]);
-  await sendTelegramKeyboard(chatId, `Клиент: ${clientName}\nЧто нужно?`, buttons);
+  await sendTelegramKeyboard(chatId, `Клиент: ${escapeHtml(clientName)}\nЧто нужно?`, buttons);
 }
 
+const DESCRIPTION_MAX_LENGTH = 1000;
+
 export async function handleTypePicked(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  chatId: number,
+  stateRow: BotStateRow,
+  type: string,
+): Promise<void> {
+  const { clientId, clientName } = stateRow.context as { clientId: string; clientName: string };
+  await setBotState(supabase, chatId, 'AWAITING_DESCRIPTION', { clientId, clientName, type });
+  await sendTelegramKeyboard(
+    chatId,
+    `Клиент: ${escapeHtml(clientName)} — ${CREATIVE_TYPE_LABELS[type] || type}\nОпишите запрос: что нужно сделать, акцент, сроки.`,
+    [[{ text: '⏭ Без описания', callback_data: 'desc_skip' }]],
+  );
+}
+
+// Text typed at the description step. Anything but text is rejected —
+// files belong in the client brief, which comes next if there isn't one.
+export async function handleDescriptionMessage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  profile: BotProfile,
+  chatId: number,
+  message: TelegramMessage,
+  stateRow: BotStateRow,
+): Promise<void> {
+  const description = message.text?.trim();
+  if (!description) {
+    await sendTelegramMessage(chatId, 'Опишите запрос текстом или нажмите «Без описания».');
+    return;
+  }
+  await handleDescription(supabase, profile, chatId, stateRow, description.slice(0, DESCRIPTION_MAX_LENGTH));
+}
+
+export async function handleDescription(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: SupabaseClient<any, any, any>,
   profile: BotProfile,
   chatId: number,
   stateRow: BotStateRow,
-  type: string,
+  description: string | null,
 ): Promise<void> {
-  const clientId = stateRow.context.clientId as string;
-  const clientName = stateRow.context.clientName as string;
+  const { clientId, clientName, type } = stateRow.context as { clientId: string; clientName: string; type: string };
 
   const { data: brief } = await supabase
     .from('client_creative_briefs')
@@ -159,10 +195,10 @@ export async function handleTypePicked(
     .single();
 
   if (!brief) {
-    await setBotState(supabase, chatId, 'AWAITING_BRIEF', { clientId, clientName, type, messageIds: [] });
+    await setBotState(supabase, chatId, 'AWAITING_BRIEF', { clientId, clientName, type, description, messageIds: [] });
     await sendTelegramKeyboard(
       chatId,
-      `Это первый запрос по клиенту «${clientName}». Пришлите бриф (текст, фото, файлы — сколько угодно сообщений), затем нажмите «Готово».`,
+      `Это первый запрос по клиенту «${escapeHtml(clientName)}». Пришлите бриф (текст, фото, файлы — сколько угодно сообщений), затем нажмите «Готово».`,
       [[{ text: '✅ Бриф готов', callback_data: 'brief_done' }]],
     );
     return;
@@ -173,6 +209,7 @@ export async function handleTypePicked(
     clientId,
     clientName,
     type,
+    description,
     requestedById: profile.id,
     requesterName: profile.full_name,
     requesterChatId: chatId,

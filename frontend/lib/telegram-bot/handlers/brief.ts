@@ -23,10 +23,11 @@ export async function finalizeBrief(
   chatId: number,
   stateRow: BotStateRow,
 ): Promise<void> {
-  const { clientId, clientName, type, messageIds } = stateRow.context as {
+  const { clientId, clientName, type, description, messageIds } = stateRow.context as {
     clientId: string;
     clientName: string;
     type: string;
+    description?: string | null;
     messageIds?: number[];
   };
 
@@ -48,6 +49,7 @@ export async function finalizeBrief(
     clientId,
     clientName,
     type,
+    description: description ?? null,
     requestedById: profile.id,
     requesterName: profile.full_name,
     requesterChatId: chatId,

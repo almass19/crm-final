@@ -10,6 +10,7 @@ export interface TelegramUser {
 export interface TelegramChat {
   id: number;
   type: string;
+  title?: string;
 }
 
 export interface TelegramMessage {
@@ -17,6 +18,10 @@ export interface TelegramMessage {
   from?: TelegramUser;
   chat: TelegramChat;
   text?: string;
+  message_thread_id?: number;
+  is_topic_message?: boolean;
+  reply_to_message?: TelegramMessage;
+  forum_topic_created?: { name: string };
   photo?: unknown[];
   video?: unknown;
   document?: unknown;
