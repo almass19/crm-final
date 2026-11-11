@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendTelegramMessage, type TelegramBot } from '@/lib/telegram';
 import { sendIdle } from '../idle';
 
-const CREATIVE_BOT_ROLES = ['TARGETOLOGIST', 'DESIGNER', 'LEAD_DESIGNER'];
+const CREATIVE_BOT_ROLES = ['TARGETOLOGIST', 'ADMIN', 'DESIGNER', 'LEAD_DESIGNER'];
 
 export function creativeBotUsername(): string {
   return process.env.TELEGRAM_CREATIVE_BOT_USERNAME || 'resultingagency_bot';

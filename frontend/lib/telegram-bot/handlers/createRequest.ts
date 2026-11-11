@@ -17,6 +17,36 @@ interface CreateRequestParams {
   briefMessageIds: number[];
 }
 
+interface Designer {
+  id: string;
+  full_name: string;
+  telegram_chat_id: number | null;
+}
+
+// The designer assigned to the client owns its creatives; the per-type
+// designer is only a fallback for clients that don't have one yet.
+async function findResponsibleDesigner(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  clientId: string,
+  type: string,
+): Promise<Designer | null> {
+  const { data: client } = await supabase
+    .from('clients')
+    .select('designer:profiles!clients_designer_id_fkey(id, full_name, telegram_chat_id)')
+    .eq('id', clientId)
+    .single();
+  const clientDesigner = (client as unknown as { designer: Designer | null } | null)?.designer;
+  if (clientDesigner) return clientDesigner;
+
+  const { data: assignment } = await supabase
+    .from('creative_type_assignments')
+    .select('designer:profiles!creative_type_assignments_designer_id_fkey(id, full_name, telegram_chat_id)')
+    .eq('type', type)
+    .single();
+  return (assignment as unknown as { designer: Designer | null } | null)?.designer ?? null;
+}
+
 // Shared by both paths that end a "what do you need" flow: the brief
 // already existed for this client, or the brief was just submitted.
 export async function createCreativeRequestAndNotify(
@@ -31,21 +61,13 @@ export async function createCreativeRequestAndNotify(
 
   const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
 
-  const { data: assignmentRaw } = await supabase
-    .from('creative_type_assignments')
-    .select('designer_id, designer:profiles!creative_type_assignments_designer_id_fkey(id, full_name, telegram_chat_id)')
-    .eq('type', type)
-    .single();
+  const designer = await findResponsibleDesigner(supabase, clientId, type);
 
-  const assignment = assignmentRaw as unknown as {
-    designer_id: string;
-    designer: { id: string; full_name: string; telegram_chat_id: number | null } | null;
-  } | null;
-
-  if (!assignment?.designer) {
+  if (!designer) {
     await sendTelegramReplyKeyboard(
       requesterChatId,
-      `⚠️ На тип «${typeLabel}» ещё не назначен дизайнер. Попросите руководителя назначить его в CRM → «Типы креативов».`,
+      `⚠️ У клиента «${escapeHtml(clientName)}» нет дизайнера, и на тип «${typeLabel}» тоже никто не назначен. `
+        + 'Попросите руководителя назначить дизайнера на клиента в CRM.',
       IDLE_TARGETOLOGIST_KEYBOARD,
     );
     return;
@@ -53,7 +75,7 @@ export async function createCreativeRequestAndNotify(
 
   const { data: request, error } = await supabase
     .from('creative_requests')
-    .insert({ client_id: clientId, type, description, requested_by_id: requestedById, designer_id: assignment.designer_id })
+    .insert({ client_id: clientId, type, description, requested_by_id: requestedById, designer_id: designer.id })
     .select('id, created_at')
     .single();
 
@@ -62,7 +84,7 @@ export async function createCreativeRequestAndNotify(
     return;
   }
 
-  const designerChatId = assignment.designer.telegram_chat_id as number | null;
+  const designerChatId = designer.telegram_chat_id;
   if (designerChatId) {
     for (const messageId of briefMessageIds) {
       await forwardMessage(designerChatId, briefChatId, messageId);
@@ -78,7 +100,7 @@ export async function createCreativeRequestAndNotify(
   }
 
   await createCreativeRequestedNotification(supabase, {
-    designerId: assignment.designer_id,
+    designerId: designer.id,
     clientId,
     clientName,
     type,
@@ -87,7 +109,7 @@ export async function createCreativeRequestAndNotify(
 
   await sendTelegramReplyKeyboard(
     requesterChatId,
-    `✅ Заявка отправлена: ${escapeHtml(assignment.designer.full_name)}`,
+    `✅ Заявка отправлена: ${escapeHtml(designer.full_name)}`,
     IDLE_TARGETOLOGIST_KEYBOARD,
   );
 }

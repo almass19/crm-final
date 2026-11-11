@@ -8,6 +8,7 @@ import {
   MY_REQUESTS_BUTTON,
   MY_TASKS_BUTTON,
   DESIGNER_ROLES,
+  REQUESTER_ROLES,
 } from './keyboards';
 import { handleStartCommand } from './handlers/linkAccount';
 import {
@@ -75,10 +76,12 @@ export async function routeUpdate(
     return;
   }
 
+  const isRequester = REQUESTER_ROLES.includes(profile.role ?? '');
+
   if (text === '/start') {
     await sendIdle(
       chatId,
-      profile.role === 'TARGETOLOGIST'
+      isRequester
         ? 'Готово! Здесь вы заказываете креативы у дизайнеров.'
         : 'Готово! Сюда будут приходить заявки на креативы.',
       profile.role,
@@ -94,7 +97,7 @@ export async function routeUpdate(
 
   // Read-only lists work from any state — checked before the state switch
   // so the button text isn't swallowed as a brief or delivery message.
-  if (text === MY_REQUESTS_BUTTON && profile.role === 'TARGETOLOGIST') {
+  if (text === MY_REQUESTS_BUTTON && isRequester) {
     await sendTargetologistRequests(supabase, profile, chatId);
     return;
   }
@@ -106,11 +109,11 @@ export async function routeUpdate(
   const stateRow = await getBotState(supabase, chatId);
 
   if (!stateRow) {
-    if (profile.role === 'TARGETOLOGIST' && isNewCreativeTrigger(text)) {
+    if (isRequester && isNewCreativeTrigger(text)) {
       await startNewCreativeFlow(supabase, chatId, profile.id);
       return;
     }
-    if (profile.role === 'TARGETOLOGIST') {
+    if (isRequester) {
       await sendTelegramReplyKeyboard(chatId, 'Нажмите кнопку ниже, чтобы запросить креатив у дизайнера.', IDLE_TARGETOLOGIST_KEYBOARD);
     } else if (DESIGNER_ROLES.includes(profile.role ?? '')) {
       await sendIdle(chatId, 'Нажмите «Мои задачи», чтобы увидеть заявки.', profile.role);

@@ -95,7 +95,7 @@ export default function CreativeRoutingPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Типы креативов</h1>
           <p className="text-slate-500 mt-1">
-            Кто отвечает за каждый тип — именно ему бот в Telegram будет отправлять заявки
+            Заявки бот отправляет дизайнеру, назначенному на клиента. Если у клиента дизайнера нет — тому, кто отвечает за тип
           </p>
         </div>
 
