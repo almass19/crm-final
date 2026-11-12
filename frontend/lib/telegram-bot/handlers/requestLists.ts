@@ -88,7 +88,15 @@ export async function sendTargetologistRequests(
       .map((r) => line(r, `сдана ${formatAlmatyTime(r.delivered_at || r.created_at)}`)), delivered.length));
   }
 
-  await sendTelegramMessage(chatId, sections.join('\n\n'));
+  const buttons: InlineButton[][] = [...pending, ...inWork].slice(0, MAX_ITEMS_PER_SECTION).map((r) => [{
+    text: `🗑 Удалить · ${truncate(clientNameOf(r), 25)} — ${typeLabelOf(r)}`,
+    callback_data: `cancel:${r.id}`,
+  }]);
+  if (buttons.length) {
+    await sendTelegramKeyboard(chatId, sections.join('\n\n'), buttons);
+  } else {
+    await sendTelegramMessage(chatId, sections.join('\n\n'));
+  }
 }
 
 // "📋 Мои задачи" — the designer's open requests, oldest first within each
@@ -143,18 +151,24 @@ export async function sendDesignerTasks(
   const sections: string[] = [];
   if (pending.length) {
     const lines = pending.map(line);
-    pending.forEach((r, i) => buttons.push([{
-      text: `✅ Принять №${n - pending.length + i + 1} · ${truncate(clientNameOf(r), 30)}`,
-      callback_data: `accept:${r.id}`,
-    }]));
+    pending.forEach((r, i) => {
+      const num = n - pending.length + i + 1;
+      buttons.push([
+        { text: `✅ Принять №${num} · ${truncate(clientNameOf(r), 20)}`, callback_data: `accept:${r.id}` },
+        { text: `🗑 №${num}`, callback_data: `cancel:${r.id}` },
+      ]);
+    });
     sections.push(section('🆕 Новые', lines, pendingTotal));
   }
   if (inWork.length) {
     const lines = inWork.map(line);
-    inWork.forEach((r, i) => buttons.push([{
-      text: `📎 Сдать №${n - inWork.length + i + 1} · ${truncate(clientNameOf(r), 30)}`,
-      callback_data: `deliver_start:${r.id}`,
-    }]));
+    inWork.forEach((r, i) => {
+      const num = n - inWork.length + i + 1;
+      buttons.push([
+        { text: `📎 Сдать №${num} · ${truncate(clientNameOf(r), 20)}`, callback_data: `deliver_start:${r.id}` },
+        { text: `🗑 №${num}`, callback_data: `cancel:${r.id}` },
+      ]);
+    });
     sections.push(section('🛠 В работе', lines, inWorkTotal));
   }
 

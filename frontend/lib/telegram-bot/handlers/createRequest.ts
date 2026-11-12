@@ -95,7 +95,10 @@ export async function createCreativeRequestAndNotify(
         + `Клиент: <b>${escapeHtml(clientName)}</b>\nТип: ${typeLabel}\n`
         + `🕒 Поступила: ${formatAlmatyTime(request.created_at)}`
         + (description ? `\n\n📝 ${escapeHtml(description)}` : ''),
-      [[{ text: '✅ Принять в работу', callback_data: `accept:${request.id}` }]],
+      [[
+        { text: '✅ Принять в работу', callback_data: `accept:${request.id}` },
+        { text: '🗑 Удалить', callback_data: `cancel:${request.id}` },
+      ]],
     );
   }
 

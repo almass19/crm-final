@@ -222,6 +222,25 @@ export async function createCreativeAcceptedNotification(
   await notifyUser(supabase, requestedById, 'CREATIVE_ACCEPTED', title, message, `/clients/${clientId}`, tgText);
 }
 
+interface CreativeCancelledParams {
+  userId: string;
+  clientId: string;
+  clientName: string;
+  type: string;
+  cancelledByName: string;
+}
+
+export async function createCreativeCancelledNotification(
+  supabase: SupabaseClient,
+  { userId, clientId, clientName, type, cancelledByName }: CreativeCancelledParams,
+) {
+  const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
+  const title = 'Заявка на креатив удалена';
+  const message = `${cancelledByName} удалил заявку «${typeLabel}» для клиента «${clientName}»`;
+  const tgText = `<b>🗑 Заявка удалена</b>\n${cancelledByName} удалил <b>${typeLabel}</b>\nКлиент: <b>${clientName}</b>`;
+  await notifyUser(supabase, userId, 'CREATIVE_CANCELLED', title, message, `/clients/${clientId}`, tgText);
+}
+
 interface CreativeDeliveredParams {
   requestedById: string;
   clientId: string;

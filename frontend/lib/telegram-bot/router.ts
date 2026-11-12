@@ -30,6 +30,7 @@ import {
   collectDeliveryMessage,
   finalizeDelivery,
 } from './handlers/acceptDeliver';
+import { handleCancelAsk, handleCancelConfirm, handleCancelDismiss } from './handlers/cancelRequest';
 import {
   isTopicCommand,
   handleTopicRegistration,
@@ -196,6 +197,21 @@ async function routeCallbackQuery(
 
   if (data.startsWith('accept:') && messageId) {
     await handleAccept(supabase, profile, chatId, messageId, callbackQuery.id, data.slice('accept:'.length));
+    return;
+  }
+
+  if (data.startsWith('cancel:')) {
+    await handleCancelAsk(supabase, profile, chatId, callbackQuery.id, data.slice('cancel:'.length));
+    return;
+  }
+
+  if (data.startsWith('cancel_yes:')) {
+    await handleCancelConfirm(supabase, profile, chatId, messageId, callbackQuery.id, data.slice('cancel_yes:'.length));
+    return;
+  }
+
+  if (data === 'cancel_no') {
+    await handleCancelDismiss(chatId, messageId, callbackQuery.id);
     return;
   }
 

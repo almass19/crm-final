@@ -133,7 +133,7 @@ export async function finalizeDelivery(
   const { data: requestRaw } = await supabase
     .from('creative_requests')
     .select(`
-      id, type, client_id, requested_by_id,
+      id, status, type, client_id, requested_by_id,
       client:clients(id, full_name, company_name),
       requester:profiles!creative_requests_requested_by_id_fkey(id, full_name, telegram_chat_id)
     `)
@@ -142,6 +142,7 @@ export async function finalizeDelivery(
 
   const request = requestRaw as unknown as {
     id: string;
+    status: string;
     type: string;
     client_id: string;
     requested_by_id: string;
@@ -152,6 +153,12 @@ export async function finalizeDelivery(
   if (!request) {
     await clearBotState(supabase, chatId);
     await sendIdle(chatId, 'Заявка не найдена.', profile.role);
+    return;
+  }
+
+  if (request.status === 'CANCELLED') {
+    await clearBotState(supabase, chatId);
+    await sendIdle(chatId, '🗑 Эту заявку уже удалили — файлы никуда не отправлены.', profile.role);
     return;
   }
 
