@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import { STATUS_LABELS, ROLE_LABELS, SERVICE_OPTIONS, CLIENT_TYPE_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
@@ -97,6 +98,7 @@ export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
   const { showToast } = useToast();
   const [client, setClient] = useState<Client | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -457,7 +459,7 @@ export default function ClientDetailPage() {
                     <span className="text-slate-500">Сумма оплаты:</span>
                     <p className="font-medium">
                       {client.paymentAmount
-                        ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸`
+                        ? money(client.paymentAmount)
                         : '—'}
                       {canEditPayment && (
                         <button
@@ -805,9 +807,7 @@ export default function ClientDetailPage() {
                     <div className="flex justify-between items-baseline pb-3 border-b">
                       <span className="text-sm text-slate-500">Всего оплачено:</span>
                       <span className="text-base font-bold text-slate-900">
-                        {payments
-                          .reduce((sum, p) => sum + Number(p.amount || 0), 0)
-                          .toLocaleString('ru-RU')} ₸
+                        {money(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0))}
                       </span>
                     </div>
                     {payments.map((p) => (
@@ -815,7 +815,7 @@ export default function ClientDetailPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium text-slate-700">
-                              {p.amount.toLocaleString('ru-RU')} ₸
+                              {money(p.amount)}
                             </p>
                             <p className="text-xs text-slate-500">
                               {p.month}

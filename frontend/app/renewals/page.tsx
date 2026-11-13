@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
@@ -33,6 +34,7 @@ const MONTH_NAMES = [
 
 export default function RenewalsPage() {
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -270,7 +272,7 @@ export default function RenewalsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={client.status} /></td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                      {client.lastRenewalAmount ? `${Number(client.lastRenewalAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                      {client.lastRenewalAmount ? money(client.lastRenewalAmount) : '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                       {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}

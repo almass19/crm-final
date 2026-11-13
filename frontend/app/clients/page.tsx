@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import { STATUS_LABELS, SERVICE_OPTIONS, CLIENT_TYPE_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
@@ -92,6 +93,7 @@ function SkeletonRow() {
 
 export default function ClientsPage() {
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -655,7 +657,7 @@ export default function ClientsPage() {
                               )}
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                              {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                              {client.paymentAmount ? money(client.paymentAmount) : '—'}
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                               {client.purchaseDate ? new Date(client.purchaseDate).toLocaleDateString('ru-RU') : '—'}
@@ -718,7 +720,7 @@ export default function ClientsPage() {
                       </td>
                       {(isAdmin || isSalesManager || isLeadDesigner) && (
                         <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                          {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                          {client.paymentAmount ? money(client.paymentAmount) : '—'}
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">

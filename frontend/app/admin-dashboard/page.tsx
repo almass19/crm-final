@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney, usePrivacy } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import { ROLE_LABELS, STATUS_LABELS, TASK_STATUS_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
@@ -99,6 +100,8 @@ type Tab = 'analytics' | 'employees' | 'kpi';
 
 export default function AdminDashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
+  const { hideMoney } = usePrivacy();
   const router = useRouter();
 
   const [tab, setTab] = useState<Tab>('analytics');
@@ -193,7 +196,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const formatCurrency = (value: number) => new Intl.NumberFormat('ru-RU').format(value) + ' ₸';
+  const formatCurrency = money;
 
   const statusChartData = (analytics?.clientsByStatus || []).map(d => ({
     ...d, label: STATUS_LABELS[d.status] || d.status,
@@ -326,7 +329,7 @@ export default function AdminDashboardPage() {
                   {analytics.revenueByManager.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={analytics.revenueByManager} layout="vertical" margin={{ left: 20 }}>
-                        <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                        <XAxis type="number" tickFormatter={(v) => (hideMoney ? '' : `${(v / 1000).toFixed(0)}k`)} />
                         <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
                         <Tooltip formatter={(value) => formatCurrency(value as number)} />
                         <Bar dataKey="amount" name="Доход" fill="#10B981" radius={[0, 4, 4, 0]} />

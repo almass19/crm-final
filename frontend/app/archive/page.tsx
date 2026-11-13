@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import { STATUS_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
@@ -51,6 +52,7 @@ function SkeletonRow() {
 
 export default function ArchivePage() {
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -303,7 +305,7 @@ export default function ArchivePage() {
                     </td>
                     {isAdmin && (
                       <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                        {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                        {client.paymentAmount ? money(client.paymentAmount) : '—'}
                       </td>
                     )}
                     <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">

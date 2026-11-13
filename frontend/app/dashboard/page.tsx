@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useMoney } from '@/lib/privacy';
 import { api } from '@/lib/api';
 import { ROLE_LABELS } from '@/lib/constants';
 import AppShell from '@/components/AppShell';
@@ -58,12 +59,13 @@ interface SalaryData {
 }
 
 function SalaryGroupCard({ title, hint, group }: { title: string; hint: string; group: SalaryGroup }) {
+  const money = useMoney();
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <h3 className="text-sm font-bold text-slate-700">{title}</h3>
         <span className="text-sm font-bold text-slate-900 whitespace-nowrap">
-          {`+${Number(group.total).toLocaleString('ru-RU')} ₸`}
+          {`+${money(group.total)}`}
         </span>
       </div>
       <p className="text-xs text-slate-400 mb-3">{hint}</p>
@@ -74,11 +76,11 @@ function SalaryGroupCard({ title, hint, group }: { title: string; hint: string; 
           {group.tiers.map((tier) => (
             <div key={tier.amount} className="flex items-center justify-between text-xs gap-2">
               <span className="text-slate-600 whitespace-nowrap">
-                {`${Number(tier.amount).toLocaleString('ru-RU')} ₸`}
+                {money(tier.amount)}
                 <span className="text-slate-400"> × {tier.count}</span>
               </span>
               <span className={tier.bonusEach ? 'font-semibold text-success-text whitespace-nowrap' : 'text-slate-400 whitespace-nowrap'}>
-                {tier.bonusEach ? `+${Number(tier.bonusTotal).toLocaleString('ru-RU')} ₸` : 'бонус не задан'}
+                {tier.bonusEach ? `+${money(tier.bonusTotal)}` : 'бонус не задан'}
               </span>
             </div>
           ))}
@@ -90,6 +92,7 @@ function SalaryGroupCard({ title, hint, group }: { title: string; hint: string; 
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const money = useMoney();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [salaryData, setSalaryData] = useState<SalaryData | null>(null);
@@ -207,7 +210,7 @@ export default function DashboardPage() {
             ) : salaryData ? (
               <>
                 <div className="text-4xl font-black text-success-text">
-                  {`${Number(salaryData.totalSalary).toLocaleString('ru-RU')} ₸`}
+                  {money(salaryData.totalSalary)}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
                   <SalaryGroupCard title="Продления" hint="по последнему платежу в этом месяце" group={salaryData.renewals} />
@@ -317,18 +320,18 @@ export default function DashboardPage() {
                         {canSeePaidTotal && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-semibold text-slate-900">
-                              {`${Number(client.paidTotal || 0).toLocaleString('ru-RU')} ₸`}
+                              {money(client.paidTotal || 0)}
                             </div>
                             {client.paymentAmount ? (
                               <div className="text-xs text-slate-400">
-                                {`из ${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸`}
+                                {`из ${money(client.paymentAmount)}`}
                               </div>
                             ) : null}
                           </td>
                         )}
                         {isTargetologist && (
                           <td className="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                            {client.paymentAmount ? `${Number(client.paymentAmount).toLocaleString('ru-RU')} ₸` : '—'}
+                            {client.paymentAmount ? money(client.paymentAmount) : '—'}
                           </td>
                         )}
                         <td className="px-6 py-4 text-sm text-slate-500">
