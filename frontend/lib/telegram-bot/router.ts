@@ -14,7 +14,7 @@ import { handleStartCommand } from './handlers/linkAccount';
 import {
   isNewCreativeTrigger,
   startNewCreativeFlow,
-  sendClientListPage,
+  handleClientListPage,
   handleClientSearch,
   handleClientPicked,
   handleTypePicked,
@@ -40,6 +40,7 @@ import {
   handleCaseNewStart,
   handleCaseNewName,
 } from './handlers/caseTopics';
+import { getFlowMessageIds, deleteFlowMessages } from './flowMessages';
 import { hasMedia, type TelegramUpdate, type TelegramCallbackQuery } from './types';
 
 export async function routeUpdate(
@@ -91,7 +92,10 @@ export async function routeUpdate(
   }
 
   if (text === '/cancel' || text === CANCEL_BUTTON) {
+    const cancelled = await getBotState(supabase, chatId);
     await clearBotState(supabase, chatId);
+    const trail = getFlowMessageIds(cancelled?.context);
+    if (trail.length > 0) await deleteFlowMessages(chatId, [...trail, message.message_id]);
     await sendIdle(chatId, 'Отменено.', profile.role);
     return;
   }
@@ -111,7 +115,7 @@ export async function routeUpdate(
 
   if (!stateRow) {
     if (isRequester && isNewCreativeTrigger(text)) {
-      await startNewCreativeFlow(supabase, chatId, profile.id);
+      await startNewCreativeFlow(supabase, chatId, profile.id, message.message_id);
       return;
     }
     if (isRequester) {
@@ -124,7 +128,7 @@ export async function routeUpdate(
 
   switch (stateRow.state) {
     case 'AWAITING_CLIENT_SEARCH':
-      await handleClientSearch(supabase, profile, chatId, message);
+      await handleClientSearch(supabase, profile, chatId, message, stateRow);
       return;
     case 'AWAITING_DESCRIPTION':
       await handleDescriptionMessage(supabase, profile, chatId, message, stateRow);
@@ -160,14 +164,15 @@ async function routeCallbackQuery(
   }
 
   if (data.startsWith('client:')) {
-    await handleClientPicked(supabase, chatId, data.slice('client:'.length));
+    const stateRow = await getBotState(supabase, chatId);
+    await answerCallbackQuery(callbackQuery.id);
+    await handleClientPicked(supabase, chatId, stateRow, data.slice('client:'.length));
     return;
   }
 
   if (data.startsWith('clients_page:')) {
     const offset = parseInt(data.slice('clients_page:'.length), 10) || 0;
-    await answerCallbackQuery(callbackQuery.id);
-    await sendClientListPage(supabase, chatId, profile.id, offset);
+    await handleClientListPage(supabase, chatId, messageId, callbackQuery.id, profile.id, offset);
     return;
   }
 

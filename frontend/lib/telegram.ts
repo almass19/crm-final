@@ -45,8 +45,9 @@ export async function sendTelegramMessage(
   chatId: number | bigint,
   text: string,
   bot: TelegramBot = 'creative',
-) {
-  await callTelegramApi('sendMessage', { chat_id: Number(chatId), text, parse_mode: 'HTML' }, bot);
+): Promise<number | null> {
+  const result = await callTelegramApi('sendMessage', { chat_id: Number(chatId), text, parse_mode: 'HTML' }, bot);
+  return (result?.message_id as number) ?? null;
 }
 
 export interface InlineButton {
@@ -101,6 +102,23 @@ export async function answerCallbackQuery(callbackQueryId: string, text?: string
   await callTelegramApi('answerCallbackQuery', { callback_query_id: callbackQueryId, text });
 }
 
+// Rewrites an already-sent message's text and inline keyboard in place —
+// used for paging through a list without stacking new messages.
+export async function editTelegramKeyboardMessage(
+  chatId: number | bigint,
+  messageId: number,
+  text: string,
+  keyboard: InlineButton[][],
+) {
+  await callTelegramApi('editMessageText', {
+    chat_id: Number(chatId),
+    message_id: messageId,
+    text,
+    parse_mode: 'HTML',
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
 // Replaces (or clears, with an empty array) the buttons on an already-sent
 // message — used to take the "Принять" button away once a designer accepts.
 export async function editMessageReplyMarkup(
@@ -138,8 +156,8 @@ export async function sendTelegramReplyKeyboard(
   chatId: number | bigint,
   text: string,
   rows: string[][],
-) {
-  await callTelegramApi('sendMessage', {
+): Promise<number | null> {
+  const result = await callTelegramApi('sendMessage', {
     chat_id: Number(chatId),
     text,
     parse_mode: 'HTML',
@@ -148,6 +166,7 @@ export async function sendTelegramReplyKeyboard(
       resize_keyboard: true,
     },
   });
+  return (result?.message_id as number) ?? null;
 }
 
 // Removes the persistent reply keyboard (used once a flow that doesn't have
@@ -201,4 +220,17 @@ export async function createForumTopic(chatId: number | bigint, name: string): P
 
 export async function deleteTelegramMessage(chatId: number | bigint, messageId: number) {
   await callTelegramApi('deleteMessage', { chat_id: Number(chatId), message_id: messageId });
+}
+
+// Bulk delete (Bot API deleteMessages, up to 100 ids per call). Ids that no
+// longer exist or are too old to delete are skipped by Telegram.
+const DELETE_MESSAGES_BATCH = 100;
+
+export async function deleteTelegramMessages(chatId: number | bigint, messageIds: number[]) {
+  for (let i = 0; i < messageIds.length; i += DELETE_MESSAGES_BATCH) {
+    await callTelegramApi('deleteMessages', {
+      chat_id: Number(chatId),
+      message_ids: messageIds.slice(i, i + DELETE_MESSAGES_BATCH),
+    });
+  }
 }

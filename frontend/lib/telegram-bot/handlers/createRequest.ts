@@ -4,6 +4,7 @@ import { createCreativeRequestedNotification } from '@/lib/notifications';
 import { CREATIVE_TYPE_LABELS } from '@/lib/constants';
 import { IDLE_TARGETOLOGIST_KEYBOARD } from '../keyboards';
 import { escapeHtml, formatAlmatyTime } from '../format';
+import { deleteFlowMessages } from '../flowMessages';
 
 interface CreateRequestParams {
   clientId: string;
@@ -15,6 +16,8 @@ interface CreateRequestParams {
   requesterChatId: number;
   briefChatId: number;
   briefMessageIds: number[];
+  // Prompts and answers of the finished flow, wiped once the outcome is known
+  flowMessageIds?: number[];
 }
 
 interface Designer {
@@ -56,8 +59,12 @@ export async function createCreativeRequestAndNotify(
 ): Promise<void> {
   const {
     clientId, clientName, type, description, requestedById, requesterName,
-    requesterChatId, briefChatId, briefMessageIds,
+    requesterChatId, briefChatId, briefMessageIds, flowMessageIds = [],
   } = params;
+
+  // The flow is over whatever happens next — clear its trail first so the
+  // outcome message is what's left in the chat.
+  await deleteFlowMessages(requesterChatId, flowMessageIds);
 
   const typeLabel = CREATIVE_TYPE_LABELS[type] || type;
 
@@ -112,7 +119,9 @@ export async function createCreativeRequestAndNotify(
 
   await sendTelegramReplyKeyboard(
     requesterChatId,
-    `✅ Заявка отправлена: ${escapeHtml(designer.full_name)}`,
+    `✅ Заявка отправлена: ${escapeHtml(designer.full_name)}\n`
+      + `Клиент: <b>${escapeHtml(clientName)}</b> · ${typeLabel}`
+      + (description ? `\n📝 ${escapeHtml(description)}` : ''),
     IDLE_TARGETOLOGIST_KEYBOARD,
   );
 }

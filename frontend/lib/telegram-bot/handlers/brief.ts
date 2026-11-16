@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendTelegramMessage } from '@/lib/telegram';
 import { setBotState, clearBotState, type BotStateRow } from '../state';
 import { createCreativeRequestAndNotify } from './createRequest';
+import { getFlowMessageIds, withFlowMessages } from '../flowMessages';
 import type { TelegramMessage } from '../types';
 import type { BotProfile } from '../profile';
 
@@ -32,7 +33,8 @@ export async function finalizeBrief(
   };
 
   if (!messageIds || messageIds.length === 0) {
-    await sendTelegramMessage(chatId, 'Сначала пришлите бриф — хотя бы одно сообщение.');
+    const hintId = await sendTelegramMessage(chatId, 'Сначала пришлите бриф — хотя бы одно сообщение.');
+    await setBotState(supabase, chatId, 'AWAITING_BRIEF', withFlowMessages(stateRow.context, hintId));
     return;
   }
 
@@ -55,5 +57,6 @@ export async function finalizeBrief(
     requesterChatId: chatId,
     briefChatId: chatId,
     briefMessageIds: messageIds,
+    flowMessageIds: getFlowMessageIds(stateRow.context),
   });
 }
