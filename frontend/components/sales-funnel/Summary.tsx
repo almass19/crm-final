@@ -46,7 +46,7 @@ export default function Summary({ data }: { data: FunnelData }) {
           label="Я заработаю"
           value={fmtMoney(e.total)}
           hint={`фикс ${fmtMoney(e.fix)} + 10% ${fmtMoney(e.percent)} + бонус ${fmtMoney(e.bonus)}${
-            e.next ? ` · до бонуса ${fmtMoney(e.next.bonus)} ещё ${fmtMoney(e.next.from - payment)} оплат` : ''
+            e.next ? ` · до бонуса ${fmtMoney(e.next.bonus)} ещё ${e.next.from - sales} продаж` : ''
           }`}
         />
       ) : (

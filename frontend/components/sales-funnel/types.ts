@@ -1,4 +1,4 @@
-import type { DayValues, SalesPlan, Week } from '@/lib/sales-funnel';
+import type { DayValues, Earnings, SalesPlan, Week } from '@/lib/sales-funnel';
 
 export interface ManagerSummary {
   id: string;
@@ -19,14 +19,6 @@ export interface SoldClient {
   amount: number;
   status: string;
   managerName: string;
-}
-
-export interface Earnings {
-  fix: number;
-  percent: number;
-  bonus: number;
-  total: number;
-  next: { from: number; bonus: number } | null;
 }
 
 export interface FunnelData {

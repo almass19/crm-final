@@ -40,14 +40,18 @@ const PLAN_SHARE: Partial<Record<FunnelField, number>> = {
   contracts: 0.1,
 };
 
-// Pay scheme exactly as the МОП sheets compute it: fixed 100k + 10% of
-// payments + 80k bonus from 1.7M of payments. (The sheet formula also lists
-// 2.1M → 110k, but its IF order never reaches it; confirmed: keep as sheet.)
-// Highest tier reached wins.
+// Pay scheme of the МОП sheets: fixed 100k + 10% of payments + bonus by the
+// number of sales (scale under the funnel in each МОП sheet). Highest tier
+// reached wins.
 export const SALARY_FIX = 100_000;
 export const SALARY_PERCENT = 0.1;
 export const BONUS_TIERS = [
-  { from: 1_700_000, bonus: 80_000 },
+  { from: 17, bonus: 50_000 },
+  { from: 22, bonus: 80_000 },
+  { from: 27, bonus: 110_000 },
+  { from: 32, bonus: 140_000 },
+  { from: 37, bonus: 180_000 },
+  { from: 42, bonus: 234_000 },
 ];
 
 export type DayValues = Partial<Record<FunnelField, number | null>>;
@@ -114,14 +118,22 @@ export function sumDays(days: Record<string, DayValues>, dates: string[], key: F
   return dates.reduce((acc, d) => acc + (Number(days[d]?.[key]) || 0), 0);
 }
 
-export function salesBonus(payment: number): number {
-  return BONUS_TIERS.reduce((acc, t) => (payment >= t.from ? t.bonus : acc), 0);
+export function salesBonus(sales: number): number {
+  return BONUS_TIERS.reduce((acc, t) => (sales >= t.from ? t.bonus : acc), 0);
 }
 
-export function earnings(payment: number) {
+export interface Earnings {
+  fix: number;
+  percent: number;
+  bonus: number;
+  total: number;
+  next: { from: number; bonus: number } | null;
+}
+
+export function earnings(payment: number, sales: number): Earnings {
   const percent = Math.round(payment * SALARY_PERCENT);
-  const bonus = salesBonus(payment);
-  const next = BONUS_TIERS.find((t) => payment < t.from) ?? null;
+  const bonus = salesBonus(sales);
+  const next = BONUS_TIERS.find((t) => sales < t.from) ?? null;
   return { fix: SALARY_FIX, percent, bonus, total: SALARY_FIX + percent + bonus, next };
 }
 

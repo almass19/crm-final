@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
         status: c.status,
         managerName: nameOf.get(c.sold_by_id) || '—',
       })),
-      earnings: selected === 'all' ? null : earnings(payment),
+      earnings: selected === 'all' ? null : earnings(payment, clients.length),
     });
   } catch (e) {
     if (e instanceof NextResponse) return e;
