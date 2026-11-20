@@ -78,7 +78,6 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
   const allDays = data.weeks.flatMap((w) => w.days);
   const fact = (key: FunnelField) => sumDays(data.days, allDays, key);
   const leadsFact = fact('leads');
-  const weekCount = data.weeks.length;
 
   const th = `px-2 py-2 text-xs font-bold whitespace-nowrap ${GRID}`;
   const head = `${th} bg-slate-50 text-slate-500`;
@@ -96,7 +95,7 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
               <th className={head} rowSpan={2}>Конв. %</th>
               <th className={head} rowSpan={2}>Выпол. %</th>
               {data.weeks.map((w) => (
-                <th key={w.n} colSpan={w.days.length + 1} className={`${th} text-center`}>
+                <th key={w.n} colSpan={w.days.length + 2} className={`${th} text-center`}>
                   Неделя {w.n}
                 </th>
               ))}
@@ -113,6 +112,7 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
                     </th>
                   );
                 }),
+                <th key={`p${w.n}`} className={`${th} ${WEEK_TOTAL_BG}`}>План</th>,
                 <th key={`w${w.n}`} className={`${th} ${WEEK_TOTAL_BG}`}>Итог</th>,
               ])}
             </tr>
@@ -123,7 +123,6 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
               const f = fact(row.key);
               const done = p ? f / p : null;
               const conv = row.key === 'leads' || row.money || !leadsFact ? null : f / leadsFact;
-              const weekPlan = p ? p / weekCount : null;
               return (
                 <tr key={row.key}>
                   <td className={`${sticky} ${ROW_BG[row.tone]} ${GRID} px-3 py-1.5 whitespace-nowrap ${LABEL_TEXT[row.tone]}`}>
@@ -137,6 +136,8 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
                   <td className={`${GRID} ${ROW_BG[row.tone]} px-2 text-right tabular-nums font-semibold ${pctClass(done)}`}>{fmtPct(done)}</td>
                   {data.weeks.map((w) => {
                     const wf = sumDays(data.days, w.days, row.key);
+                    // Week plan: month plan split by the number of days in the week.
+                    const weekPlan = p ? (p * w.days.length) / allDays.length : null;
                     const wp = weekPlan ? wf / weekPlan : null;
                     return [
                       ...w.days.map((d) => (
@@ -150,6 +151,9 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
                           />
                         </td>
                       )),
+                      <td key={`p${w.n}`} className={`${GRID} ${WEEK_TOTAL_BG} px-2 text-right tabular-nums text-slate-700 whitespace-nowrap`}>
+                        {weekPlan === null ? '—' : show(Math.round(weekPlan), row.money, '0')}
+                      </td>,
                       <td key={`w${w.n}`} className={`${GRID} ${WEEK_TOTAL_BG} px-2 text-right whitespace-nowrap`}>
                         <div className="tabular-nums font-semibold">{show(wf, row.money, '0')}</div>
                         <div className={`text-[10px] ${pctClass(wp)}`}>{fmtPct(wp)}</div>
