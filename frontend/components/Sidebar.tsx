@@ -263,6 +263,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <NavLink href="/renewals" icon="renewals" label="Продлеваемые" onNavigate={onClose} />
           )}
 
+          {['ADMIN', 'SALES_MANAGER'].includes(user.role || '') && (
+            <NavLink href="/sales-funnel" icon="chart" label="Воронка ОП" onNavigate={onClose} />
+          )}
+
           {['ADMIN', 'TARGETOLOGIST', 'DESIGNER', 'SALES_MANAGER', 'LEAD_DESIGNER'].includes(
             user.role || ''
           ) && <NavLink href="/dashboard" icon="dashboard" label="Мой дашборд" onNavigate={onClose} />}

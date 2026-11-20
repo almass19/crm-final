@@ -214,6 +214,17 @@ export const api = {
   getRenewals: (month: string) =>
     request(`/renewals?month=${month}`),
 
+  // Sales department funnel (ОП)
+  getSalesFunnel: (month: string, managerId?: string) =>
+    request(`/sales-funnel?month=${month}${managerId ? `&managerId=${encodeURIComponent(managerId)}` : ''}`),
+
+  saveSalesFunnelCell: (data: { managerId: string; day: string; field: string; value: number | null }) =>
+    request('/sales-funnel/day', { method: 'PUT', body: JSON.stringify(data) }),
+
+  saveSalesPlan: (data: {
+    month: string; managerId: string; leadsPlan: number; salesPlan: number; avgCheck: number; adBudgetPlan: number;
+  }) => request('/sales-funnel/plan', { method: 'PUT', body: JSON.stringify(data) }),
+
   // Notifications
   getNotifications: () => request('/notifications'),
 
