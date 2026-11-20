@@ -67,7 +67,7 @@ function Cell({ value, editable, money, hidden, onCommit }: {
       onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ''))}
       onBlur={commit}
       onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-      className="w-full min-w-[3rem] bg-transparent hover:bg-white/60 focus:bg-white rounded px-1.5 py-1 text-right tabular-nums outline-none focus:ring-2 focus:ring-primary/40"
+      className="w-full min-w-[3rem] bg-transparent hover:bg-slate-100 focus:bg-white rounded px-1.5 py-1 text-right tabular-nums outline-none focus:ring-2 focus:ring-primary/40"
     />
   );
 }
@@ -81,7 +81,7 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
   const weekCount = data.weeks.length;
 
   const th = `px-2 py-2 text-xs font-bold whitespace-nowrap ${GRID}`;
-  const head = `${th} bg-black text-white uppercase`;
+  const head = `${th} bg-slate-50 text-slate-500`;
   const sticky = 'sticky left-0 z-[1]';
 
   return (
@@ -125,22 +125,22 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
               const conv = row.key === 'leads' || row.money || !leadsFact ? null : f / leadsFact;
               const weekPlan = p ? p / weekCount : null;
               return (
-                <tr key={row.key} className={ROW_BG[row.tone]}>
+                <tr key={row.key}>
                   <td className={`${sticky} ${ROW_BG[row.tone]} ${GRID} px-3 py-1.5 whitespace-nowrap ${LABEL_TEXT[row.tone]}`}>
                     {row.label}
                     {row.source === 'crm' && <span className="ml-1 text-[10px] font-normal text-slate-500">из CRM</span>}
                     {row.source === 'admin' && <span className="ml-1 text-[10px] font-normal text-slate-500">рук.</span>}
                   </td>
-                  <td className={`${GRID} px-2 text-right tabular-nums text-slate-700`}>{p === null ? '—' : show(p, row.money, '0')}</td>
+                  <td className={`${GRID} ${ROW_BG[row.tone]} px-2 text-right tabular-nums text-slate-700`}>{p === null ? '—' : show(p, row.money, '0')}</td>
                   <td className={`${GRID} ${FACT_BG} px-2 text-right tabular-nums font-semibold`}>{show(f, row.money, '0')}</td>
-                  <td className={`${GRID} px-2 text-right tabular-nums text-slate-700`}>{fmtPct(conv)}</td>
-                  <td className={`${GRID} px-2 text-right tabular-nums font-semibold ${pctClass(done)}`}>{fmtPct(done)}</td>
+                  <td className={`${GRID} ${ROW_BG[row.tone]} px-2 text-right tabular-nums text-slate-700`}>{fmtPct(conv)}</td>
+                  <td className={`${GRID} ${ROW_BG[row.tone]} px-2 text-right tabular-nums font-semibold ${pctClass(done)}`}>{fmtPct(done)}</td>
                   {data.weeks.map((w) => {
                     const wf = sumDays(data.days, w.days, row.key);
                     const wp = weekPlan ? wf / weekPlan : null;
                     return [
                       ...w.days.map((d) => (
-                        <td key={d} className={`${GRID} px-1 py-0.5 ${d === data.today ? 'ring-2 ring-inset ring-primary/40' : ''}`}>
+                        <td key={d} className={`${GRID} bg-white px-1 py-0.5 ${d === data.today ? 'ring-2 ring-inset ring-primary/40' : ''}`}>
                           <Cell
                             value={data.days[d]?.[row.key]}
                             editable={canEdit(row, d) && !(row.money && hideMoney)}
