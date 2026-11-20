@@ -43,5 +43,4 @@ export interface FunnelData {
   earnings: Earnings | null;
 }
 
-export const fmtMoney = (n: number): string => `${Math.round(n).toLocaleString('ru-RU')} ₸`;
 export const fmtPct = (n: number | null): string => (n === null || !Number.isFinite(n) ? '—' : `${Math.round(n * 100)}%`);

@@ -11,7 +11,8 @@ import FunnelGrid from '@/components/sales-funnel/FunnelGrid';
 import DayForm from '@/components/sales-funnel/DayForm';
 import Summary from '@/components/sales-funnel/Summary';
 import PlanModal from '@/components/sales-funnel/PlanModal';
-import { FunnelData, ManagerPlan, fmtMoney, fmtPct } from '@/components/sales-funnel/types';
+import { FunnelData, ManagerPlan, fmtPct } from '@/components/sales-funnel/types';
+import { useMoney, usePrivacy } from '@/lib/privacy';
 import { FunnelField, FunnelRow } from '@/lib/sales-funnel';
 
 const MONTH_NAMES = [
@@ -24,6 +25,8 @@ export default function SalesFunnelPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { showToast } = useToast();
+  const fmtMoney = useMoney();
+  const { hideMoney } = usePrivacy();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -145,7 +148,7 @@ export default function SalesFunnelPage() {
             )}
             <Summary data={data} />
             {single && <DayForm data={data} canEdit={canEdit} onSave={saveCell} />}
-            <FunnelGrid data={data} canEdit={canEdit} onSave={(f, d, v) => { saveCell(f, d, v).catch(() => {}); }} />
+            <FunnelGrid data={data} hideMoney={hideMoney} canEdit={canEdit} onSave={(f, d, v) => { saveCell(f, d, v).catch(() => {}); }} />
 
             {isAdmin && !single && data.managers.length > 0 && (
               <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">

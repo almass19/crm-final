@@ -1,7 +1,8 @@
 'use client';
 
 import { planFor, sumDays } from '@/lib/sales-funnel';
-import { FunnelData, fmtMoney, fmtPct } from './types';
+import { useMoney } from '@/lib/privacy';
+import { FunnelData, fmtPct } from './types';
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -15,6 +16,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 
 /** Plan vs fact, pace to the end of the month and (for one manager) earnings. */
 export default function Summary({ data }: { data: FunnelData }) {
+  const fmtMoney = useMoney();
   const plan = planFor(data.plan);
   const allDays = data.weeks.flatMap((w) => w.days);
   const sales = sumDays(data.days, allDays, 'sales');

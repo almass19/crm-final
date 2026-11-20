@@ -8,6 +8,7 @@ const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 interface FunnelGridProps {
   data: FunnelData;
+  hideMoney: boolean;
   canEdit: (row: FunnelRow, day: string) => boolean;
   onSave: (field: FunnelField, day: string, value: number | null) => void;
 }
@@ -24,15 +25,16 @@ function pctClass(p: number | null): string {
   return 'text-red-600';
 }
 
-function Cell({ value, editable, money, onCommit }: {
+function Cell({ value, editable, money, hidden, onCommit }: {
   value: number | null | undefined;
+  hidden?: boolean;
   editable: boolean;
   money?: boolean;
   onCommit: (v: number | null) => void;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   if (!editable) {
-    return <span className="block text-right tabular-nums">{fmt(Number(value) || 0, money)}</span>;
+    return <span className="block text-right tabular-nums">{hidden && value ? '•••' : fmt(Number(value) || 0, money)}</span>;
   }
   const shown = draft ?? (value === null || value === undefined ? '' : String(value));
   const commit = () => {
@@ -55,7 +57,8 @@ function Cell({ value, editable, money, onCommit }: {
   );
 }
 
-export default function FunnelGrid({ data, canEdit, onSave }: FunnelGridProps) {
+export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelGridProps) {
+  const show = (n: number, money?: boolean, zero = ''): string => (money && hideMoney && n ? '•••' : fmt(n, money) || zero);
   const plan = planFor(data.plan);
   const allDays = data.weeks.flatMap((w) => w.days);
   const fact = (key: FunnelField) => sumDays(data.days, allDays, key);
@@ -112,8 +115,8 @@ export default function FunnelGrid({ data, canEdit, onSave }: FunnelGridProps) {
                     {row.source === 'crm' && <span className="ml-1 text-[10px] text-slate-400">из CRM</span>}
                     {row.source === 'admin' && <span className="ml-1 text-[10px] text-slate-400">рук.</span>}
                   </td>
-                  <td className="px-2 text-right tabular-nums text-slate-500">{p === null ? '—' : fmt(p, row.money) || '0'}</td>
-                  <td className="px-2 text-right tabular-nums font-semibold">{fmt(f, row.money) || '0'}</td>
+                  <td className="px-2 text-right tabular-nums text-slate-500">{p === null ? '—' : show(p, row.money, '0')}</td>
+                  <td className="px-2 text-right tabular-nums font-semibold">{show(f, row.money, '0')}</td>
                   <td className="px-2 text-right tabular-nums text-slate-500">{fmtPct(conv)}</td>
                   <td className={`px-2 text-right tabular-nums font-semibold border-r border-slate-200 ${pctClass(done)}`}>{fmtPct(done)}</td>
                   {data.weeks.map((w) => {
@@ -124,14 +127,15 @@ export default function FunnelGrid({ data, canEdit, onSave }: FunnelGridProps) {
                         <td key={d} className={`px-1 py-1 ${d === data.today ? 'bg-primary/5' : ''}`}>
                           <Cell
                             value={data.days[d]?.[row.key]}
-                            editable={canEdit(row, d)}
+                            editable={canEdit(row, d) && !(row.money && hideMoney)}
+                            hidden={row.money && hideMoney}
                             money={row.money}
                             onCommit={(v) => onSave(row.key, d, v)}
                           />
                         </td>
                       )),
                       <td key={`w${w.n}`} className="px-2 bg-slate-50 border-r border-slate-200 text-right whitespace-nowrap">
-                        <div className="tabular-nums font-semibold">{fmt(wf, row.money) || '0'}</div>
+                        <div className="tabular-nums font-semibold">{show(wf, row.money, '0')}</div>
                         <div className={`text-[10px] ${pctClass(wp)}`}>{fmtPct(wp)}</div>
                       </td>,
                     ];
