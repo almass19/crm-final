@@ -15,20 +15,22 @@ export interface FunnelRow {
   label: string;
   source: 'manager' | 'admin' | 'crm';
   money?: boolean;
+  /** Label colour, as in the sheet: green = main funnel, gray = lead quality, pink = money. */
+  tone: 'green' | 'gray' | 'pink';
 }
 
 // Same order and wording as the sheets.
 export const FUNNEL_ROWS: FunnelRow[] = [
-  { key: 'leads', label: 'Кол-во заявок', source: 'manager' },
-  { key: 'adBudget', label: 'Рекламный бюджет', source: 'admin', money: true },
-  { key: 'qualified', label: 'ЦА заявки', source: 'manager' },
-  { key: 'rejected', label: 'Бракованные заявки', source: 'manager' },
-  { key: 'callsSet', label: 'Назначен звонок', source: 'manager' },
-  { key: 'callsDone', label: 'Успешный звонок', source: 'manager' },
-  { key: 'requisites', label: 'Реквизиты', source: 'manager' },
-  { key: 'contracts', label: 'Договор', source: 'manager' },
-  { key: 'sales', label: 'Кол-во продаж', source: 'crm' },
-  { key: 'payment', label: 'Оплата', source: 'crm', money: true },
+  { key: 'leads', label: 'Кол-во заявок', source: 'manager', tone: 'green' },
+  { key: 'adBudget', label: 'Рекламный бюджет', source: 'admin', money: true, tone: 'green' },
+  { key: 'qualified', label: 'ЦА заявки', source: 'manager', tone: 'gray' },
+  { key: 'rejected', label: 'Бракованные заявки', source: 'manager', tone: 'gray' },
+  { key: 'callsSet', label: 'Назначен звонок', source: 'manager', tone: 'green' },
+  { key: 'callsDone', label: 'Успешный звонок', source: 'manager', tone: 'green' },
+  { key: 'requisites', label: 'Реквизиты', source: 'manager', tone: 'green' },
+  { key: 'contracts', label: 'Договор', source: 'manager', tone: 'green' },
+  { key: 'sales', label: 'Кол-во продаж', source: 'crm', tone: 'green' },
+  { key: 'payment', label: 'Оплата', source: 'crm', money: true, tone: 'pink' },
 ];
 
 // Plan shares of leads, as in the МОП sheets (B7 = B5*0.4, B9 = B5*25% …).

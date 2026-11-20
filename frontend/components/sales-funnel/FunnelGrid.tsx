@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { FUNNEL_ROWS, FunnelField, FunnelRow, planFor, sumDays } from '@/lib/sales-funnel';
 import { FunnelData, fmtPct } from './types';
 
+// Label colours of the ОП sheet (Google Sheets light green 3 / light gray 2 / light red 3).
+const TONE: Record<FunnelRow['tone'], string> = {
+  green: 'bg-[#d9ead3] text-slate-900 font-semibold',
+  gray: 'bg-[#e3e3e3] text-slate-600 text-xs',
+  pink: 'bg-[#f4cccc] text-slate-900',
+};
+
 const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 interface FunnelGridProps {
@@ -110,10 +117,10 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
               const weekPlan = p ? p / weekCount : null;
               return (
                 <tr key={row.key} className="hover:bg-slate-50/60">
-                  <td className={`${sticky} px-3 py-1.5 font-medium text-slate-800 whitespace-nowrap`}>
+                  <td className={`sticky left-0 z-[1] px-3 py-1.5 whitespace-nowrap border-r border-white ${TONE[row.tone]}`}>
                     {row.label}
-                    {row.source === 'crm' && <span className="ml-1 text-[10px] text-slate-400">из CRM</span>}
-                    {row.source === 'admin' && <span className="ml-1 text-[10px] text-slate-400">рук.</span>}
+                    {row.source === 'crm' && <span className="ml-1 text-[10px] font-normal text-slate-500">из CRM</span>}
+                    {row.source === 'admin' && <span className="ml-1 text-[10px] font-normal text-slate-500">рук.</span>}
                   </td>
                   <td className="px-2 text-right tabular-nums text-slate-500">{p === null ? '—' : show(p, row.money, '0')}</td>
                   <td className="px-2 text-right tabular-nums font-semibold">{show(f, row.money, '0')}</td>
