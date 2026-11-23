@@ -221,6 +221,9 @@ export const api = {
   saveSalesFunnelCell: (data: { managerId: string; day: string; field: string; value: number | null }) =>
     request('/sales-funnel/day', { method: 'PUT', body: JSON.stringify(data) }),
 
+  getTargetologistReport: (q: { period: string; year: number; month: number; personId: string }) =>
+    request(`/targetologist-report?period=${q.period}&year=${q.year}&month=${q.month}&personId=${encodeURIComponent(q.personId)}`),
+
   saveSalesPlan: (data: {
     month: string; managerId: string; leadsPlan: number; salesPlan: number; avgCheck: number; adBudgetPlan: number;
   }) => request('/sales-funnel/plan', { method: 'PUT', body: JSON.stringify(data) }),

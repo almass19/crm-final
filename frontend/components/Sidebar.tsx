@@ -279,6 +279,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               {user.role === 'ADMIN' && (
                 <>
                   <NavLink href="/admin-dashboard" icon="chart" label="Дашборды" onNavigate={onClose} />
+                  <NavLink href="/targetologist-report" icon="chart" label="Аналитика таргета" onNavigate={onClose} />
                   <NavLink href="/users" icon="users" label="Пользователи" onNavigate={onClose} />
                 </>
               )}
