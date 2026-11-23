@@ -216,7 +216,7 @@ function countFunnel(clients: ReportClient[], payments: RenewalPayment[], bucket
 }
 
 /** New + renewal payments per month — the base the retention plan is measured against. */
-function payingByMonth(clients: ReportClient[], payments: RenewalPayment[]): Map<string, number> {
+export function payingByMonth(clients: ReportClient[], payments: RenewalPayment[]): Map<string, number> {
   const out = new Map<string, number>();
   const add = (ym: string | null | undefined) => {
     if (ym) out.set(ym, (out.get(ym) || 0) + 1);

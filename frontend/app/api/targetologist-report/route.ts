@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireRoles } from '@/lib/supabase/auth-helpers';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 import {
   HIDDEN_PROFILE_IDS, Period, RenewalPayment, ReportClient, cohortMonths, cohortTotals, cohorts,
   displayName, periodBuckets, periodMonths, summarize, teamSummary,
 } from '@/lib/targetologist-report';
 
 const ALMATY_OFFSET_MS = 5 * 3_600_000;
-const PAGE = 1000;
 const PERIODS: Period[] = ['month', 'quarter', 'year'];
-
-// PostgREST caps a response at 1000 rows, so long tables are read page by page.
-async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
-  const out: T[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await page(from, from + PAGE - 1);
-    if (error) throw error;
-    out.push(...(data || []));
-    if (!data || data.length < PAGE) return out;
-  }
-}
 
 /**
  * GET /api/targetologist-report?period=month|quarter|year&year=YYYY&month=M&personId=<id|all>

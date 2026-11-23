@@ -221,6 +221,8 @@ export const api = {
   saveSalesFunnelCell: (data: { managerId: string; day: string; field: string; value: number | null }) =>
     request('/sales-funnel/day', { method: 'PUT', body: JSON.stringify(data) }),
 
+  getYearPlan: (year: number) => request(`/year-plan?year=${year}`),
+
   getTargetologistReport: (q: { period: string; year: number; month: number; personId: string }) =>
     request(`/targetologist-report?period=${q.period}&year=${q.year}&month=${q.month}&personId=${encodeURIComponent(q.personId)}`),
 
