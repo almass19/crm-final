@@ -4,6 +4,9 @@ export interface PersonRow {
   id: string;
   name: string;
   active: number;
+  inWork: number;
+  renewal: number;
+  paused: number;
   newCount: number;
   due: number;
   renewed: number;

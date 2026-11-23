@@ -4,7 +4,7 @@ import { RETENTION_TARGET } from '@/lib/targetologist-report';
 import { useMoney } from '@/lib/privacy';
 import { CELL, HEAD, PersonRow, fmtPct, retentionBg } from './types';
 
-const COLS = ['Таргетолог', 'Активных', 'Новых', 'Подошло к продлению', 'Продлили', 'Ушли', 'Удержание по сроку', 'Заработок'];
+const COLS = ['Таргетолог', 'Активных', 'В работе', 'Продление', 'Пауза', 'Новых', 'Подошло к продлению', 'Продлили', 'Ушли', 'Удержание по сроку', 'Заработок'];
 
 interface RankingProps {
   people: PersonRow[];
@@ -31,7 +31,10 @@ export default function Ranking({ people, onPick }: RankingProps) {
               title="Открыть отчёт таргетолога"
             >
               <td className={`${CELL} text-center font-bold min-w-[220px]`}>{p.name}</td>
-              <td className={`${CELL} text-center`}>{p.active}</td>
+              <td className={`${CELL} text-center font-semibold`}>{p.active}</td>
+              <td className={`${CELL} text-center text-slate-600`}>{p.inWork}</td>
+              <td className={`${CELL} text-center text-slate-600`}>{p.renewal}</td>
+              <td className={`${CELL} text-center text-slate-600`}>{p.paused}</td>
               <td className={`${CELL} text-center`}>{p.newCount}</td>
               <td className={`${CELL} text-center`}>{p.due}</td>
               <td className={`${CELL} text-center`}>{p.renewed}</td>

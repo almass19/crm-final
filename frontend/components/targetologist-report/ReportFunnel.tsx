@@ -14,6 +14,7 @@ interface Row {
   buckets?: Value[];
   kind?: 'pct' | 'money';
   bold?: boolean;
+  sub?: boolean;
 }
 
 function ratioList(a: number[], b: number[]): Value[] {
@@ -25,7 +26,11 @@ function buildRows(data: ReportData): Row[] {
   const w = (k: FunnelKey) => s.weekly[k];
   const done = (fact: number, plan: number) => (plan ? fact / plan : null);
   return [
-    { label: 'Активных проектов (сейчас)', plan: s.activePlan, fact: s.active },
+    { label: 'Активных проектов (сейчас)', plan: s.activePlan, fact: s.active, bold: true },
+    { label: '— в работе (ведение)', plan: 'none', fact: s.activeByStatus.inWork, sub: true },
+    { label: '— в статусе продления', plan: 'none', fact: s.activeByStatus.renewal, sub: true },
+    { label: '— на паузе', plan: 'none', fact: s.activeByStatus.paused, sub: true },
+    { label: '— ещё не запущены (новый, назначен, брифинг, настройка)', plan: 'none', fact: s.activeByStatus.starting, sub: true },
     { label: 'Новых проектов взято', plan: 'none', fact: s.totals.new, buckets: w('new') },
     { label: 'Запущено (дата запуска)', plan: 'none', fact: s.totals.launched, buckets: w('launched') },
     { label: 'Подошло к продлению', plan: 'none', fact: s.totals.due, buckets: w('due') },
@@ -36,7 +41,6 @@ function buildRows(data: ReportData): Row[] {
     { label: 'Удержание к прошлому месяцу (как в плане)', plan: RETENTION_TARGET, fact: s.retPlan, kind: 'pct', bold: true },
     { label: 'Заработок: новые проекты', plan: 'none', fact: s.earnNew, kind: 'money' },
     { label: 'Заработок: продления', plan: 'none', fact: s.earnRenewal, kind: 'money' },
-    { label: 'Премия за удержание (+2 000 ₸ за продление при цели)', plan: 'none', fact: s.bonus, kind: 'money' },
     { label: 'ЗАРАБОТОК ИТОГО', plan: s.earnPlan, fact: s.earnTotal, kind: 'money', bold: true },
   ];
 }
@@ -67,7 +71,7 @@ export default function ReportFunnel({ data }: { data: ReportData }) {
         <tbody>
           {buildRows(data).map((r) => (
             <tr key={r.label} className="hover:brightness-[0.97]">
-              <td className={`${CELL} sticky left-0 z-[1] bg-white text-center ${r.bold ? 'font-bold' : ''}`}>{r.label}</td>
+              <td className={`${CELL} sticky left-0 z-[1] ${r.sub ? 'bg-slate-50 text-slate-600 text-xs text-left pl-8' : 'bg-white text-center'} ${r.bold ? 'font-bold' : ''}`}>{r.label}</td>
               <td className={`${CELL} ${PLAN_BG} text-center`}>{show(r.plan, r.kind)}</td>
               <td className={`${CELL} ${FACT_BG} text-center font-semibold ${r.kind === 'pct' ? retentionBg(r.fact, RETENTION_TARGET) : ''}`}>
                 {show(r.fact, r.kind)}

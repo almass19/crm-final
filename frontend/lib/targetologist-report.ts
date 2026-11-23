@@ -12,7 +12,16 @@ export const PERIOD_DAYS = 30;
 const EARLY_DAYS = 10;
 const LATE_DAYS = 14;
 
-export const ACTIVE_STATUSES = ['IN_WORK', 'ASSIGNED', 'RENEWAL', 'ONBOARDING', 'PAUSED', 'NEW'];
+export const ACTIVE_STATUSES = ['IN_WORK', 'ASSIGNED', 'RENEWAL', 'ONBOARDING', 'SETUP', 'PAUSED', 'NEW'];
+
+// How the active projects split by CRM status; «starting» = not launched yet.
+export const ACTIVE_GROUPS = {
+  inWork: ['IN_WORK'],
+  renewal: ['RENEWAL'],
+  paused: ['PAUSED'],
+  starting: ['NEW', 'ASSIGNED', 'ONBOARDING', 'SETUP'],
+} as const;
+export type ActiveGroup = keyof typeof ACTIVE_GROUPS;
 
 export const ACTIVE_NORM = 25; // active projects per targetologist
 export const RETENTION_TARGET = 0.35;
@@ -20,7 +29,6 @@ export const RATE_NEW = 10_000;
 export const RATE_NEW_100_EXTRA = 3_000;
 export const RATE_RENEWAL = 14_000;
 export const RATE_RENEWAL_100 = 16_000;
-export const BONUS_PER_RENEWAL = 2_000;
 const BIG_CHECK = 100_000;
 
 // Not shown in the report at all (their clients are left out of the totals too).
@@ -75,6 +83,7 @@ export type Weekly = Record<FunnelKey, number[]>;
 
 export interface Summary {
   active: number;
+  activeByStatus: Record<ActiveGroup, number>;
   activePlan: number;
   totals: Record<FunnelKey, number>;
   weekly: Weekly;
@@ -85,7 +94,6 @@ export interface Summary {
   retPlan: number | null;
   earnNew: number;
   earnRenewal: number;
-  bonus: number;
   earnTotal: number;
   earnPlan: number;
 }
@@ -253,10 +261,15 @@ export function summarize(
   const renewedPlan = Math.round(prevPaying * RETENTION_TARGET);
   const retPlan = ratio(totals.renewed, prevPaying);
   const [earnNew, earnRenewal] = earningsFor(clients, payments, months);
-  const bonus = retPlan !== null && retPlan >= RETENTION_TARGET ? totals.renewed * BONUS_PER_RENEWAL : 0;
+  const activeClients = clients.filter(isActive);
 
   return {
-    active: clients.filter(isActive).length,
+    active: activeClients.length,
+    activeByStatus: Object.fromEntries(
+      (Object.keys(ACTIVE_GROUPS) as ActiveGroup[]).map((g) => [
+        g, activeClients.filter((c) => (ACTIVE_GROUPS[g] as readonly string[]).includes(c.status || '')).length,
+      ]),
+    ) as Record<ActiveGroup, number>,
     activePlan: ACTIVE_NORM * people,
     totals,
     weekly,
@@ -267,8 +280,7 @@ export function summarize(
     retPlan,
     earnNew,
     earnRenewal,
-    bonus,
-    earnTotal: earnNew + earnRenewal + bonus,
+    earnTotal: earnNew + earnRenewal,
     earnPlan: renewedPlan * RATE_RENEWAL_100 + earnNew,
   };
 }
@@ -351,20 +363,16 @@ export function cohortTotals(rows: Cohort[]): Omit<Cohort, 'ym' | 'label'> {
 }
 
 /**
- * Team view, as in the sheet's «Общая аналитика»: plans, the retention bonus
- * and earnings are sums of the people, not recomputed on the team total
- * (each targetologist earns the bonus only for reaching their own target).
+ * Team view, as in the sheet's «Общая аналитика»: plans are sums of the
+ * people (each rounded on its own), not recomputed on the team total.
  */
 export function teamSummary(team: Summary, people: Summary[]): Summary {
   const sum = (f: (s: Summary) => number) => people.reduce((a, s) => a + f(s), 0);
   const renewedPlan = sum((s) => s.renewedPlan);
-  const bonus = sum((s) => s.bonus);
   return {
     ...team,
     renewedPlan,
     lostPlan: Math.max(0, team.totals.due - renewedPlan),
-    bonus,
-    earnTotal: team.earnNew + team.earnRenewal + bonus,
     earnPlan: sum((s) => s.earnPlan),
   };
 }
