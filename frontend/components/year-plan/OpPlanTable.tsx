@@ -1,91 +1,80 @@
 'use client';
 
 import { useMoney } from '@/lib/privacy';
-import { CELL, FACT_BG, HEAD, MonthCell, PLAN_BG, TOTAL_BG, YearPlanData, doneBg, num, pct, ratio } from './shared';
-
-const COLS = [
-  'Месяц', 'МОПов (план)', 'ПЛАН: заявок', 'ПЛАН: продаж', 'ПЛАН: конверсия', 'ПЛАН: средний чек', 'ПЛАН: выручка',
-  'ПЛАН: реклама ОП', 'ФАКТ: заявок', 'ФАКТ: продаж', 'ФАКТ: конверсия', 'ФАКТ: средний чек', 'ФАКТ: выручка',
-  'Выполнение: продажи', 'Выполнение: выручка',
-];
+import { PLAN_YEAR } from '@/lib/year-plan';
+import PairTable from './PairTable';
+import { YearPlanData, num, pct, ratio } from './shared';
 
 export default function OpPlanTable({ data }: { data: YearPlanData }) {
   const money = useMoney();
-  const m = (v: number | null | undefined) => (v === null || v === undefined ? '' : money(Math.round(v)));
+  const m = (v: number) => money(Math.round(v));
   // 2026 December has only a targetologist plan — no ОП sheet.
   const opPlan = (ym: string) => (data.plan[ym]?.sales ? data.plan[ym] : undefined);
   const plans = data.months.map(opPlan).filter((p): p is NonNullable<typeof p> => !!p);
   const facts = data.months.map((ym) => data.op[ym]).filter(Boolean);
   const sum = <T,>(rows: T[], f: (r: T) => number) => rows.reduce((a, r) => a + f(r), 0);
+  const hasPlan = plans.length > 0;
   const P = {
     leads: sum(plans, (p) => p.leads), sales: sum(plans, (p) => p.sales),
     revenue: sum(plans, (p) => p.revenue), ad: sum(plans, (p) => p.adBudget),
   };
   const F = { leads: sum(facts, (f) => f.leads), sales: sum(facts, (f) => f.sales), revenue: sum(facts, (f) => f.revenue) };
-  // Completion of the year only over months that already have a fact.
-  const planSoFar = (f: (p: (typeof plans)[number]) => number) =>
-    sum(data.months.map((ym) => (data.op[ym] ? opPlan(ym) : undefined)).filter((p): p is NonNullable<typeof p> => !!p), f);
-  const hasPlan = plans.length > 0;
+  // Year completion only over months that already have a fact.
+  const doneSoFar = (fact: number, f: (p: (typeof plans)[number]) => number) => {
+    const planned = data.months.map((ym) => (data.op[ym] ? opPlan(ym) : undefined)).filter((p): p is NonNullable<typeof p> => !!p);
+    return ratio(fact, sum(planned, f));
+  };
+  const orNull = (v: number) => (hasPlan ? v : null);
+  const fromSheet = (ym: string) => !!data.sheetFactUntil && ym.startsWith('2026') && ym <= data.sheetFactUntil;
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-      <table className="min-w-full text-sm border-collapse text-slate-900">
-        <thead><tr>{COLS.map((c) => <th key={c} className={`${HEAD} min-w-[84px]`}>{c}</th>)}</tr></thead>
-        <tbody>
-          {data.months.map((ym) => {
-            const p = opPlan(ym);
-            const f = data.op[ym];
-            const fromSheet = !!data.sheetFactUntil && ym <= data.sheetFactUntil && ym.startsWith('2026');
-            return (
-              <tr key={ym}>
-                <MonthCell ym={ym} currentYm={data.currentYm} />
-                <td className={`${CELL} bg-[#fff2cc]`}>{p ? p.mops : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG}`}>{p ? num(p.leads) : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG} font-bold`}>{p ? num(p.sales) : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG}`}>{p ? pct(p.conv) : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG}`}>{p ? m(p.check) : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG} font-bold`}>{p ? m(p.revenue) : '—'}</td>
-                <td className={`${CELL} ${PLAN_BG}`}>{p ? m(p.adBudget) : '—'}</td>
-                <td className={`${CELL} ${FACT_BG}`} title={fromSheet ? 'Из таблицы «Отчет по месяцам»' : 'Из CRM'}>{f ? num(f.leads) : ''}</td>
-                <td className={`${CELL} ${FACT_BG} font-bold`}>{f ? num(f.sales) : ''}</td>
-                <td className={`${CELL} ${FACT_BG}`}>{f ? pct(ratio(f.sales, f.leads)) : ''}</td>
-                <td className={`${CELL} ${FACT_BG}`}>{f && f.sales ? m(f.revenue / f.sales) : ''}</td>
-                <td className={`${CELL} ${FACT_BG} font-bold`}>{f ? m(f.revenue) : ''}</td>
-                <td className={`${CELL} font-semibold ${f && p ? doneBg(ratio(f.sales, p.sales)) : ''}`}>{f && p ? pct(ratio(f.sales, p.sales)) : ''}</td>
-                <td className={`${CELL} font-semibold ${f && p ? doneBg(ratio(f.revenue, p.revenue)) : ''}`}>{f && p ? pct(ratio(f.revenue, p.revenue)) : ''}</td>
-              </tr>
-            );
-          })}
-          <tr className={TOTAL_BG}>
-            <td className={CELL}>{data.year}</td>
-            <td className={CELL}>{hasPlan ? Math.max(...plans.map((p) => p.mops)) : '—'}</td>
-            <td className={CELL}>{hasPlan ? num(P.leads) : '—'}</td>
-            <td className={CELL}>{hasPlan ? num(P.sales) : '—'}</td>
-            <td className={CELL}>{hasPlan ? pct(ratio(P.sales, P.leads)) : '—'}</td>
-            <td className={CELL}>{hasPlan ? m(P.revenue / P.sales) : '—'}</td>
-            <td className={CELL}>{hasPlan ? m(P.revenue) : '—'}</td>
-            <td className={CELL}>{hasPlan ? m(P.ad) : '—'}</td>
-            <td className={CELL}>{num(F.leads)}</td>
-            <td className={CELL}>{num(F.sales)}</td>
-            <td className={CELL}>{pct(ratio(F.sales, F.leads))}</td>
-            <td className={CELL}>{F.sales ? m(F.revenue / F.sales) : ''}</td>
-            <td className={CELL}>{m(F.revenue)}</td>
-            <td className={`${CELL} ${doneBg(ratio(F.sales, planSoFar((p) => p.sales)))}`}>{pct(ratio(F.sales, planSoFar((p) => p.sales)))}</td>
-            <td className={`${CELL} ${doneBg(ratio(F.revenue, planSoFar((p) => p.revenue)))}`}>{pct(ratio(F.revenue, planSoFar((p) => p.revenue)))}</td>
-          </tr>
-        </tbody>
-      </table>
-      {hasPlan && (
-        <div className="px-5 py-4 text-sm text-slate-600 space-y-1">
-          <p><b>Контроль:</b> реклама на одну продажу (план) — {m(P.ad / P.sales)}; продаж на МОПа в среднем (план) — {(P.sales / (plans.reduce((a, p) => a + p.mops, 0))).toFixed(1)} в месяц.</p>
+    <div className="space-y-3">
+      <PairTable
+        data={data}
+        before={[{ label: 'МОПов (план)', value: (ym) => opPlan(ym)?.mops, total: hasPlan ? Math.max(...plans.map((p) => p.mops)) : null, fmt: num, kind: 'input' }]}
+        pairs={[
+          {
+            label: 'Заявки', plan: (ym) => opPlan(ym)?.leads, fact: (ym) => data.op[ym]?.leads,
+            planTotal: orNull(P.leads), factTotal: F.leads, fmt: num, graded: true, doneTotal: doneSoFar(F.leads, (p) => p.leads),
+            factTitle: (ym) => (data.op[ym] ? (fromSheet(ym) ? 'Из таблицы «Отчет по месяцам»' : 'Из CRM («Воронка ОП»)') : undefined),
+          },
+          {
+            label: 'Продажи', plan: (ym) => opPlan(ym)?.sales, fact: (ym) => data.op[ym]?.sales,
+            planTotal: orNull(P.sales), factTotal: F.sales, fmt: num, graded: true, bold: true, doneTotal: doneSoFar(F.sales, (p) => p.sales),
+          },
+          {
+            label: 'Конверсия', plan: (ym) => opPlan(ym)?.conv,
+            fact: (ym) => (data.op[ym] ? ratio(data.op[ym].sales, data.op[ym].leads) : null),
+            planTotal: hasPlan ? ratio(P.sales, P.leads) : null, factTotal: ratio(F.sales, F.leads), fmt: pct,
+          },
+          {
+            label: 'Средний чек', plan: (ym) => opPlan(ym)?.check,
+            fact: (ym) => (data.op[ym]?.sales ? data.op[ym].revenue / data.op[ym].sales : null),
+            planTotal: hasPlan ? P.revenue / P.sales : null, factTotal: F.sales ? F.revenue / F.sales : null, fmt: m,
+          },
+          {
+            label: 'Выручка', plan: (ym) => opPlan(ym)?.revenue, fact: (ym) => data.op[ym]?.revenue,
+            planTotal: orNull(P.revenue), factTotal: F.revenue, fmt: m, graded: true, bold: true, doneTotal: doneSoFar(F.revenue, (p) => p.revenue),
+          },
+        ]}
+        after={[{ label: 'Реклама ОП (план)', value: (ym) => opPlan(ym)?.adBudget, total: orNull(P.ad), fmt: m, kind: 'plan' }]}
+      />
+      <div className="px-1 text-sm text-slate-600 space-y-1">
+        <p className="text-xs text-slate-500">
+          Цвет факта — выполнение плана: зелёный ≥ 100%, жёлтый 80–99%, красный ниже. Итог года сравнивается с планом только прошедших месяцев.
+        </p>
+        {hasPlan && (
+          <p><b>Контроль:</b> реклама на одну продажу (план) — {m(P.ad / P.sales)}; продаж на МОПа в среднем (план) — {(P.sales / sum(plans, (p) => p.mops)).toFixed(1)} в месяц.</p>
+        )}
+        {data.year === PLAN_YEAR && (
           <p className="text-xs text-slate-500">Найм: 6-й МОП в январе (продаёт с апреля), 7-й — в августе под сентябрь. Летом отдел не сокращать.</p>
-          {data.year === 2026 ? (
-            <p className="text-xs text-slate-500">2026: план и факт по январь–октябрь — из таблиц «Отчет по месяцам» (сумма листов МОПов). С ноября факт — из CRM: заявки из «Воронки ОП», продажи и выручка из карточек клиентов менеджеров по продажам.</p>
-          ) : (
-            <p className="text-xs text-slate-500">Факт: заявки — из «Воронки ОП», продажи и выручка — из карточек клиентов, только у менеджеров по продажам (продажи таргетологов и админов не попадают).</p>
-          )}
-        </div>
-      )}
-    </section>
+        )}
+        <p className="text-xs text-slate-500">
+          {data.year === 2026
+            ? '2026: план и факт по январь–октябрь — из таблиц «Отчет по месяцам» (сумма листов МОПов). С ноября факт — из CRM: заявки из «Воронки ОП», продажи и выручка из карточек клиентов менеджеров по продажам.'
+            : 'Факт: заявки — из «Воронки ОП», продажи и выручка — из карточек клиентов, только у менеджеров по продажам (продажи таргетологов и админов не попадают).'}
+        </p>
+      </div>
+    </div>
   );
 }
