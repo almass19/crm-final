@@ -10,6 +10,9 @@ import AppShell from '@/components/AppShell';
 import NotificationBell from '@/components/NotificationBell';
 import StatusBadge from '@/components/StatusBadge';
 import { useToast } from '@/components/Toast';
+import DailyCheckButton from '@/components/daily-check/DailyCheckButton';
+import DailyCheckModal from '@/components/daily-check/DailyCheckModal';
+import { DailyCheck, almatyToday } from '@/lib/daily-checks';
 
 interface Client {
   id: string;
@@ -120,6 +123,17 @@ export default function ClientsPage() {
   const [designerFilter, setDesignerFilter] = useState('');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [urlInitialized, setUrlInitialized] = useState(false);
+  // Admin's daily check per client (today) and the client whose check popup is open
+  const [todayChecks, setTodayChecks] = useState<Record<string, DailyCheck>>({});
+  const [checkClient, setCheckClient] = useState<{ id: string; name: string } | null>(null);
+
+  const isAdminUser = user?.role === 'ADMIN';
+  useEffect(() => {
+    if (!isAdminUser) return;
+    api.getDailyChecks(almatyToday())
+      .then((res: { checks: DailyCheck[] }) => setTodayChecks(Object.fromEntries(res.checks.map((c) => [c.clientId, c]))))
+      .catch(() => showToast('Не удалось загрузить отметки за сегодня', 'error'));
+  }, [isAdminUser, showToast]);
 
   // Initialize filters from URL on first client render
   useEffect(() => {
@@ -543,7 +557,7 @@ export default function ClientsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isAdmin
-                    ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Контроль', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
@@ -590,7 +604,7 @@ export default function ClientsPage() {
               <thead className="bg-slate-50">
                 <tr>
                   {(isAdmin
-                    ? ['Компания', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
+                    ? ['Компания', 'Контроль', 'Дизайнер', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска', 'Специалист']
                     : isSalesManager
                     ? ['Компания', 'Телефон', 'Статус', 'Сумма', 'Дата покупки', 'Дата запуска']
                     : isLeadDesigner
@@ -692,6 +706,14 @@ export default function ClientsPage() {
                           </div>
                         </div>
                       </td>
+                      {isAdmin && (
+                        <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <DailyCheckButton
+                            check={todayChecks[client.id]}
+                            onOpen={() => setCheckClient({ id: client.id, name: client.companyName || client.fullName || 'Клиент' })}
+                          />
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                         {(isAdmin || isLeadDesigner) ? (client.designer?.fullName || '—') : client.phone}
                       </td>
@@ -773,6 +795,18 @@ export default function ClientsPage() {
             );
           })}
         </div>
+      )}
+
+      {checkClient && (
+        <DailyCheckModal
+          clientId={checkClient.id}
+          clientName={checkClient.name}
+          onClose={() => setCheckClient(null)}
+          onSaved={(check) => {
+            if (check.day === almatyToday()) setTodayChecks((prev) => ({ ...prev, [check.clientId]: check }));
+            showToast('Отметка сохранена');
+          }}
+        />
       )}
 
       {showCreateModal && (

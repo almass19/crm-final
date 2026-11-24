@@ -4,7 +4,7 @@ import { requireRoles } from '@/lib/supabase/auth-helpers';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import {
   HIDDEN_PROFILE_IDS, Period, RenewalPayment, ReportClient, cohortMonths, cohortTotals, cohorts,
-  displayName, periodBuckets, periodMonths, summarize, teamSummary,
+  CheckEntry, displayName, periodBuckets, periodMonths, qualityCounts, summarize, teamSummary,
 } from '@/lib/targetologist-report';
 
 const ALMATY_OFFSET_MS = 5 * 3_600_000;
@@ -54,6 +54,17 @@ export async function GET(request: NextRequest) {
     const today = new Date(Date.now() + ALMATY_OFFSET_MS).toISOString().slice(0, 10);
     const months = periodMonths(period, year, month);
     const buckets = periodBuckets(months);
+
+    // Project manager's daily checks in the period, by the targetologist of that day.
+    const checks = (await fetchAll<CheckEntry>((a, b) => supabase
+      .from('client_daily_checks')
+      .select('day, targetologist_id, complaint, slow_reply, overdue')
+      .gte('day', buckets[0].start)
+      .lte('day', buckets[buckets.length - 1].end)
+      .order('day')
+      .order('client_id')
+      .range(a, b))).filter((c) => c.targetologist_id && !hidden.has(c.targetologist_id));
+    const checksOf = (ids: Set<string>) => checks.filter((c) => ids.has(c.targetologist_id as string));
     const cohortRange = cohortMonths(period, months, today.slice(0, 7));
 
     // People: anyone with an active client or with sales/renewals in the period.
@@ -71,8 +82,14 @@ export async function GET(request: NextRequest) {
 
     const people = Array.from(byPerson.entries())
       .filter(([uid]) => nameOf.has(uid))
-      .map(([uid, g]) => ({ id: uid, name: nameOf.get(uid) as string, ...summarize(g.clients, g.payments, months, buckets, today, 1) }))
-      .filter((p) => p.active > 0 || p.totals.new > 0 || p.totals.renewed > 0 || p.totals.due > 0)
+      .map(([uid, g]) => ({
+        id: uid,
+        name: nameOf.get(uid) as string,
+        ...summarize(g.clients, g.payments, months, buckets, today, 1),
+        quality: qualityCounts(checksOf(new Set([uid])), buckets).totals,
+      }))
+      .filter((p) => p.active > 0 || p.totals.new > 0 || p.totals.renewed > 0 || p.totals.due > 0
+        || p.quality.complaint + p.quality.slowReply + p.quality.overdue > 0)
       .sort((a, b) => b.active - a.active || a.name.localeCompare(b.name));
 
     const selected = personId !== 'all' && byPerson.has(personId) ? personId : 'all';
@@ -86,6 +103,7 @@ export async function GET(request: NextRequest) {
     const groupPayments = group.payments;
 
     const cohortRows = cohorts(group.clients, groupPayments, cohortRange, today);
+    const quality = qualityCounts(checksOf(selected === 'all' ? shown : new Set([selected])), buckets);
 
     return NextResponse.json({
       period,
@@ -96,6 +114,7 @@ export async function GET(request: NextRequest) {
       summary: selected === 'all'
         ? teamSummary(summarize(group.clients, groupPayments, months, buckets, today, people.length), people)
         : summarize(group.clients, groupPayments, months, buckets, today, 1),
+      quality,
       people: people.map((p) => ({
         id: p.id,
         name: p.name,
@@ -108,7 +127,9 @@ export async function GET(request: NextRequest) {
         renewed: p.totals.renewed,
         lost: p.totals.lost,
         retDue: p.retDue,
-        earnTotal: p.earnTotal,
+        complaints: p.quality.complaint,
+        slowReplies: p.quality.slowReply,
+        overdue: p.quality.overdue,
       })),
       cohorts: cohortRows,
       cohortTotals: cohortTotals(cohortRows),

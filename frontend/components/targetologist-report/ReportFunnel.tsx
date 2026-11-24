@@ -1,7 +1,6 @@
 'use client';
 
 import { FunnelKey, RETENTION_TARGET } from '@/lib/targetologist-report';
-import { useMoney } from '@/lib/privacy';
 import { CELL, FACT_BG, GREY_BG, HEAD, PLAN_BG, ReportData, fmtPct, retentionBg } from './types';
 
 type Value = number | null;
@@ -12,7 +11,7 @@ interface Row {
   fact: Value;
   done?: Value;
   buckets?: Value[];
-  kind?: 'pct' | 'money';
+  kind?: 'pct' | 'bad';
   bold?: boolean;
   sub?: boolean;
 }
@@ -23,6 +22,7 @@ function ratioList(a: number[], b: number[]): Value[] {
 
 function buildRows(data: ReportData): Row[] {
   const s = data.summary;
+  const q = data.quality;
   const w = (k: FunnelKey) => s.weekly[k];
   const done = (fact: number, plan: number) => (plan ? fact / plan : null);
   return [
@@ -39,20 +39,22 @@ function buildRows(data: ReportData): Row[] {
     { label: 'Срок прошёл, ждём оплату', plan: 'none', fact: s.totals.waiting, buckets: w('waiting') },
     { label: 'Удержание по сроку (продлили ÷ подошло)', plan: RETENTION_TARGET, fact: s.retDue, buckets: ratioList(w('renewed'), w('due')), kind: 'pct' },
     { label: 'Удержание к прошлому месяцу (как в плане)', plan: RETENTION_TARGET, fact: s.retPlan, kind: 'pct', bold: true },
-    { label: 'Заработок: новые проекты', plan: 'none', fact: s.earnNew, kind: 'money' },
-    { label: 'Заработок: продления', plan: 'none', fact: s.earnRenewal, kind: 'money' },
-    { label: 'ЗАРАБОТОК ИТОГО', plan: s.earnPlan, fact: s.earnTotal, kind: 'money', bold: true },
+    // From the project manager's daily checks (clients list → «Контроль»). Target is zero.
+    { label: 'Жалобы клиентов', plan: 0, fact: q.totals.complaint, buckets: q.weekly.complaint, kind: 'bad' },
+    { label: 'Ответов клиенту дольше 1 часа', plan: 0, fact: q.totals.slowReply, buckets: q.weekly.slowReply, kind: 'bad' },
+    { label: 'Просроченных отчётов / дедлайнов', plan: 0, fact: q.totals.overdue, buckets: q.weekly.overdue, kind: 'bad' },
   ];
 }
 
 export default function ReportFunnel({ data }: { data: ReportData }) {
-  const money = useMoney();
   const show = (v: Value | 'none', kind?: Row['kind']): string => {
     if (v === 'none') return '—';
     if (kind === 'pct') return fmtPct(v);
     if (v === null) return '—';
-    return kind === 'money' ? money(v) : String(v);
+    return String(v);
   };
+  // «Bad» counters (complaints etc.): any non-zero is red.
+  const badBg = (r: Row, v: Value) => (r.kind === 'bad' && v ? 'bg-[#ffc7ce] text-red-800' : '');
 
   return (
     <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
@@ -73,14 +75,14 @@ export default function ReportFunnel({ data }: { data: ReportData }) {
             <tr key={r.label} className="hover:brightness-[0.97]">
               <td className={`${CELL} sticky left-0 z-[1] ${r.sub ? 'bg-slate-50 text-slate-600 text-xs text-left pl-8' : 'bg-white text-center'} ${r.bold ? 'font-bold' : ''}`}>{r.label}</td>
               <td className={`${CELL} ${PLAN_BG} text-center`}>{show(r.plan, r.kind)}</td>
-              <td className={`${CELL} ${FACT_BG} text-center font-semibold ${r.kind === 'pct' ? retentionBg(r.fact, RETENTION_TARGET) : ''}`}>
+              <td className={`${CELL} text-center font-semibold ${(r.kind === 'pct' && retentionBg(r.fact, RETENTION_TARGET)) || badBg(r, r.fact) || FACT_BG}`}>
                 {show(r.fact, r.kind)}
               </td>
               <td className={`${CELL} text-center ${r.done !== undefined ? 'bg-[#fff2cc]' : ''}`}>
                 {r.done !== undefined ? fmtPct(r.done ?? null) : ''}
               </td>
               {data.buckets.map((b, i) => (
-                <td key={b.start} className={`${CELL} text-center ${r.buckets ? FACT_BG : GREY_BG} ${r.kind === 'pct' ? 'font-semibold' : ''}`}>
+                <td key={b.start} className={`${CELL} text-center ${r.buckets ? badBg(r, r.buckets[i]) || FACT_BG : GREY_BG} ${r.kind === 'pct' ? 'font-semibold' : ''}`}>
                   {r.buckets ? show(r.buckets[i], r.kind) : ''}
                 </td>
               ))}

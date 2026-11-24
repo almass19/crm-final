@@ -1,4 +1,4 @@
-import type { Bucket, Cohort, Period, Summary } from '@/lib/targetologist-report';
+import type { Bucket, Cohort, Period, Quality, Summary } from '@/lib/targetologist-report';
 
 export interface PersonRow {
   id: string;
@@ -12,7 +12,9 @@ export interface PersonRow {
   renewed: number;
   lost: number;
   retDue: number | null;
-  earnTotal: number;
+  complaints: number;
+  slowReplies: number;
+  overdue: number;
 }
 
 export interface ReportData {
@@ -22,6 +24,7 @@ export interface ReportData {
   selected: string;
   buckets: Bucket[];
   summary: Summary;
+  quality: Quality;
   people: PersonRow[];
   cohorts: Cohort[];
   cohortTotals: Omit<Cohort, 'ym' | 'label'>;

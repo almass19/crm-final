@@ -25,11 +25,6 @@ export type ActiveGroup = keyof typeof ACTIVE_GROUPS;
 
 export const ACTIVE_NORM = 25; // active projects per targetologist
 export const RETENTION_TARGET = 0.35;
-export const RATE_NEW = 10_000;
-export const RATE_NEW_100_EXTRA = 3_000;
-export const RATE_RENEWAL = 14_000;
-export const RATE_RENEWAL_100 = 16_000;
-const BIG_CHECK = 100_000;
 
 // Not shown in the report at all (their clients are left out of the totals too).
 export const HIDDEN_PROFILE_IDS = [
@@ -92,10 +87,6 @@ export interface Summary {
   prevPaying: number;
   retDue: number | null;
   retPlan: number | null;
-  earnNew: number;
-  earnRenewal: number;
-  earnTotal: number;
-  earnPlan: number;
 }
 
 export interface Cohort {
@@ -226,17 +217,6 @@ export function payingByMonth(clients: ReportClient[], payments: RenewalPayment[
   return out;
 }
 
-function earningsFor(clients: ReportClient[], payments: RenewalPayment[], months: string[]): [number, number] {
-  const inRange = (ym: string | null | undefined) => !!ym && months.includes(ym);
-  const earnNew = clients
-    .filter((c) => inRange(day10(c.purchase_date)?.slice(0, 7)))
-    .reduce((s, c) => s + RATE_NEW + ((Number(c.payment_amount) || 0) >= BIG_CHECK ? RATE_NEW_100_EXTRA : 0), 0);
-  const earnRenewal = payments
-    .filter((p) => inRange(p.month))
-    .reduce((s, p) => s + ((Number(p.amount) || 0) >= BIG_CHECK ? RATE_RENEWAL_100 : RATE_RENEWAL), 0);
-  return [earnNew, earnRenewal];
-}
-
 const ratio = (a: number, b: number): number | null => (b ? a / b : null);
 
 /**
@@ -260,7 +240,6 @@ export function summarize(
   const prevPaying = months.reduce((s, ym) => s + (paying.get(shiftMonth(ym, -1)) || 0), 0);
   const renewedPlan = Math.round(prevPaying * RETENTION_TARGET);
   const retPlan = ratio(totals.renewed, prevPaying);
-  const [earnNew, earnRenewal] = earningsFor(clients, payments, months);
   const activeClients = clients.filter(isActive);
 
   return {
@@ -278,10 +257,6 @@ export function summarize(
     prevPaying,
     retDue: ratio(totals.renewed, totals.due),
     retPlan,
-    earnNew,
-    earnRenewal,
-    earnTotal: earnNew + earnRenewal,
-    earnPlan: renewedPlan * RATE_RENEWAL_100 + earnNew,
   };
 }
 
@@ -373,6 +348,39 @@ export function teamSummary(team: Summary, people: Summary[]): Summary {
     ...team,
     renewedPlan,
     lostPlan: Math.max(0, team.totals.due - renewedPlan),
-    earnPlan: sum((s) => s.earnPlan),
   };
+}
+
+// ---------- daily checks (complaints, slow replies, overdue) ----------
+
+export const QUALITY_KEYS = ['complaint', 'slowReply', 'overdue'] as const;
+export type QualityKey = typeof QUALITY_KEYS[number];
+
+export interface CheckEntry {
+  day: string;
+  targetologist_id: string | null;
+  complaint: boolean;
+  slow_reply: boolean;
+  overdue: boolean;
+}
+
+export interface Quality {
+  totals: Record<QualityKey, number>;
+  weekly: Record<QualityKey, number[]>;
+}
+
+/** Days marked in the project manager's daily checks, per funnel column. */
+export function qualityCounts(entries: CheckEntry[], buckets: Bucket[]): Quality {
+  const weekly = Object.fromEntries(QUALITY_KEYS.map((k) => [k, buckets.map(() => 0)])) as Record<QualityKey, number[]>;
+  for (const e of entries) {
+    const i = bucketIndex(buckets, e.day);
+    if (i < 0) continue;
+    if (e.complaint) weekly.complaint[i] += 1;
+    if (e.slow_reply) weekly.slowReply[i] += 1;
+    if (e.overdue) weekly.overdue[i] += 1;
+  }
+  const totals = Object.fromEntries(
+    QUALITY_KEYS.map((k) => [k, weekly[k].reduce((a, b) => a + b, 0)]),
+  ) as Record<QualityKey, number>;
+  return { totals, weekly };
 }

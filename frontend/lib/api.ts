@@ -221,6 +221,14 @@ export const api = {
   saveSalesFunnelCell: (data: { managerId: string; day: string; field: string; value: number | null }) =>
     request('/sales-funnel/day', { method: 'PUT', body: JSON.stringify(data) }),
 
+  getDailyChecks: (day: string) => request(`/daily-checks?day=${day}`),
+
+  getClientDailyCheck: (clientId: string, day: string) => request(`/clients/${clientId}/daily-check?day=${day}`),
+
+  saveClientDailyCheck: (clientId: string, data: {
+    day: string; complaint: boolean; slowReply: boolean; overdue: boolean; note: string | null;
+  }) => request(`/clients/${clientId}/daily-check`, { method: 'PUT', body: JSON.stringify(data) }),
+
   getYearPlan: (year: number) => request(`/year-plan?year=${year}`),
 
   getTargetologistReport: (q: { period: string; year: number; month: number; personId: string }) =>
