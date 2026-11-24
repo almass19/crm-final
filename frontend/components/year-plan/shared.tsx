@@ -8,6 +8,7 @@ export interface YearPlanData {
   plan: Record<string, MonthPlan>;
   op: Record<string, OpFact>;
   tg: Record<string, TgFact>;
+  sheetFactUntil?: string;
 }
 
 export const HEAD = 'bg-[#1f3864] text-white text-xs font-bold px-2 py-2 border border-slate-300 text-center align-middle';

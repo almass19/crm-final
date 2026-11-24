@@ -12,7 +12,9 @@ const COLS = [
 export default function OpPlanTable({ data }: { data: YearPlanData }) {
   const money = useMoney();
   const m = (v: number | null | undefined) => (v === null || v === undefined ? '' : money(Math.round(v)));
-  const plans = data.months.map((ym) => data.plan[ym]).filter(Boolean);
+  // 2026 December has only a targetologist plan — no ОП sheet.
+  const opPlan = (ym: string) => (data.plan[ym]?.sales ? data.plan[ym] : undefined);
+  const plans = data.months.map(opPlan).filter((p): p is NonNullable<typeof p> => !!p);
   const facts = data.months.map((ym) => data.op[ym]).filter(Boolean);
   const sum = <T,>(rows: T[], f: (r: T) => number) => rows.reduce((a, r) => a + f(r), 0);
   const P = {
@@ -22,7 +24,7 @@ export default function OpPlanTable({ data }: { data: YearPlanData }) {
   const F = { leads: sum(facts, (f) => f.leads), sales: sum(facts, (f) => f.sales), revenue: sum(facts, (f) => f.revenue) };
   // Completion of the year only over months that already have a fact.
   const planSoFar = (f: (p: (typeof plans)[number]) => number) =>
-    sum(data.months.filter((ym) => data.op[ym] && data.plan[ym]).map((ym) => data.plan[ym]), f);
+    sum(data.months.map((ym) => (data.op[ym] ? opPlan(ym) : undefined)).filter((p): p is NonNullable<typeof p> => !!p), f);
   const hasPlan = plans.length > 0;
 
   return (
@@ -31,8 +33,9 @@ export default function OpPlanTable({ data }: { data: YearPlanData }) {
         <thead><tr>{COLS.map((c) => <th key={c} className={`${HEAD} min-w-[84px]`}>{c}</th>)}</tr></thead>
         <tbody>
           {data.months.map((ym) => {
-            const p = data.plan[ym];
+            const p = opPlan(ym);
             const f = data.op[ym];
+            const fromSheet = !!data.sheetFactUntil && ym <= data.sheetFactUntil && ym.startsWith('2026');
             return (
               <tr key={ym}>
                 <MonthCell ym={ym} currentYm={data.currentYm} />
@@ -43,7 +46,7 @@ export default function OpPlanTable({ data }: { data: YearPlanData }) {
                 <td className={`${CELL} ${PLAN_BG}`}>{p ? m(p.check) : '—'}</td>
                 <td className={`${CELL} ${PLAN_BG} font-bold`}>{p ? m(p.revenue) : '—'}</td>
                 <td className={`${CELL} ${PLAN_BG}`}>{p ? m(p.adBudget) : '—'}</td>
-                <td className={`${CELL} ${FACT_BG}`}>{f ? num(f.leads) : ''}</td>
+                <td className={`${CELL} ${FACT_BG}`} title={fromSheet ? 'Из таблицы «Отчет по месяцам»' : 'Из CRM'}>{f ? num(f.leads) : ''}</td>
                 <td className={`${CELL} ${FACT_BG} font-bold`}>{f ? num(f.sales) : ''}</td>
                 <td className={`${CELL} ${FACT_BG}`}>{f ? pct(ratio(f.sales, f.leads)) : ''}</td>
                 <td className={`${CELL} ${FACT_BG}`}>{f && f.sales ? m(f.revenue / f.sales) : ''}</td>
@@ -76,7 +79,11 @@ export default function OpPlanTable({ data }: { data: YearPlanData }) {
         <div className="px-5 py-4 text-sm text-slate-600 space-y-1">
           <p><b>Контроль:</b> реклама на одну продажу (план) — {m(P.ad / P.sales)}; продаж на МОПа в среднем (план) — {(P.sales / (plans.reduce((a, p) => a + p.mops, 0))).toFixed(1)} в месяц.</p>
           <p className="text-xs text-slate-500">Найм: 6-й МОП в январе (продаёт с апреля), 7-й — в августе под сентябрь. Летом отдел не сокращать.</p>
-          <p className="text-xs text-slate-500">Факт: заявки — из «Воронки ОП», продажи и выручка — из карточек клиентов, только у менеджеров по продажам (продажи таргетологов и админов не попадают).</p>
+          {data.year === 2026 ? (
+            <p className="text-xs text-slate-500">2026: план и факт по январь–октябрь — из таблиц «Отчет по месяцам» (сумма листов МОПов). С ноября факт — из CRM: заявки из «Воронки ОП», продажи и выручка из карточек клиентов менеджеров по продажам.</p>
+          ) : (
+            <p className="text-xs text-slate-500">Факт: заявки — из «Воронки ОП», продажи и выручка — из карточек клиентов, только у менеджеров по продажам (продажи таргетологов и админов не попадают).</p>
+          )}
         </div>
       )}
     </section>

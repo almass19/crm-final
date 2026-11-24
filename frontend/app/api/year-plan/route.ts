@@ -6,6 +6,7 @@ import {
   HIDDEN_PROFILE_IDS, RenewalPayment, ReportClient, payingByMonth, periodBuckets, periodMonths, shiftMonth, summarize,
 } from '@/lib/targetologist-report';
 import { OpFact, TgFact, yearPlan } from '@/lib/year-plan';
+import { OP_SHEETS_2026, SHEET_FACT_UNTIL } from '@/lib/year-plan-2026';
 
 const ALMATY_OFFSET_MS = 5 * 3_600_000;
 
@@ -66,6 +67,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Closed months before the CRM funnel existed: fact from the monthly ОП sheets.
+    for (const ym of Object.keys(op)) {
+      const sheet = OP_SHEETS_2026[ym];
+      if (sheet && ym <= SHEET_FACT_UNTIL) op[ym] = { ...sheet.fact };
+    }
+
     // Targetologists: same attribution and hidden people as «Аналитика таргета».
     const hidden = new Set(HIDDEN_PROFILE_IDS);
     const clients = clientsAll.filter((c) => !hidden.has(c.assigned_to_id as string));
@@ -91,7 +98,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ year, currentYm, months, plan: yearPlan(year), op, tg });
+    return NextResponse.json({ year, currentYm, months, plan: yearPlan(year, paying), op, tg, sheetFactUntil: SHEET_FACT_UNTIL });
   } catch (e) {
     if (e instanceof NextResponse) return e;
     return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });

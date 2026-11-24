@@ -9,7 +9,7 @@ import NotificationBell from '@/components/NotificationBell';
 import OpPlanTable from '@/components/year-plan/OpPlanTable';
 import TgPlanTable from '@/components/year-plan/TgPlanTable';
 import { YearPlanData } from '@/components/year-plan/shared';
-import { PLAN_YEAR } from '@/lib/year-plan';
+import { PLAN_YEAR, PLAN_YEARS } from '@/lib/year-plan';
 
 type Tab = 'op' | 'tg';
 const TABS: Record<Tab, string> = { op: 'План ОП', tg: 'План таргетологов' };
@@ -52,9 +52,10 @@ export default function YearPlanPage() {
   }
 
   const years = Array.from({ length: Math.max(PLAN_YEAR, new Date().getFullYear()) - FIRST_YEAR + 1 }, (_, i) => FIRST_YEAR + i);
+  const source = year === 2026 ? 'из ежемесячных таблиц ОП' : 'как в «Модели 2027»';
   const subtitle = tab === 'op'
-    ? 'План: МОПы, заявки, продажи, чек, выручка и реклама — как в «Модели 2027». Факт — из CRM.'
-    : 'План: платящие клиенты, новые проекты, продления и удержание — как в «Модели 2027». Факт — из CRM, по текущему таргетологу клиента.';
+    ? `План: МОПы, заявки, продажи, чек, выручка и реклама — ${source}. Факт — ${year === 2026 ? 'из таблиц по октябрь, с ноября из CRM' : 'из CRM'}.`
+    : `План: новые проекты, продления и удержание — ${source}. Факт — из CRM, по текущему таргетологу клиента.`;
 
   return (
     <AppShell>
@@ -86,12 +87,12 @@ export default function YearPlanPage() {
       <div className="p-4 sm:p-6 md:p-8 space-y-5">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">
-            {TABS[tab]} на {year} <span className="text-slate-400 font-bold">· из «Финмодели Resulting 2027»</span>
+            {TABS[tab]} на {year} <span className="text-slate-400 font-bold">· {year === 2026 ? 'из таблиц «Отчет по месяцам»' : 'из «Финмодели Resulting 2027»'}</span>
           </h1>
           <p className="text-slate-500 mt-1">{subtitle}</p>
-          {year !== PLAN_YEAR && (
+          {!PLAN_YEARS.includes(year) && (
             <p className="mt-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm">
-              План в финмодели есть только на {PLAN_YEAR} год — за {year} показан только факт.
+              Плана на {year} год нет — показан только факт.
             </p>
           )}
         </div>
