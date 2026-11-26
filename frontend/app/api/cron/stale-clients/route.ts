@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const { data: clients, error } = await supabase
     .from('clients')
-    .select('id, full_name, company_name, assigned_to_id, profiles!clients_assigned_to_id_fkey(telegram_chat_id)')
+    .select('id, full_name, group_name, assigned_to_id, profiles!clients_assigned_to_id_fkey(telegram_chat_id)')
     .eq('status', 'IN_WORK')
     .lt('updated_at', sevenDaysAgo)
     .not('assigned_to_id', 'is', null);
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       : (profileData as { telegram_chat_id: number | null } | null);
     if (!specialist || !client.assigned_to_id) continue;
 
-    const clientName = client.company_name || client.full_name;
+    const clientName = client.group_name || client.full_name;
     const title = '⚠️ Зависший клиент';
     const message = `Клиент «${clientName}» не обновлялся более 7 дней. Проверьте статус.`;
 

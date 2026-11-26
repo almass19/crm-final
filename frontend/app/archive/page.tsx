@@ -14,7 +14,7 @@ import { useToast } from '@/components/Toast';
 interface Client {
   id: string;
   fullName: string | null;
-  companyName: string | null;
+  groupName: string | null;
   phone: string;
   niche: string | null;
   services: string[];
@@ -285,13 +285,13 @@ export default function ArchivePage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs flex-shrink-0">
-                          {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
+                          {(client.groupName || client.fullName || '?')[0]?.toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-700">
-                            {client.companyName || client.fullName}
+                            {client.groupName || client.fullName}
                           </div>
-                          {client.companyName && client.fullName && (
+                          {client.groupName && client.fullName && (
                             <div className="text-xs text-slate-400">{client.fullName}</div>
                           )}
                         </div>

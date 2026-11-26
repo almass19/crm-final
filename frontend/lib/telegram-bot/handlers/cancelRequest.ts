@@ -17,7 +17,7 @@ interface CancellableRequest {
   client_id: string;
   designer_id: string;
   requested_by_id: string;
-  client: { full_name: string | null; company_name: string | null } | null;
+  client: { full_name: string | null; group_name: string | null } | null;
 }
 
 async function loadCancellable(
@@ -29,7 +29,7 @@ async function loadCancellable(
 ): Promise<CancellableRequest | null> {
   const { data } = await supabase
     .from('creative_requests')
-    .select('id, status, type, client_id, designer_id, requested_by_id, client:clients(full_name, company_name)')
+    .select('id, status, type, client_id, designer_id, requested_by_id, client:clients(full_name, group_name)')
     .eq('id', requestId)
     .single();
   const request = data as unknown as CancellableRequest | null;
@@ -52,7 +52,7 @@ async function loadCancellable(
 
 function describe(request: CancellableRequest): { clientName: string; typeLabel: string } {
   return {
-    clientName: request.client?.company_name || request.client?.full_name || '—',
+    clientName: request.client?.group_name || request.client?.full_name || '—',
     typeLabel: CREATIVE_TYPE_LABELS[request.type] || request.type,
   };
 }

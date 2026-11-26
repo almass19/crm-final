@@ -50,7 +50,7 @@ export async function POST(
 
     const { data: client } = await supabase
       .from('clients')
-      .select('id, full_name, company_name, assigned_to_id')
+      .select('id, full_name, group_name, assigned_to_id')
       .eq('id', clientId)
       .single();
 
@@ -74,7 +74,7 @@ export async function POST(
     if (error) throw error;
 
     if (client.assigned_to_id && client.assigned_to_id !== user.id) {
-      const clientName = client.company_name || client.full_name || 'Клиент';
+      const clientName = client.group_name || client.full_name || 'Клиент';
       await createCommentNotification(supabase, {
         specialistId: client.assigned_to_id,
         clientId,

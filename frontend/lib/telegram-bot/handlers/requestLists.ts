@@ -17,12 +17,12 @@ interface RequestRow {
   created_at: string;
   accepted_at: string | null;
   delivered_at: string | null;
-  client: { full_name: string | null; company_name: string | null } | null;
+  client: { full_name: string | null; group_name: string | null } | null;
   designer?: { full_name: string } | null;
 }
 
 function clientNameOf(row: RequestRow): string {
-  return row.client?.company_name || row.client?.full_name || '—';
+  return row.client?.group_name || row.client?.full_name || '—';
 }
 
 function typeLabelOf(row: RequestRow): string {
@@ -48,7 +48,7 @@ export async function sendTargetologistRequests(
     .from('creative_requests')
     .select(`
       id, type, status, description, created_at, accepted_at, delivered_at,
-      client:clients(full_name, company_name),
+      client:clients(full_name, group_name),
       designer:profiles!creative_requests_designer_id_fkey(full_name)
     `)
     .eq('requested_by_id', profile.id)
@@ -112,7 +112,7 @@ export async function sendDesignerTasks(
     .from('creative_requests')
     .select(`
       id, type, status, description, created_at, accepted_at, delivered_at,
-      client:clients(full_name, company_name),
+      client:clients(full_name, group_name),
       requester:profiles!creative_requests_requested_by_id_fkey(full_name)
     `)
     .eq('designer_id', profile.id)

@@ -14,7 +14,6 @@ import NotificationBell from '@/components/NotificationBell';
 interface DashboardClient {
   id: string;
   fullName: string | null;
-  companyName: string | null;
   phone: string;
   groupName: string | null;
   status: string;
@@ -301,10 +300,10 @@ export default function DashboardPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="text-sm font-semibold text-slate-900">
-                            {client.fullName || client.companyName}
+                            {client.groupName || client.fullName}
                           </div>
-                          {client.fullName && client.companyName && (
-                            <div className="text-xs text-slate-500">{client.companyName}</div>
+                          {client.groupName && client.fullName && (
+                            <div className="text-xs text-slate-500">{client.fullName}</div>
                           )}
                         </td>
                         <td className="px-6 py-4">

@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = await createClient();
     const [clientRes, prevRes] = await Promise.all([
-      supabase.from('clients').select('id, assigned_to_id, company_name, group_name, full_name').eq('id', clientId).maybeSingle(),
+      supabase.from('clients').select('id, assigned_to_id, group_name, full_name').eq('id', clientId).maybeSingle(),
       supabase.from('client_daily_checks').select('note').eq('client_id', clientId).eq('day', day).maybeSingle(),
     ]);
     if (clientRes.error) throw clientRes.error;
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         await createDailyCheckNoteNotification(supabase, {
           targetologistId: client.assigned_to_id,
           clientId,
-          clientName: client.company_name || client.group_name || client.full_name || 'Клиент',
+          clientName: client.group_name || client.full_name || 'Клиент',
           day,
           issues: CHECK_FLAGS.filter((f) => check[f.key]).map((f) => f.label),
           note: cleanNote,

@@ -28,7 +28,6 @@ interface Employee {
 interface DashboardClient {
   id: string;
   fullName: string | null;
-  companyName: string | null;
   phone: string;
   groupName: string | null;
   status: string;
@@ -537,8 +536,8 @@ export default function AdminDashboardPage() {
                           className="hover:bg-slate-50 cursor-pointer transition-colors"
                         >
                           <td className="px-6 py-4">
-                            <div className="text-sm font-semibold text-slate-900">{client.fullName || client.companyName}</div>
-                            {client.fullName && client.companyName && <div className="text-xs text-slate-500">{client.companyName}</div>}
+                            <div className="text-sm font-semibold text-slate-900">{client.groupName || client.fullName}</div>
+                            {client.groupName && client.fullName && <div className="text-xs text-slate-500">{client.fullName}</div>}
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-500">
                             <div>{client.phone}</div>

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const { data: clients, error } = await supabase
     .from('clients')
     .select(`
-      id, full_name, company_name, purchase_date, assigned_to_id,
+      id, full_name, group_name, purchase_date, assigned_to_id,
       specialist:profiles!clients_assigned_to_id_fkey(telegram_chat_id)
     `)
     .is('launch_date', null)
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   let notified = 0;
 
   for (const client of clients) {
-    const clientName = client.company_name || client.full_name;
+    const clientName = client.group_name || client.full_name;
     const title = '⏰ Не указана дата запуска';
     const message = `Клиент «${clientName}» куплен 3+ дней назад, дата запуска не установлена.`;
     const tgText = `<b>${title}</b>\nКлиент «<b>${clientName}</b>» куплен 3+ дней назад, дата запуска не установлена.`;

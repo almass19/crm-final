@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     // counted regardless of archived/status, since the sale already happened.
     const { data: newClientsRaw, error: newError } = await supabase
       .from('clients')
-      .select('id, full_name, company_name, payment_amount, purchase_date, status, archived')
+      .select('id, full_name, group_name, payment_amount, purchase_date, status, archived')
       .eq('assigned_to_id', user.id)
       .gte('purchase_date', startDate)
       .lte('purchase_date', endDate);
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       .filter((c) => c.payment_amount != null)
       .map((c) => ({
         id: c.id,
-        name: c.company_name || c.full_name || '—',
+        name: c.group_name || c.full_name || '—',
         amount: Number(c.payment_amount),
       }));
 
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     // archived) whose latest renewal payment this month lands on a bonus tier.
     const { data: myClients, error: myClientsError } = await supabase
       .from('clients')
-      .select('id, full_name, company_name')
+      .select('id, full_name, group_name')
       .eq('assigned_to_id', user.id);
     if (myClientsError) throw myClientsError;
 
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
       const c = myClientMap.get(clientId);
       return {
         id: clientId,
-        name: c ? (c.company_name || c.full_name || '—') : '—',
+        name: c ? (c.group_name || c.full_name || '—') : '—',
         amount,
       };
     });
