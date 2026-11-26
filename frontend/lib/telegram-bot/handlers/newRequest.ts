@@ -61,11 +61,11 @@ async function buildClientListPage(
 ): Promise<ClientListPage> {
   const { data: clients, count } = await supabase
     .from('clients')
-    .select('id, full_name, group_name', { count: 'exact' })
+    .select('id, full_name, company_name', { count: 'exact' })
     .eq('assigned_to_id', targetologistId)
     .eq('archived', false)
     .not('status', 'in', INACTIVE_STATUS_FILTER)
-    .order('group_name', { ascending: true })
+    .order('company_name', { ascending: true })
     .range(offset, offset + CLIENT_LIST_PAGE_SIZE - 1);
 
   if (!clients || clients.length === 0) {
@@ -73,8 +73,8 @@ async function buildClientListPage(
   }
 
   const buttons: InlineButton[][] = clients.map(
-    (c: { id: string; full_name: string | null; group_name: string | null }) => [
-      { text: c.group_name || c.full_name || '—', callback_data: `client:${c.id}` },
+    (c: { id: string; full_name: string | null; company_name: string | null }) => [
+      { text: c.company_name || c.full_name || '—', callback_data: `client:${c.id}` },
     ],
   );
 
@@ -142,19 +142,19 @@ async function searchClients(
   const safeQuery = escapePostgrestValue(`%${query}%`);
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, full_name, group_name')
+    .select('id, full_name, company_name')
     .eq('assigned_to_id', targetologistId)
     .eq('archived', false)
     .not('status', 'in', INACTIVE_STATUS_FILTER)
-    .or(`group_name.ilike.${safeQuery},full_name.ilike.${safeQuery}`)
+    .or(`company_name.ilike.${safeQuery},full_name.ilike.${safeQuery}`)
     .limit(CLIENT_SEARCH_LIMIT);
 
   if (!clients || clients.length === 0) {
     return { text: 'Ничего не найдено среди ваших активных клиентов. Попробуйте другое название или /cancel.', buttons: null };
   }
 
-  const buttons = clients.map((c: { id: string; full_name: string | null; group_name: string | null }) => [
-    { text: c.group_name || c.full_name || '—', callback_data: `client:${c.id}` },
+  const buttons = clients.map((c: { id: string; full_name: string | null; company_name: string | null }) => [
+    { text: c.company_name || c.full_name || '—', callback_data: `client:${c.id}` },
   ]);
   return { text: 'Выберите клиента:', buttons };
 }
@@ -169,7 +169,7 @@ export async function handleClientPicked(
   const flowContext = stateRow?.context ?? {};
   const { data: client } = await supabase
     .from('clients')
-    .select('id, full_name, group_name, archived, status')
+    .select('id, full_name, company_name, archived, status')
     .eq('id', clientId)
     .single();
 
@@ -188,7 +188,7 @@ export async function handleClientPicked(
     return;
   }
 
-  const clientName = client.group_name || client.full_name || '—';
+  const clientName = client.company_name || client.full_name || '—';
   const buttons = Object.entries(CREATIVE_TYPE_LABELS).map(([type, label]) => [
     { text: label, callback_data: `type:${type}` },
   ]);

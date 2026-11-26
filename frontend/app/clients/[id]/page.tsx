@@ -377,11 +377,11 @@ export default function ClientDetailPage() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h1 className="text-xl font-bold text-slate-900">
-                    {client.groupName || client.fullName}
+                    {client.fullName || client.companyName}
                   </h1>
-                  {client.groupName && client.fullName && (
+                  {client.fullName && client.companyName && (
                     <p className="text-sm text-slate-500 mt-1">
-                      {client.fullName}
+                      {client.companyName}
                     </p>
                   )}
                 </div>
@@ -1230,6 +1230,7 @@ function EditClientModal({
   const isAdmin = userRole === 'ADMIN';
   const [form, setForm] = useState({
     fullName: client.fullName || '',
+    companyName: client.companyName || '',
     phone: client.phone || '',
     groupName: client.groupName || '',
     niche: client.niche || '',
@@ -1259,8 +1260,8 @@ function EditClientModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName && !form.groupName) {
-      setError('Укажите ФИО или название группы');
+    if (!form.fullName && !form.companyName) {
+      setError('Укажите ФИО или название компании');
       return;
     }
     setError('');
@@ -1268,6 +1269,7 @@ function EditClientModal({
     try {
       const payload: Record<string, unknown> = {
         fullName: form.fullName || null,
+        companyName: form.companyName || null,
         phone: form.phone,
         clientType: form.clientType || null,
         groupName: form.groupName || null,
@@ -1332,6 +1334,16 @@ function EditClientModal({
                 type="text"
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Компания</label>
+              <input
+                type="text"
+                value={form.companyName}
+                onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>

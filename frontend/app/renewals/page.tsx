@@ -12,7 +12,7 @@ import StatusBadge from '@/components/StatusBadge';
 interface Client {
   id: string;
   fullName: string | null;
-  groupName: string | null;
+  companyName: string | null;
   phone: string;
   status: string;
   purchaseDate: string | null;
@@ -255,13 +255,13 @@ export default function RenewalsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                          {(client.groupName || client.fullName || '?')[0]?.toUpperCase()}
+                          {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-slate-900">
-                            {client.groupName || client.fullName}
+                            {client.companyName || client.fullName}
                           </div>
-                          {client.groupName && client.fullName && (
+                          {client.companyName && client.fullName && (
                             <div className="text-xs text-slate-500">{client.fullName}</div>
                           )}
                         </div>

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
 
     // payment_amount is filtered back out below for roles that must not see it
-    const clientSelect = 'id, full_name, phone, group_name, status, services, purchase_date, created_at, assigned_at, designer_assigned_at, payment_amount';
+    const clientSelect = 'id, full_name, company_name, phone, group_name, status, services, purchase_date, created_at, assigned_at, designer_assigned_at, payment_amount';
 
     // payment_amount (deal amount) is hidden only from DESIGNER, same as sanitizeClient
     // elsewhere. paid_total (sum of payment records) is further restricted to

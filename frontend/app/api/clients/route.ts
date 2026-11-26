@@ -54,8 +54,6 @@ export async function GET(request: NextRequest) {
       launch_date: 'launch_date',
       fullName: 'full_name',
       full_name: 'full_name',
-      groupName: 'group_name',
-      group_name: 'group_name',
       companyName: 'company_name',
       company_name: 'company_name',
       status: 'status',
@@ -167,10 +165,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const supabase = await createClient();
 
-    // companyName is still accepted (CSV import) but no longer required or shown.
-    if (!body.fullName && !body.groupName && !body.companyName) {
+    if (!body.fullName && !body.companyName) {
       return NextResponse.json(
-        { message: 'Необходимо указать ФИО или название группы' },
+        { message: 'Необходимо указать ФИО или название компании' },
         { status: 400 },
       );
     }
@@ -229,7 +226,7 @@ export async function POST(request: Request) {
       action: 'CLIENT_CREATED',
       user_id: user.id,
       client_id: client.id,
-      details: `Клиент создан: ${body.groupName || body.fullName || body.companyName}`,
+      details: `Клиент создан: ${body.fullName || body.companyName}`,
     });
 
     return NextResponse.json(snakeToCamel(client));

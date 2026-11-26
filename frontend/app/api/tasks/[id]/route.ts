@@ -6,7 +6,7 @@ import { createTaskAssignedNotification, createTaskDoneNotification } from '@/li
 
 const taskSelect = `
   *,
-  client:clients!tasks_client_id_fkey(id, full_name, group_name),
+  client:clients!tasks_client_id_fkey(id, full_name, company_name),
   creator:profiles!tasks_creator_id_fkey(id, full_name, role),
   assignee:profiles!tasks_assignee_id_fkey(id, full_name, role)
 `;
@@ -49,7 +49,7 @@ export async function PATCH(
 
     const { data: existing } = await supabase
       .from('tasks')
-      .select('id, assignee_id, creator_id, title, client_id, status, client:clients!tasks_client_id_fkey(full_name, group_name)')
+      .select('id, assignee_id, creator_id, title, client_id, status, client:clients!tasks_client_id_fkey(full_name, company_name)')
       .eq('id', id)
       .single();
 
@@ -79,8 +79,8 @@ export async function PATCH(
       body.assigneeId !== existing.assignee_id &&
       body.assigneeId !== user.id
     ) {
-      const clientInfo = (existing.client as unknown) as { full_name: string | null; group_name: string | null } | null;
-      const clientName = clientInfo?.group_name || clientInfo?.full_name || '';
+      const clientInfo = (existing.client as unknown) as { full_name: string | null; company_name: string | null } | null;
+      const clientName = clientInfo?.company_name || clientInfo?.full_name || '';
       await createTaskAssignedNotification(supabase, {
         assigneeId: body.assigneeId,
         taskTitle: existing.title,

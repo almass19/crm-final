@@ -18,7 +18,7 @@ interface PlanRow {
 interface ClientRow {
   id: string;
   full_name: string | null;
-  group_name: string | null;
+  company_name: string | null;
   sold_by_id: string;
   purchase_date: string;
   payment_amount: number | null;
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     let plansQ = supabase.from('sales_plans').select('manager_id, leads_plan, sales_plan, avg_check, ad_budget_plan').eq('month', month);
     let clientsQ = supabase
       .from('clients')
-      .select('id, full_name, group_name, sold_by_id, purchase_date, payment_amount, status')
+      .select('id, full_name, company_name, sold_by_id, purchase_date, payment_amount, status')
       .not('sold_by_id', 'is', null)
       .gte('purchase_date', from)
       .lt('purchase_date', to)
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
       managers,
       clients: clients.map((c) => ({
         id: c.id,
-        name: (c.group_name || c.full_name || 'без названия').trim(),
+        name: (c.company_name || c.full_name || 'без названия').trim(),
         date: c.purchase_date.slice(0, 10),
         amount: Number(c.payment_amount) || 0,
         status: c.status,

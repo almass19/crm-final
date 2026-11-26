@@ -30,7 +30,7 @@ export async function handleAccept(
     .from('creative_requests')
     .select(`
       id, status, type, client_id, requested_by_id, designer_id,
-      client:clients(id, full_name, group_name)
+      client:clients(id, full_name, company_name)
     `)
     .eq('id', requestId)
     .single();
@@ -42,7 +42,7 @@ export async function handleAccept(
     client_id: string;
     requested_by_id: string;
     designer_id: string;
-    client: { id: string; full_name: string | null; group_name: string | null };
+    client: { id: string; full_name: string | null; company_name: string | null };
   } | null;
 
   if (!request) {
@@ -68,7 +68,7 @@ export async function handleAccept(
   await answerCallbackQuery(callbackQueryId, 'Принято');
   await editMessageReplyMarkup(chatId, messageId, []);
 
-  const clientName = request.client.group_name || request.client.full_name || '—';
+  const clientName = request.client.company_name || request.client.full_name || '—';
   const typeLabel = CREATIVE_TYPE_LABELS[request.type] || request.type;
 
   await sendTelegramKeyboard(
@@ -134,7 +134,7 @@ export async function finalizeDelivery(
     .from('creative_requests')
     .select(`
       id, status, type, client_id, requested_by_id,
-      client:clients(id, full_name, group_name),
+      client:clients(id, full_name, company_name),
       requester:profiles!creative_requests_requested_by_id_fkey(id, full_name, telegram_chat_id)
     `)
     .eq('id', requestId)
@@ -146,7 +146,7 @@ export async function finalizeDelivery(
     type: string;
     client_id: string;
     requested_by_id: string;
-    client: { id: string; full_name: string | null; group_name: string | null };
+    client: { id: string; full_name: string | null; company_name: string | null };
     requester: { id: string; full_name: string; telegram_chat_id: number | null } | null;
   } | null;
 
@@ -162,7 +162,7 @@ export async function finalizeDelivery(
     return;
   }
 
-  const clientName = request.client.group_name || request.client.full_name || '—';
+  const clientName = request.client.company_name || request.client.full_name || '—';
   const typeLabel = CREATIVE_TYPE_LABELS[request.type] || request.type;
   const requesterChatId = request.requester?.telegram_chat_id as number | null;
 

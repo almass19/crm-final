@@ -197,7 +197,7 @@ export async function PATCH(
       });
 
       if (client.assigned_to_id && client.assigned_to_id !== user.id) {
-        const clientName = client.group_name || client.full_name || 'Клиент';
+        const clientName = client.company_name || client.full_name || 'Клиент';
         await createClientStatusChangedNotification(supabase, {
           specialistId: client.assigned_to_id,
           clientId: id,

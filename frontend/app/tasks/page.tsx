@@ -17,7 +17,7 @@ interface Task {
   status: string;
   dueDate: string | null;
   createdAt: string;
-  client: { id: string; fullName: string | null; groupName: string | null };
+  client: { id: string; fullName: string | null; companyName: string | null };
   creator: { id: string; fullName: string; role: string };
   assignee: { id: string; fullName: string; role: string } | null;
 }
@@ -25,7 +25,7 @@ interface Task {
 interface Client {
   id: string;
   fullName: string | null;
-  groupName: string | null;
+  companyName: string | null;
   designerId: string | null;
   designer: { fullName: string } | null;
 }
@@ -248,7 +248,7 @@ export default function TasksPage() {
                               onClick={() => router.push(`/clients/${task.client.id}`)}
                               className="text-sm text-primary hover:underline font-medium whitespace-nowrap"
                             >
-                              {task.client.groupName || task.client.fullName}
+                              {task.client.companyName || task.client.fullName}
                             </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -370,12 +370,12 @@ function CreateTaskModal({
   }, []);
 
   const filteredClients = clients.filter((c) =>
-    `${c.fullName || ''} ${c.groupName || ''}`.toLowerCase().includes(clientSearch.toLowerCase())
+    `${c.fullName || ''} ${c.companyName || ''}`.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
   const handleClientSelect = (client: Client) => {
     setForm((prev) => ({ ...prev, clientId: client.id, assigneeId: defaultAssigneeId }));
-    setClientSearch(client.groupName || client.fullName || '');
+    setClientSearch(client.companyName || client.fullName || '');
     setShowClientList(false);
 
     if (currentUser.role === 'TARGETOLOGIST') {
@@ -475,7 +475,7 @@ function CreateTaskModal({
                       className="px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 text-slate-700"
                       onMouseDown={() => handleClientSelect(c)}
                     >
-                      {c.groupName || c.fullName}
+                      {c.companyName || c.fullName}
                     </li>
                   ))}
                 </ul>
