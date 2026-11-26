@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       })
       .select(`
         *,
-        client:clients!tasks_client_id_fkey(id, full_name, company_name),
+        client:clients!tasks_client_id_fkey(id, full_name, group_name),
         creator:profiles!tasks_creator_id_fkey(id, full_name, role),
         assignee:profiles!tasks_assignee_id_fkey(id, full_name, role)
       `)
@@ -66,8 +66,8 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     if (body.assigneeId && body.assigneeId !== user.id) {
-      const clientName = (data.client as { company_name: string | null; full_name: string | null } | null)?.company_name
-        || (data.client as { company_name: string | null; full_name: string | null } | null)?.full_name
+      const clientName = (data.client as { group_name: string | null; full_name: string | null } | null)?.group_name
+        || (data.client as { group_name: string | null; full_name: string | null } | null)?.full_name
         || '';
       await createTaskAssignedNotification(supabase, {
         assigneeId: body.assigneeId,

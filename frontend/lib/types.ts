@@ -13,7 +13,6 @@ export interface User {
 export interface Client {
   id: string;
   fullName: string | null;
-  companyName: string | null;
   phone: string;
   groupName: string | null;
   services: string[];
@@ -44,7 +43,7 @@ export interface Task {
   priority: number;
   status: TaskStatus;
   clientId: string;
-  client?: { id: string; fullName: string | null; companyName: string | null };
+  client?: { id: string; fullName: string | null; groupName: string | null };
   creatorId: string;
   creator?: { id: string; fullName: string; role: UserRole | null };
   assigneeId: string | null;

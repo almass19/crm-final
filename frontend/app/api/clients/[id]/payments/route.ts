@@ -114,7 +114,7 @@ export async function POST(
       })
       .select(`
         *,
-        client:clients!payments_client_id_fkey(id, full_name, company_name),
+        client:clients!payments_client_id_fkey(id, full_name, group_name),
         manager:profiles!payments_manager_id_fkey(id, full_name)
       `)
       .single();

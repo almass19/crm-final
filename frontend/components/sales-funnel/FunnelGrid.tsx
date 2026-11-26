@@ -40,31 +40,38 @@ function pctClass(p: number | null): string {
   return 'text-red-600';
 }
 
-function Cell({ value, editable, money, hidden, onCommit }: {
+function Cell({ value, editable, money, hidden, usd, title, onCommit }: {
   value: number | null | undefined;
   hidden?: boolean;
   editable: boolean;
   money?: boolean;
+  /** Typed in dollars (cents allowed); stored and shown elsewhere in tenge. */
+  usd?: boolean;
+  title?: string;
   onCommit: (v: number | null) => void;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   if (!editable) {
-    return <span className="block text-right tabular-nums">{hidden && value ? '•••' : fmt(Number(value) || 0, money)}</span>;
+    return <span className="block text-right tabular-nums" title={title}>{hidden && value ? '•••' : fmt(Number(value) || 0, money)}</span>;
   }
   const shown = draft ?? (value === null || value === undefined ? '' : String(value));
   const commit = () => {
     if (draft === null) return;
     const trimmed = draft.trim();
     setDraft(null);
-    const next = trimmed === '' ? null : Number(trimmed);
-    if (next !== null && (!Number.isInteger(next) || next < 0)) return;
+    const next = trimmed === '' ? null : Number(trimmed.replace(',', '.'));
+    const valid = next === null
+      || (Number.isFinite(next) && next >= 0 && (usd ? Math.round(next * 100) === next * 100 : Number.isInteger(next)));
+    if (!valid) return;
     if (next !== (value ?? null)) onCommit(next);
   };
   return (
     <input
-      inputMode="numeric"
+      inputMode={usd ? 'decimal' : 'numeric'}
       value={shown}
-      onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ''))}
+      placeholder={usd ? '$' : undefined}
+      title={title}
+      onChange={(e) => setDraft(e.target.value.replace(usd ? /[^\d.,]/g : /[^\d]/g, ''))}
       onBlur={commit}
       onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
       className="w-full min-w-[3rem] bg-transparent hover:bg-slate-100 focus:bg-white rounded px-1.5 py-1 text-right tabular-nums outline-none focus:ring-2 focus:ring-primary/40"
@@ -78,6 +85,20 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
   const allDays = data.weeks.flatMap((w) => w.days);
   const fact = (key: FunnelField) => sumDays(data.days, allDays, key);
   const leadsFact = fact('leads');
+
+  // An admin types the ad budget in dollars; everyone else sees it in tenge.
+  // Hovering shows the conversion: $ × National Bank rate = ₸.
+  const cellProps = (row: FunnelRow, d: string) => {
+    const editable = canEdit(row, d) && !(row.money && hideMoney);
+    const entry = row.key === 'adBudget' ? data.adUsd?.[d] : undefined;
+    const title = entry
+      ? `$${entry.usd}${entry.rate ? ` × ${entry.rate} ₸ = ${fmt(Number(data.days[d]?.adBudget) || 0, true)} ₸` : ''}`
+      : undefined;
+    if (row.key === 'adBudget' && editable) {
+      return { value: entry?.usd ?? null, editable, usd: true, title: title ?? 'Сумма в долларах — переведётся в тенге по курсу Нацбанка' };
+    }
+    return { value: data.days[d]?.[row.key], editable, hidden: row.money && hideMoney, money: row.money, title };
+  };
 
   const th = `px-2 py-2 text-xs font-bold whitespace-nowrap ${GRID}`;
   const head = `${th} bg-slate-50 text-slate-500`;
@@ -143,10 +164,7 @@ export default function FunnelGrid({ data, hideMoney, canEdit, onSave }: FunnelG
                       ...w.days.map((d) => (
                         <td key={d} className={`${GRID} bg-white px-1 py-0.5 ${d === data.today ? 'ring-2 ring-inset ring-primary/40' : ''}`}>
                           <Cell
-                            value={data.days[d]?.[row.key]}
-                            editable={canEdit(row, d) && !(row.money && hideMoney)}
-                            hidden={row.money && hideMoney}
-                            money={row.money}
+                            {...cellProps(row, d)}
                             onCommit={(v) => onSave(row.key, d, v)}
                           />
                         </td>

@@ -146,6 +146,7 @@ export default function DailyCheckModal({ clientId, clientName, onClose, onSaved
               placeholder="Что случилось, что сделали"
               className="mt-1 w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
             />
+            <span className="block mt-1 text-xs text-slate-500">Примечание сразу придёт таргетологу клиента — в CRM и в Telegram.</span>
           </label>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

@@ -259,3 +259,31 @@ export async function createCreativeDeliveredNotification(
   const tgText = `<b>✅ Креатив готов</b>\n${designerName} сдал <b>${typeLabel}</b>\nКлиент: <b>${clientName}</b>\nФайлы выше ⬆️ — не забудьте выложить в кейсы`;
   await notifyUser(supabase, requestedById, 'CREATIVE_DELIVERED', title, message, `/clients/${clientId}`, tgText);
 }
+
+// ─── Daily check note (project manager → targetologist) ───────────────────────
+
+interface DailyCheckNoteParams {
+  targetologistId: string;
+  clientId: string;
+  clientName: string;
+  day: string; // YYYY-MM-DD
+  issues: string[]; // labels of the flags marked «да»
+  note: string;
+  authorName: string;
+}
+
+const escapeTg = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export async function createDailyCheckNoteNotification(
+  supabase: SupabaseClient,
+  { targetologistId, clientId, clientName, day, issues, note, authorName }: DailyCheckNoteParams,
+) {
+  const date = `${day.slice(8, 10)}.${day.slice(5, 7)}`;
+  const preview = note.length > 300 ? note.slice(0, 300) + '...' : note;
+  const issuesText = issues.length ? issues.join(', ') : 'без замечаний';
+  const title = 'Примечание по клиенту';
+  const message = `${clientName}, ${date} (${issuesText}): ${preview} — ${authorName}`;
+  const tgText = `<b>📝 Примечание по клиенту</b>\nКлиент «<b>${escapeTg(clientName)}</b>», ${date}\n`
+    + `${issues.length ? '⚠️ ' : '✅ '}${escapeTg(issuesText)}\n<i>${escapeTg(preview)}</i>\n— ${escapeTg(authorName)}`;
+  await notifyUser(supabase, targetologistId, 'DAILY_CHECK_NOTE', title, message, `/clients/${clientId}`, tgText);
+}

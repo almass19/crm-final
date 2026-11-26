@@ -16,7 +16,7 @@ export async function GET(
       .from('tasks')
       .select(`
         *,
-        client:clients!tasks_client_id_fkey(id, full_name, company_name),
+        client:clients!tasks_client_id_fkey(id, full_name, group_name),
         creator:profiles!tasks_creator_id_fkey(id, full_name, role),
         assignee:profiles!tasks_assignee_id_fkey(id, full_name, role)
       `)

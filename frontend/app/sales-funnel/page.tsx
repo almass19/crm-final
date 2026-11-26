@@ -82,11 +82,25 @@ export default function SalesFunnelPage() {
   const saveCell = async (field: FunnelField, day: string, value: number | null) => {
     if (!data) return;
     const prev = data.days;
-    setData({ ...data, days: { ...prev, [day]: { ...(prev[day] || {}), [field]: value } } });
+    const prevUsd = data.adUsd;
+    // The ad budget is typed in USD; the server converts it and returns the KZT amount.
+    const isUsd = field === 'adBudget';
+    if (!isUsd) setData({ ...data, days: { ...prev, [day]: { ...(prev[day] || {}), [field]: value } } });
     try {
-      await api.saveSalesFunnelCell({ managerId: data.selected, day, field, value });
+      const res = await api.saveSalesFunnelCell({ managerId: data.selected, day, field, value });
+      if (isUsd) {
+        setData((d) => {
+          if (!d) return d;
+          const restUsd = Object.fromEntries(Object.entries(d.adUsd).filter(([k]) => k !== day));
+          return {
+            ...d,
+            days: { ...d.days, [day]: { ...(d.days[day] || {}), adBudget: res.adBudget ?? null } },
+            adUsd: res.adBudgetUsd == null ? restUsd : { ...restUsd, [day]: { usd: res.adBudgetUsd, rate: res.usdRate ?? null } },
+          };
+        });
+      }
     } catch (err: unknown) {
-      setData((d) => (d ? { ...d, days: prev } : d));
+      setData((d) => (d ? { ...d, days: prev, adUsd: prevUsd } : d));
       showToast(err instanceof Error ? err.message : 'Не удалось сохранить', 'error');
       throw err;
     }
@@ -131,7 +145,7 @@ export default function SalesFunnelPage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Воронка ОП</h1>
           <p className="text-slate-500 mt-1">
-            {single ? 'Жёлтые ячейки заполняются вручную, продажи и оплата — из карточек клиентов.' : 'Сумма по всему отделу. Выберите менеджера, чтобы заполнять его воронку.'}
+            {single ? 'Жёлтые ячейки заполняются вручную. Заявки и рекламный бюджет (в $, по курсу Нацбанка) — только руководитель. Продажи и оплата — из карточек клиентов.' : 'Сумма по всему отделу. Выберите менеджера, чтобы заполнять его воронку.'}
           </p>
         </div>
 

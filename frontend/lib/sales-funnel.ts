@@ -8,7 +8,8 @@ export const FUNNEL_INPUT_FIELDS = [
 export type FunnelInputField = typeof FUNNEL_INPUT_FIELDS[number];
 export type FunnelField = FunnelInputField | 'sales' | 'payment';
 
-export const ADMIN_ONLY_FIELDS: FunnelInputField[] = ['adBudget'];
+// Entered only by the head of sales: lead count and ad budget (in USD, converted to KZT).
+export const ADMIN_ONLY_FIELDS: FunnelInputField[] = ['leads', 'adBudget'];
 
 export interface FunnelRow {
   key: FunnelField;
@@ -21,7 +22,7 @@ export interface FunnelRow {
 
 // Same order and wording as the sheets.
 export const FUNNEL_ROWS: FunnelRow[] = [
-  { key: 'leads', label: 'Кол-во заявок', source: 'manager', tone: 'green' },
+  { key: 'leads', label: 'Кол-во заявок', source: 'admin', tone: 'green' },
   { key: 'adBudget', label: 'Рекламный бюджет', source: 'admin', money: true, tone: 'green' },
   { key: 'qualified', label: 'ЦА заявки', source: 'manager', tone: 'gray' },
   { key: 'rejected', label: 'Бракованные заявки', source: 'manager', tone: 'gray' },

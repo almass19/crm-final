@@ -30,6 +30,8 @@ export interface FunnelData {
   plan: SalesPlan | null;
   managerPlans: ManagerPlan[];
   days: Record<string, DayValues>;
+  /** Ad budget as entered, per day: USD and the National Bank rate used. */
+  adUsd: Record<string, { usd: number; rate: number | null }>;
   managers: ManagerSummary[];
   clients: SoldClient[];
   earnings: Earnings | null;

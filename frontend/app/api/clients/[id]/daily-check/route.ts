@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireRoles } from '@/lib/supabase/auth-helpers';
-import { DailyCheckRow, NOTE_MAX_LENGTH, almatyToday, fromRow, isValidDay } from '@/lib/daily-checks';
+import { CHECK_FLAGS, DailyCheckRow, NOTE_MAX_LENGTH, almatyToday, fromRow, isValidDay } from '@/lib/daily-checks';
+import { createDailyCheckNoteNotification } from '@/lib/notifications';
 
 const COLUMNS = 'client_id, day, complaint, slow_reply, overdue, note, updated_at';
 const RECENT_LIMIT = 10;
@@ -52,9 +53,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const cleanNote = typeof note === 'string' ? note.trim().slice(0, NOTE_MAX_LENGTH) || null : null;
 
     const supabase = await createClient();
-    const { data: client, error: clientErr } = await supabase
-      .from('clients').select('id, assigned_to_id').eq('id', clientId).maybeSingle();
-    if (clientErr) throw clientErr;
+    const [clientRes, prevRes] = await Promise.all([
+      supabase.from('clients').select('id, assigned_to_id, group_name, full_name').eq('id', clientId).maybeSingle(),
+      supabase.from('client_daily_checks').select('note').eq('client_id', clientId).eq('day', day).maybeSingle(),
+    ]);
+    if (clientRes.error) throw clientRes.error;
+    if (prevRes.error) throw prevRes.error;
+    const client = clientRes.data;
     if (!client) return NextResponse.json({ message: 'Клиент не найден' }, { status: 404 });
 
     const { data, error } = await supabase
@@ -73,8 +78,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .select(COLUMNS)
       .single();
     if (error) throw error;
+    const check = fromRow(data as DailyCheckRow);
 
-    return NextResponse.json({ check: fromRow(data as DailyCheckRow) });
+    // A new or changed note goes to the client's targetologist (bell + Telegram).
+    if (cleanNote && cleanNote !== (prevRes.data?.note ?? null) && client.assigned_to_id && client.assigned_to_id !== user.id) {
+      try {
+        await createDailyCheckNoteNotification(supabase, {
+          targetologistId: client.assigned_to_id,
+          clientId,
+          clientName: client.group_name || client.full_name || 'Клиент',
+          day,
+          issues: CHECK_FLAGS.filter((f) => check[f.key]).map((f) => f.label),
+          note: cleanNote,
+          authorName: user.fullName || 'Руководитель',
+        });
+      } catch (notifyErr) {
+        // The check is saved; a failed notification must not undo it.
+        console.error('daily check note notification failed', notifyErr);
+      }
+    }
+
+    return NextResponse.json({ check });
   } catch (e) {
     if (e instanceof NextResponse) return e;
     return NextResponse.json({ message: 'Ошибка сервера' }, { status: 500 });

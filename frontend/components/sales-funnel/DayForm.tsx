@@ -23,11 +23,19 @@ export default function DayForm({ data, canEdit, onSave }: DayFormProps) {
   const rows = FUNNEL_ROWS.filter((r) => r.source !== 'crm' && canEdit(r, day));
 
   useEffect(() => {
-    const current = data.days[day] || {};
-    setValues(Object.fromEntries(rows.map((r) => [r.key, current[r.key] == null ? '' : String(current[r.key])])));
+    setValues(Object.fromEntries(rows.map((r) => [r.key, shownValue(r.key)])));
     // rows derive from day + permissions; re-sync only when the day or saved data changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, data.days]);
+  }, [day, data.days, data.adUsd]);
+
+  // The ad budget is typed in dollars (cents allowed); the rest are whole numbers.
+  function shownValue(key: FunnelField): string {
+    if (key === 'adBudget') return data.adUsd?.[day] ? String(data.adUsd[day].usd) : '';
+    const v = data.days[day]?.[key];
+    return v == null ? '' : String(v);
+  }
+  const usdEntry = data.adUsd?.[day];
+  const adBudgetKzt = Number(data.days[day]?.adBudget) || 0;
 
   if (rows.length === 0) return null;
 
@@ -35,11 +43,11 @@ export default function DayForm({ data, canEdit, onSave }: DayFormProps) {
     e.preventDefault();
     setSaving(true);
     try {
-      const current = data.days[day] || {};
       for (const r of rows) {
-        const raw = (values[r.key] ?? '').trim();
+        const raw = (values[r.key] ?? '').trim().replace(',', '.');
         const next = raw === '' ? null : Number(raw);
-        if ((current[r.key] ?? null) !== next) await onSave(r.key, day, next);
+        if (next !== null && !Number.isFinite(next)) continue;
+        if (raw !== shownValue(r.key)) await onSave(r.key, day, next);
       }
     } finally {
       setSaving(false);
@@ -66,13 +74,21 @@ export default function DayForm({ data, canEdit, onSave }: DayFormProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {rows.map((r) => (
           <label key={r.key} className="block">
-            <span className="block text-xs font-medium text-slate-500 mb-1">{r.label}</span>
+            <span className="block text-xs font-medium text-slate-500 mb-1">{r.key === 'adBudget' ? `${r.label}, $` : r.label}</span>
             <input
-              inputMode="numeric"
+              inputMode={r.key === 'adBudget' ? 'decimal' : 'numeric'}
               value={values[r.key] ?? ''}
-              onChange={(e) => setValues({ ...values, [r.key]: e.target.value.replace(/[^\d]/g, '') })}
+              placeholder={r.key === 'adBudget' ? '$' : undefined}
+              onChange={(e) => setValues({ ...values, [r.key]: e.target.value.replace(r.key === 'adBudget' ? /[^\d.,]/g : /[^\d]/g, '') })}
               className="w-full px-3 py-2 bg-amber-50/70 border border-slate-200 rounded-lg text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white"
             />
+            {r.key === 'adBudget' && (
+              <span className="block mt-1 text-[11px] text-slate-500 tabular-nums">
+                {usdEntry?.rate
+                  ? `= ${adBudgetKzt.toLocaleString('ru-RU')} ₸ по курсу ${usdEntry.rate}`
+                  : adBudgetKzt ? `${adBudgetKzt.toLocaleString('ru-RU')} ₸ (введено раньше в тенге)` : 'Переведётся в ₸ по курсу Нацбанка'}
+              </span>
+            )}
           </label>
         ))}
       </div>

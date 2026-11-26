@@ -16,7 +16,7 @@ export async function POST(
 
     const { data: client } = await supabase
       .from('clients')
-      .select('id, status, assigned_to_id, designer_id, full_name, company_name')
+      .select('id, status, assigned_to_id, designer_id, full_name, group_name')
       .eq('id', clientId)
       .single();
 
@@ -87,7 +87,7 @@ export async function POST(
         await createClientAssignedNotification(supabase, {
           assigneeId: specialistId,
           clientId,
-          clientName: client.company_name || client.full_name,
+          clientName: client.group_name || client.full_name,
           assignerName: user.fullName,
           role: 'specialist',
         });
@@ -132,7 +132,7 @@ export async function POST(
         await createClientAssignedNotification(supabase, {
           assigneeId: designerId,
           clientId,
-          clientName: client.company_name || client.full_name,
+          clientName: client.group_name || client.full_name,
           assignerName: user.fullName,
           role: 'designer',
         });

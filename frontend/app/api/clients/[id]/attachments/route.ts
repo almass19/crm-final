@@ -13,7 +13,7 @@ async function getAccessibleClient(clientId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from('clients')
-    .select('id, full_name, company_name')
+    .select('id, full_name, group_name')
     .eq('id', clientId)
     .single();
   return data;

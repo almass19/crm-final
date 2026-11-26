@@ -18,7 +18,7 @@ interface PlanRow {
 interface ClientRow {
   id: string;
   full_name: string | null;
-  company_name: string | null;
+  group_name: string | null;
   sold_by_id: string;
   purchase_date: string;
   payment_amount: number | null;
@@ -73,11 +73,13 @@ export async function GET(request: NextRequest) {
     let plansQ = supabase.from('sales_plans').select('manager_id, leads_plan, sales_plan, avg_check, ad_budget_plan').eq('month', month);
     let clientsQ = supabase
       .from('clients')
-      .select('id, full_name, company_name, sold_by_id, purchase_date, payment_amount, status')
+      .select('id, full_name, group_name, sold_by_id, purchase_date, payment_amount, status')
       .not('sold_by_id', 'is', null)
       .gte('purchase_date', from)
       .lt('purchase_date', to)
-      .order('purchase_date', { ascending: true });
+      // Newest first: the month's sales list shows the latest sales on top.
+      .order('purchase_date', { ascending: false })
+      .order('created_at', { ascending: false });
     if (!isAdmin) {
       plansQ = plansQ.eq('manager_id', user.id);
       clientsQ = clientsQ.eq('sold_by_id', user.id);
@@ -112,6 +114,13 @@ export async function GET(request: NextRequest) {
         const v = row[FIELD_TO_COLUMN[field]];
         if (v !== null && v !== undefined) addTo(days, row.day, field, Number(v));
       }
+    }
+    // Ad budget as entered: USD and the rate it was converted at (KZT is in days.adBudget).
+    const adUsd: Record<string, { usd: number; rate: number | null }> = {};
+    for (const row of daysRes.data || []) {
+      if (row.ad_budget_usd === null || row.ad_budget_usd === undefined) continue;
+      const cur = adUsd[row.day] || { usd: 0, rate: null };
+      adUsd[row.day] = { usd: Math.round((cur.usd + Number(row.ad_budget_usd)) * 100) / 100, rate: row.usd_rate ? Number(row.usd_rate) : cur.rate };
     }
     for (const c of clients) {
       addTo(days, c.purchase_date.slice(0, 10), 'sales', 1);
@@ -152,10 +161,11 @@ export async function GET(request: NextRequest) {
         avgCheck: p.avg_check, adBudgetPlan: p.ad_budget_plan,
       })) : [],
       days,
+      adUsd,
       managers,
       clients: clients.map((c) => ({
         id: c.id,
-        name: (c.company_name || c.full_name || 'без названия').trim(),
+        name: (c.group_name || c.full_name || 'без названия').trim(),
         date: c.purchase_date.slice(0, 10),
         amount: Number(c.payment_amount) || 0,
         status: c.status,

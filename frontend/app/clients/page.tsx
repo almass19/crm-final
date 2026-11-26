@@ -17,7 +17,6 @@ import { DailyCheck, almatyToday } from '@/lib/daily-checks';
 interface Client {
   id: string;
   fullName: string | null;
-  companyName: string | null;
   phone: string;
   groupName: string | null;
   niche: string | null;
@@ -58,8 +57,8 @@ const SORT_OPTIONS = [
   { value: 'purchaseDate:asc', label: 'Дата покупки ↑' },
   { value: 'launchDate:desc', label: 'Дата запуска ↓' },
   { value: 'launchDate:asc', label: 'Дата запуска ↑' },
-  { value: 'fullName:asc', label: 'По имени А-Я' },
-  { value: 'fullName:desc', label: 'По имени Я-А' },
+  { value: 'groupName:asc', label: 'По названию А-Я' },
+  { value: 'groupName:desc', label: 'По названию Я-А' },
   { value: 'status:asc', label: 'По статусу' },
 ];
 
@@ -641,13 +640,13 @@ export default function ClientsPage() {
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                                  {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
+                                  {(client.groupName || client.fullName || '?')[0]?.toUpperCase()}
                                 </div>
                                 <div>
                                   <div className="text-sm font-semibold text-slate-900">
-                                    {client.companyName || client.fullName}
+                                    {client.groupName || client.fullName}
                                   </div>
-                                  {client.companyName && client.fullName && (
+                                  {client.groupName && client.fullName && (
                                     <div className="text-xs text-slate-500">{client.fullName}</div>
                                   )}
                                 </div>
@@ -694,13 +693,13 @@ export default function ClientsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
-                            {(client.companyName || client.fullName || '?')[0]?.toUpperCase()}
+                            {(client.groupName || client.fullName || '?')[0]?.toUpperCase()}
                           </div>
                           <div>
                             <div className="text-sm font-semibold text-slate-900">
-                              {client.companyName || client.fullName}
+                              {client.groupName || client.fullName}
                             </div>
-                            {client.companyName && client.fullName && (
+                            {client.groupName && client.fullName && (
                               <div className="text-xs text-slate-500">{client.fullName}</div>
                             )}
                           </div>
@@ -710,7 +709,7 @@ export default function ClientsPage() {
                         <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <DailyCheckButton
                             check={todayChecks[client.id]}
-                            onOpen={() => setCheckClient({ id: client.id, name: client.companyName || client.fullName || 'Клиент' })}
+                            onOpen={() => setCheckClient({ id: client.id, name: client.groupName || client.fullName || 'Клиент' })}
                           />
                         </td>
                       )}
@@ -846,7 +845,7 @@ function CreateClientModal({
   onError: (msg: string) => void;
 }) {
   const [form, setForm] = useState({
-    fullName: '', companyName: '', phone: '', groupName: '',
+    fullName: '', phone: '', groupName: '',
     services: [] as string[], notes: '', paymentAmount: '',
     soldById: userRole === 'SALES_MANAGER' ? userId : '', purchaseDate: '', niche: '',
     clientType: '' as 'LEGAL' | 'INDIVIDUAL' | '',
@@ -873,7 +872,7 @@ function CreateClientModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName && !form.companyName) { setError('Укажите ФИО или название компании'); return; }
+    if (!form.fullName && !form.groupName) { setError('Укажите ФИО или название группы'); return; }
     if (!form.clientType) { setError('Выберите тип оплаты: Юр. лицо или Физ. лицо'); return; }
     if (form.services.length === 0) { setError('Выберите хотя бы одну услугу'); return; }
     setError('');
@@ -881,7 +880,6 @@ function CreateClientModal({
     try {
       const data: Record<string, unknown> = {};
       if (form.fullName) data.fullName = form.fullName;
-      if (form.companyName) data.companyName = form.companyName;
       data.phone = form.phone;
       data.clientType = form.clientType;
       if (form.groupName) data.groupName = form.groupName;
@@ -902,7 +900,7 @@ function CreateClientModal({
         }
       }
 
-      onCreated(form.companyName || form.fullName || 'Клиент');
+      onCreated(form.groupName || form.fullName || 'Клиент');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ошибка создания';
       setError(msg);
@@ -957,8 +955,8 @@ function CreateClientModal({
               <input type="text" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className={fieldCls} placeholder="Иванов Иван Иванович" />
             </div>
             <div>
-              <label className={labelCls}>Название компании</label>
-              <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} className={fieldCls} placeholder="ООО 'Компания'" />
+              <label className={labelCls}>Название группы</label>
+              <input type="text" value={form.groupName} onChange={(e) => setForm({ ...form, groupName: e.target.value })} className={fieldCls} placeholder="Название группы" />
             </div>
             <div>
               <label className={labelCls}>Телефон *</label>
@@ -967,10 +965,6 @@ function CreateClientModal({
             <div>
               <label className={labelCls}>Ниша</label>
               <input type="text" value={form.niche} onChange={(e) => setForm({ ...form, niche: e.target.value })} className={fieldCls} placeholder="Например: E-commerce, Медицина..." />
-            </div>
-            <div>
-              <label className={labelCls}>Название группы</label>
-              <input type="text" value={form.groupName} onChange={(e) => setForm({ ...form, groupName: e.target.value })} className={fieldCls} placeholder="Название группы" />
             </div>
             <div>
               <label className={labelCls}>Услуги *</label>
