@@ -646,9 +646,6 @@ export default function ClientsPage() {
                                   <div className="text-sm font-semibold text-slate-900">
                                     {client.groupName || client.fullName}
                                   </div>
-                                  {client.groupName && client.fullName && (
-                                    <div className="text-xs text-slate-500">{client.fullName}</div>
-                                  )}
                                 </div>
                               </div>
                             </td>
@@ -699,9 +696,6 @@ export default function ClientsPage() {
                             <div className="text-sm font-semibold text-slate-900">
                               {client.groupName || client.fullName}
                             </div>
-                            {client.groupName && client.fullName && (
-                              <div className="text-xs text-slate-500">{client.fullName}</div>
-                            )}
                           </div>
                         </div>
                       </td>
